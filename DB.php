@@ -90,23 +90,27 @@ class Wave_DB {
 		
 		$sql = "UPDATE $table SET ";
 		
+		
 		foreach($data as $key => $value){
-			if(is_object($object->$key) || is_array($object->$key))
-				continue;
+			if($object->$key === null)
+				$sql .= "`$key` = NULL,";
+			elseif($object->$key instanceof DateTime)
+				$sql .= "`$key` = '".$object->$key->format('Y-m-d H:i:s')."',";
+			elseif(!is_object($object->$key) && !is_array($object->$key))
+				$sql .= "`$key` = '".addslashes($object->$key)."',";
 				
-			$sql .= "`$key` = '".addslashes($object->$key)."',";
 		}
 		//remove comma
 		$sql = substr($sql, 0, strlen($sql)-1);
 		
-		$sql .= "WHERE ";
+		$sql .= " WHERE ";
 		
 		foreach($keys as $key){
 			$sql .= "`$key` = '{$object->$key}',";
 		}
 		//remove comma
 		$sql = substr($sql, 0, strlen($sql)-1);
-		
+				
 		return $db->exec($sql);
 
 	
