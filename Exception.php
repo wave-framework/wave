@@ -47,7 +47,7 @@ class Wave_Exception extends Exception {
 		
 		switch($type){
 			case Wave_Response::STATUS_NOT_FOUND : 
-				return throw new Wave_Exception('The requested resource was not found', $type);
+				throw new Wave_Exception('The requested resource was not found', $type);
 			case Wave_Response::STATUS_OK :
 			case Wave_Response::STATUS_CREATED :
 			case Wave_Response::STATUS_ACCEPTED :
@@ -62,7 +62,7 @@ class Wave_Exception extends Exception {
 			case Wave_Response::STATUS_SERVER_ERROR :  
 			case Wave_Response::STATUS_NOT_IMPLEMENTED :
 			default :
-				return throw new Wave_Exception('Unknown error', $type);
+				throw new Wave_Exception('Unknown error', $type);
 		}
 		
 	}
