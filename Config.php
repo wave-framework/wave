@@ -58,7 +58,7 @@ class Wave_Config {
 				$baseurl = substr($file, 7);
 				$routes = Wave_Cache::load('routes_'.$baseurl);
 				if($routes == null){
-					$defaultdomain = Wave_Config::get('wave')->router->base->route;
+					$defaultdomain = Wave_Config::get('deploy')->baseurl;
 					$file = 'routes/'.$defaultdomain;
 					$routes = Wave_Cache::load('routes_'.$defaultdomain);
 				}
