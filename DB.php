@@ -85,20 +85,21 @@ class Wave_DB {
 		$db = self::get()->getConnection();
 	
 		$table = $object::_getTableName();
-		$data = $object->_getDirtyArray();
+		$data = $object->_getDataArray();
+		$dirty = $object->_getDirtyArray();
 		$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
 		
 		$sql = "UPDATE $table SET ";
 		
 		
-		foreach($data as $key => $value){
-			if($object->$key === null)
+		foreach($dirty as $key => $value){
+			if($data[$key] === null)
 				$sql .= "`$key` = NULL,";
-			elseif($object->$key instanceof DateTime)
-				$sql .= "`$key` = '".$object->$key->format('Y-m-d H:i:s')."',";
-			elseif(!is_object($object->$key) && !is_array($object->$key))
-				$sql .= "`$key` = '".addslashes($object->$key)."',";
-				
+			elseif($data[$key] instanceof DateTime)
+				$sql .= "`$key` = '".$data[$key]->format('Y-m-d H:i:s')."',";
+			elseif(!is_object($data[$key]) && !is_array($data[$key]))
+				$sql .= "`$key` = '".addslashes($data[$key])."',";
+
 		}
 		//remove comma
 		$sql = substr($sql, 0, strlen($sql)-1);
@@ -110,7 +111,7 @@ class Wave_DB {
 		}
 		//remove comma
 		$sql = substr($sql, 0, strlen($sql)-1);
-				
+						
 		return $db->exec($sql);
 
 	
