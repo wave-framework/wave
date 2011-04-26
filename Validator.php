@@ -58,7 +58,7 @@ class Wave_Validator {
                     throw new Wave_Exception('The type must be set for property '.$field_name);
 			
 			// if its a custom validator, do it first
-			if(is_callable($properties['type'])){
+			if(is_callable($properties['type']) && $properties['type'] instanceof Closure){
 				$properties['type']($this);
 			}
 			else {
