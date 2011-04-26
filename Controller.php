@@ -118,7 +118,8 @@ class Wave_Controller {
 		$response = array(
 			'assets' => Wave_Config::get('deploy')->assets,
 			'_identity' => $this->_identity,
-			'input' => isset($this->_sanitized) ? $this->_sanitized : array()
+			'input' => isset($this->_sanitized) ? $this->_sanitized : $this->_data,
+			'errors' => isset($this->_input_errors) ? $this->_input_errors : array()
 		);
 				
 		$properties = $this->_getResponseProperties();

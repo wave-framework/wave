@@ -97,7 +97,7 @@ class Wave_Router {
 			else if($destination['requireslevel'] !== null && Wave_Auth::$_is_loaded){
 				if(!($auth_obj instanceof Wave_IAuthable) || !$auth_obj->hasAccess($destination['requireslevel'], $var_stack)){
 					$auth_class = Wave_Auth::getHandlerClass();
-					
+									
 					if(!$auth_class::noAuthAction(array(
 						'destination' => $destination,
 						'auth_obj' => $auth_obj

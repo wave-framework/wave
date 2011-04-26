@@ -73,7 +73,6 @@ class Wave_Auth {
 	}
 		
 	public static function persistIdentity($identity, $type = null){
-		
 		$config = Wave_Config::get('deploy')->auth;
 		if($type === null)
 			$type = $config->persist_type;
