@@ -32,7 +32,11 @@ class Wave_View {
 		    return false;
 		});
 		$this->twig->addFilter('last', new Twig_Filter_Function('Wave_Utils::array_peek'));
-				
+		
+		// global variables
+		$this->twig->addGlobal('_assets', Wave_Config::get('deploy')->assets);
+		//$this->twig->addGlobal('_protocol', Wave_Router::$protocol);
+		$this->twig->addGlobal('_host', Wave_Config::get('deploy')->baseurl);
 	}
 	
 	public static function getInstance(){

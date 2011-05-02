@@ -12,7 +12,7 @@ class Wave_Router {
 	public $response_method;
 	
 	public function __construct($host){	
-		self::$root = cfg('routes/'.$host);
+		self::$root = self::loadRoutesCache($host);
 	}
 	
 	public static function init($host = null){
@@ -113,6 +113,24 @@ class Wave_Router {
 		else {
 			throw new Wave_Exception('The requested URL does not exist', 404);
 		}
+	}
+	
+	public static function loadRoutesCache($host){
+		$cache_name = self::getCacheName($host);
+			
+		$routes = Wave_Cache::load($cache_name);
+		if($routes == null){
+			$defaultdomain = Wave_Config::get('deploy')->baseurl;
+			$routes = Wave_Cache::load(self::getCacheName($defaultdomain));
+		}
+		if($routes == null)
+			throw new Wave_Exception('Could not load routes for domain: '.$host.' nor default domain: '.$defaultdomain);
+		else
+			return $routes;	
+	}
+	
+	public static function getCacheName($host){
+		return 'routes/'.md5($host);
 	}
 
 }
