@@ -63,6 +63,33 @@ class Wave_View {
 		self::$_filters[$filter] = $action;
 	}
 	
+	public static function generate(){
+		
+		// delete caches		
+		$dir_iterator = new RecursiveDirectoryIterator(Wave_Config::get('wave')->view->cache);
+		$iterator = new RecursiveIteratorIterator($dir_iterator);
+		$cache_count = 0;
+		foreach($iterator as $cache_file){
+			@unlink ($cache_file);
+			$cache_count++;
+		}
+		$self = self::getInstance();
+		
+		$dir_iterator = new RecursiveDirectoryIterator(Wave_Config::get('wave')->path->views);
+		$iterator = new RecursiveIteratorIterator($dir_iterator);
+		$template_count = 0;
+		$l = strlen(Wave_Config::get('wave')->path->views);
+		foreach($iterator as $template){
+			$template;
+			$self->twig->loadTemplate(substr($template, $l));
+			$template_count++;
+		}
+		
+		
+		
+		
+	}
+
 }
 
 
