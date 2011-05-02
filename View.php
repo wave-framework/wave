@@ -77,6 +77,9 @@ class Wave_View {
 		$iterator = new RecursiveIteratorIterator($dir_iterator);
 		$l = strlen(Wave_Config::get('wave')->path->views);
 		foreach($iterator as $template){
+			$i = pathinfo($template);
+			if($i['extension'] != 'phtml') continue; 
+			
 			$self->twig->loadTemplate(substr($template, $l));
 		}
 		
