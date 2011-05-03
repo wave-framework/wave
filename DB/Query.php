@@ -206,7 +206,7 @@ class Wave_DB_Query{
 
 		}
 		
-		$query = 'SELECT '.implode(',',$select_fields).' FROM '.$from::_getTableName().' AS '.$from."\n";
+		$query = 'SELECT '.implode(',',$select_fields).' FROM `'.$from::_getTableName().'` AS '.$from."\n";
 		$query .= $with_joins;
 		$query .= $manual_joins;
 		
@@ -251,7 +251,7 @@ class Wave_DB_Query{
 		}
 		
 		$this->_built = true;
-				
+			
 		return $query;			
 	
 	}
