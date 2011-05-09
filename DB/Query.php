@@ -213,7 +213,7 @@ class Wave_DB_Query{
 		
 		if(isset($this->where[0])){
 			$where_rows = array();
-			
+					
 			foreach($this->where as $where){
 				$where_conditions = array();
 				foreach($where['conditions'] as $condition){

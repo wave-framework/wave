@@ -106,6 +106,7 @@ abstract class Wave_DB_Model {
 				return (string) $data;
 				break;
 				
+			case Wave_DB_Column::TYPE_DATE:
 			case Wave_DB_Column::TYPE_TIMESTAMP:
 				if($data == 'CURRENT_TIMESTAMP')
 					$data = 'now';
