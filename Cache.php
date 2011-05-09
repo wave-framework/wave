@@ -6,8 +6,10 @@ class Wave_Cache {
 	private static $_cachepath = null;
 	
 	public static function init(){
+		
 		self::$_cachepath = cfg('wave')->path->cache;
 		self::$_ready = true;
+		
 	}
 	
 	public static function load($key){
@@ -19,11 +21,9 @@ class Wave_Cache {
 	}
 	
 	public static function store($key, $data){
-		$path = self::$_cachepath . $key;
-		$dir = dirname(self::$_cachepath . $key);
-		if(!is_dir($dir))
-			@mkdir($dir, 0770, true);
-		file_put_contents($path, serialize($data));
+		if(!file_exists(self::$_cachepath))
+			@mkdir(self::$_cachepath, 0770, true);
+		file_put_contents(self::$_cachepath . $key, serialize($data));
 	}
 	
 	public static function delete($key){

@@ -19,6 +19,7 @@
 class <<class_name>> extends <<base_model>> {
 
 	//Table name
+	protected static $_schema_name = '<<database_namespace>>';
 	protected static $_table_name = '<<table_name>>';
 	
 	//Columns

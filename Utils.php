@@ -2,9 +2,7 @@
 
 
 abstract class Wave_Utils {
-	
-	const DATE_FORMAT_MYSQL = 'Y-m-d H:i:s';
-	
+
 	public static function array_peek($arr){
 		if(!is_array($arr)) return null;
 		$element = array_pop($arr);

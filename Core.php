@@ -33,7 +33,7 @@ class Wave_Core {
 		
 		$missing = array();
 		
-		$required_extensions = array();
+		$required_extensions = array('mcrypt');
 		
 		foreach($required_extensions as $ext){
 			if(!extension_loaded($ext))

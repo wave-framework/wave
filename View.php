@@ -32,11 +32,7 @@ class Wave_View {
 		    return false;
 		});
 		$this->twig->addFilter('last', new Twig_Filter_Function('Wave_Utils::array_peek'));
-		
-		// global variables
-		$this->twig->addGlobal('_assets', Wave_Config::get('deploy')->assets);
-		//$this->twig->addGlobal('_protocol', Wave_Router::$protocol);
-		$this->twig->addGlobal('_host', Wave_Config::get('deploy')->baseurl);
+				
 	}
 	
 	public static function getInstance(){
@@ -63,31 +59,6 @@ class Wave_View {
 		self::$_filters[$filter] = $action;
 	}
 	
-	public static function generate(){
-		
-		// delete caches		
-		$dir_iterator = new RecursiveDirectoryIterator(Wave_Config::get('wave')->view->cache);
-		$iterator = new RecursiveIteratorIterator($dir_iterator);
-		foreach($iterator as $cache_file){
-			@unlink ($cache_file);
-		}
-		$self = self::getInstance();
-		
-		$dir_iterator = new RecursiveDirectoryIterator(Wave_Config::get('wave')->path->views);
-		$iterator = new RecursiveIteratorIterator($dir_iterator);
-		$l = strlen(Wave_Config::get('wave')->path->views);
-		foreach($iterator as $template){
-			$i = pathinfo($template);
-			if($i['extension'] != 'phtml') continue; 
-			
-			$self->twig->loadTemplate(substr($template, $l));
-		}
-		
-		
-		
-		
-	}
-
 }
 
 

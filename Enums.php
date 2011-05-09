@@ -8,13 +8,14 @@ abstract class Wave_Method {
 	const POST = 'POST';
 	const GET  = 'GET';
 	const PUT  = 'PUT';
+	const CLI  = 'CLI';
 	const DELETE = 'DELETE';
 	const UPDATE = 'UPDATE';
 	const CREATE = 'CREATE';
 
 	static $ALL = array(
 		self::ANY, self::POST, self::GET,
-		self::PUT, self::DELETE, self::UPDATE,
+		self::PUT, self::CLI, self::DELETE, self::UPDATE,
 		self::CREATE
 	);
 
@@ -37,14 +38,15 @@ abstract class Wave_Response {
 	const STATUS_SERVER_ERROR	= 500;
 	const STATUS_NOT_IMPLEMENTED= 501;
 	
-	const HTML = 'html';
-	const JSON = 'json';
-	const XML = 'xml';
-	const DIALOG = 'dialog';
+	const HTML		= 'html';
+	const JSON		= 'json';
+	const XML 		= 'xml';
+	const DIALOG 	= 'dialog';
+	const CLI		= 'cli';
 	
 	static $ALL = array(
 		self::HTML, self::JSON,
-		self::XML, self::DIALOG
+		self::XML, self::DIALOG, self::CLI
 	);
 	
 	public static function register($method){

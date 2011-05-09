@@ -69,7 +69,9 @@ class Wave_DB_Generator {
 		
 		//@todo make dynamic
 		$table['base_model'] = 'Wave_DB_Model';
+		$table['database_namespace'] = $database->getNamespace();
 		$table['class_name'] = $database->getNamespace().'_Base_'.Wave_DB::tableNameToClass($table['table_name']);
+		
 		
 		$t = new Wave_DB_Generator_Template('base_start');
 		$t->setData($database, $table);

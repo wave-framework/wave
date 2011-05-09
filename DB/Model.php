@@ -106,7 +106,6 @@ abstract class Wave_DB_Model {
 				return (string) $data;
 				break;
 				
-			case Wave_DB_Column::TYPE_DATE:
 			case Wave_DB_Column::TYPE_TIMESTAMP:
 				if($data == 'CURRENT_TIMESTAMP')
 					$data = 'now';
@@ -122,6 +121,12 @@ abstract class Wave_DB_Model {
 		
 		$called_class = get_called_class();
 		return $called_class::$_table_name;
+	}
+	
+	public static function _getSchemaName(){
+		
+		$called_class = get_called_class();
+		return $called_class::$_schema_name;
 	}
 	
 	public static function _getFields(){

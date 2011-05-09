@@ -18,7 +18,7 @@ class Wave_DB {
 		$this->config = $config;
 		
 		if(Wave_Core::$_MODE == Wave_Core::MODE_DEVELOPMENT)
-			$this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO ::ERRMODE_EXCEPTION);
+			$this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	}
 	
 	
@@ -42,11 +42,12 @@ class Wave_DB {
 	//CRUDE IMPLEMENTATION TO BE REPLACED   vvvvvvvv (euphemism?)
 	public static function insert($object){
 	
-		$db = self::get()->getConnection();
+		$schema = $object::_getSchemaName();
+		$db = self::get($schema)->getConnection();
 	
 		$table = $object::_getTableName();
 		$data = $object->_getDataArray();
-		
+				
 		$values = '';
 		foreach($data as $key => $value){
 			if($value === null)
@@ -81,37 +82,32 @@ class Wave_DB {
 	
 	public static function update($object){
 	
-	
-		$db = self::get()->getConnection();
+		$schema = $object::_getSchemaName();
+		$db = self::get($schema)->getConnection();
 	
 		$table = $object::_getTableName();
-		$data = $object->_getDataArray();
-		$dirty = $object->_getDirtyArray();
+		$data = $object->_getDirtyArray();
 		$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
 		
 		$sql = "UPDATE $table SET ";
 		
-		
-		foreach($dirty as $key => $value){
-			if($data[$key] === null)
-				$sql .= "`$key` = NULL,";
-			elseif($data[$key] instanceof DateTime)
-				$sql .= "`$key` = '".$data[$key]->format('Y-m-d H:i:s')."',";
-			elseif(!is_object($data[$key]) && !is_array($data[$key]))
-				$sql .= "`$key` = '".addslashes($data[$key])."',";
-
+		foreach($data as $key => $value){
+			if(is_object($object->$key) || is_array($object->$key))
+				continue;
+				
+			$sql .= "`$key` = '".addslashes($object->$key)."',";
 		}
 		//remove comma
 		$sql = substr($sql, 0, strlen($sql)-1);
 		
-		$sql .= " WHERE ";
+		$sql .= "WHERE ";
 		
 		foreach($keys as $key){
 			$sql .= "`$key` = '{$object->$key}',";
 		}
 		//remove comma
 		$sql = substr($sql, 0, strlen($sql)-1);
-						
+		
 		return $db->exec($sql);
 
 	

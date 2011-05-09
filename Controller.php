@@ -35,7 +35,12 @@ class Wave_Controller {
 					$controller->_is_post = true;
 				}
 				
-				self::$_response_method = $router->response_method;			
+				if($router->request_method == Wave_Method::CLI){
+					self::$_response_method = Wave_Response::CLI;			
+				} else {
+					self::$_response_method = $router->response_method;			
+				}
+				
 			}
 					
 			$controller->_data = $data;
@@ -118,8 +123,8 @@ class Wave_Controller {
 		$response = array(
 			'assets' => Wave_Config::get('deploy')->assets,
 			'_identity' => $this->_identity,
-			'input' => isset($this->_sanitized) ? $this->_sanitized : $this->_data,
-			'errors' => isset($this->_input_errors) ? $this->_input_errors : array()
+			'_input_errors' => isset($this->_input_errors) ? $this->_input_errors : array(),
+			'input' => isset($this->_sanitized) ? $this->_sanitized : array()
 		);
 				
 		$properties = $this->_getResponseProperties();

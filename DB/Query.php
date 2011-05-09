@@ -19,6 +19,8 @@ class Wave_DB_Query{
 	private $_executed = false;
 	private $_params = array();
 	
+	private static $query_count = 0;
+	
 	const JOIN_INNER 	= 'INNER JOIN';
 	const JOIN_LEFT		= 'LEFT JOIN';
 	const JOIN_RIGHT	= 'RIGHT JOIN';
@@ -36,7 +38,7 @@ class Wave_DB_Query{
 	
 	
 	public function from($table, $fields = null){
-		
+			
 		if(is_null($fields))
 			$fields = Wave_DB::getFieldsForTable($table, $this->database);
 			
@@ -80,7 +82,6 @@ class Wave_DB_Query{
 	
 	public function where($array_or_field, $mode_or_operator = null, $value = null){
 	
-		
 		if(is_array($array_or_field)){
 			//key => value pair input
 			$array = $array_or_field;
@@ -147,8 +148,15 @@ class Wave_DB_Query{
 		$from = $this->from;
 	
 		$select_fields = array();
-		foreach($this->fields as $field => $data)
-			$select_fields[] = $from.'.'.$field.' AS '.$from.self::TABLE_ALIAS_SPLIT.$field;
+		foreach($this->fields as $field => $data){
+			if(is_int($field)){
+				$select_fields[] = $data;
+			} else {
+				$select_fields[] = $from.'.'.$field.' AS '.$from.self::TABLE_ALIAS_SPLIT.$field;			
+			}	
+		}
+			
+		
 		
 		$with_joins = '';
 		if(isset($this->with[0])){
@@ -206,14 +214,14 @@ class Wave_DB_Query{
 
 		}
 		
-		$query = 'SELECT '.implode(',',$select_fields).' FROM `'.$from::_getTableName().'` AS '.$from."\n";
+		$query = 'SELECT '.implode(',',$select_fields).' FROM '.$from::_getTableName().' AS '.$from."\n";
 		$query .= $with_joins;
 		$query .= $manual_joins;
 		
 		
 		if(isset($this->where[0])){
 			$where_rows = array();
-					
+			
 			foreach($this->where as $where){
 				$where_conditions = array();
 				foreach($where['conditions'] as $condition){
@@ -238,12 +246,10 @@ class Wave_DB_Query{
 			$query .= $this->checkClassNames('WHERE '.implode(' '. self::WHERE_AND .' ', $where_rows)."\n");
 		}
 		
-		$extra = '';
-		if (isset($this->group[0])) $extra .= 'GROUP BY ' . implode(',', $this->group)."\n";
-		if (isset($this->order[0])) $extra .= 'ORDER BY ' . $this->order . "\n"; //implode(',', $this->order). "\n";
-		if (isset($this->having))	$extra .= 'HAVING ' . $this->having . "\n";
-		$query .= $this->checkClassNames($extra);
-		
+		if (isset($this->group[0])) $query .= 'GROUP BY ' . implode(',', $this->group)."\n";
+		if (isset($this->order[0])) $query .= $this->checkClassNames('ORDER BY ' . $this->order . "\n");
+		if (isset($this->having))	$query .= $this->checkClassNames('HAVING ' . $this->having . "\n");
+				
 		if (isset($this->limit)){
 			$query .= 'LIMIT '.$this->limit;
 			if (isset($this->offset))
@@ -251,8 +257,8 @@ class Wave_DB_Query{
 		}
 		
 		$this->_built = true;
-			
-		return $query;			
+				
+		return $query;
 	
 	}
 	
@@ -266,6 +272,8 @@ class Wave_DB_Query{
 		
 		if($debug)
 			$statement->debugDumpParams();
+		
+		self::$query_count++;
 		
 		$this->_statement = $statement;
 		$this->_executed = true; 
@@ -376,6 +384,10 @@ class Wave_DB_Query{
 		
 		return $sql;
 	
+	}
+	
+	public static function getQueryCount(){
+		return self::$query_count;
 	}
 	
 	
