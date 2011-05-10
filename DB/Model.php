@@ -19,6 +19,7 @@ abstract class Wave_DB_Model {
 		$fields = self::_getFields();
 		
 		if(!is_null($data)){			
+			$this->_loaded = true;
 			//construct object form data
 			foreach($fields as $field => $value){
 				//if load fails, flag
@@ -29,8 +30,7 @@ abstract class Wave_DB_Model {
 				}
 				*/
 				
-				if(isset($data[$assoc_prefix.$field]) && $data[$assoc_prefix.$field] != '')
-					$this->_loaded = true;
+				//if(isset($data[$assoc_prefix.$field]) && $data[$assoc_prefix.$field] != '')
 
 				
 				$this->_pk_null = $data[$assoc_prefix.$field] === null ? $this->_pk_null : false;
@@ -106,6 +106,7 @@ abstract class Wave_DB_Model {
 				return (string) $data;
 				break;
 				
+			case Wave_DB_Column::TYPE_DATE:
 			case Wave_DB_Column::TYPE_TIMESTAMP:
 				if($data == 'CURRENT_TIMESTAMP')
 					$data = 'now';

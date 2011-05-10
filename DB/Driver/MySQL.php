@@ -65,6 +65,9 @@ class Wave_DB_Driver_MySQL extends Wave_DB_Driver implements Wave_DB_IDriver {
 			case 'timestamp':
 				return Wave_DB_Column::TYPE_TIMESTAMP;
 			
+			case 'date' :
+				return Wave_DB_Column::TYPE_DATE;
+			
 			default:
 				return Wave_DB_Column::TYPE_UNKNOWN;
 		}

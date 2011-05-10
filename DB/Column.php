@@ -8,6 +8,7 @@ class Wave_DB_Column {
 	const TYPE_BOOL			= 3;
 	const TYPE_TIMESTAMP	= 4;
 	const TYPE_FLOAT 		= 5;
+	const TYPE_DATE			= 6;
 	
 	const INDEX_UNKNOWN		= 10;
 	const INDEX_PRIMARY		= 11;

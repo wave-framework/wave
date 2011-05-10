@@ -1,5 +1,8 @@
 <<?php>>
-
+	
+	//<<target_class>>
+	//<<referenced_table_name>>
+	
 	protected function _get<<relation_alias>>(){
 		
 		if(!isset($this->_data['<<relation_alias>>'])){
@@ -12,7 +15,7 @@
 		return $this->_data['<<relation_alias>>'];
 	}
 	
-	public function add<<relation_alias>>($object, $create_relation = true){
+	public function add<<relation_alias_singular>>($object, $create_relation = true){
 		
 		if($create_relation){
 		

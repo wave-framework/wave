@@ -38,7 +38,7 @@ class Wave_DB_Query{
 	
 	
 	public function from($table, $fields = null){
-			
+		
 		if(is_null($fields))
 			$fields = Wave_DB::getFieldsForTable($table, $this->database);
 			
@@ -157,7 +157,6 @@ class Wave_DB_Query{
 		}
 			
 		
-		
 		$with_joins = '';
 		if(isset($this->with[0])){
 			foreach($this->with as $key => $with){
@@ -214,7 +213,7 @@ class Wave_DB_Query{
 
 		}
 		
-		$query = 'SELECT '.implode(',',$select_fields).' FROM '.$from::_getTableName().' AS '.$from."\n";
+		$query = 'SELECT '.implode(',',$select_fields).' FROM `'.$from::_getTableName().'` AS '.$from."\n";
 		$query .= $with_joins;
 		$query .= $manual_joins;
 		
@@ -389,7 +388,6 @@ class Wave_DB_Query{
 	public static function getQueryCount(){
 		return self::$query_count;
 	}
-	
 	
 	/*
 	* Function to return new Wave_DB_Query object. 

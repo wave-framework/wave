@@ -72,7 +72,6 @@ class Wave_DB_Generator {
 		$table['database_namespace'] = $database->getNamespace();
 		$table['class_name'] = $database->getNamespace().'_Base_'.Wave_DB::tableNameToClass($table['table_name']);
 		
-		
 		$t = new Wave_DB_Generator_Template('base_start');
 		$t->setData($database, $table);
 
@@ -248,6 +247,7 @@ class Wave_DB_Generator {
 			'relation_type' 			=> $relation_type,
 			'target_table'				=> $target_table,
 			'target_class'				=> Wave_DB::columnToRelationName($key, $target_table),
+			'relation_alias_singular'	=> Wave_DB::columnToRelationName($key, $target_table),
 			'relation_alias'			=> Wave_Inflector::pluralize(Wave_DB::columnToRelationName($key, $target_table)));
 			
 		$key['relation_alias'] = Wave_DB::columnToRelationName($reversed_key);
@@ -258,9 +258,10 @@ class Wave_DB_Generator {
 		if($reversed_key['relation_type'] == Wave_DB_Model::RELATION_ONE_TO_MANY && $key['column_name'] !== $key['referenced_column_name']){
 			
 			$reversed_key['relation_alias'] = Wave_Inflector::camelize(Wave_Inflector::pluralize($key['table_name']).'_'.$key['column_name'], '_id');
+			$reversed_key['relation_alias_singular'] = Wave_Inflector::camelize($key['table_name'].'_'.$key['column_name'], '_id');
 			$key['relation_alias'] = Wave_Inflector::camelize($key['column_name'], '_id');
 		}
-
+	
 		return array($key, $reversed_key);
 	}
 	
