@@ -8,7 +8,7 @@ interface Wave_IAuthable {
 		
 	public function hasAccess(array $level, $vars);
 	
-	public static function noAuthAction();
+	public static function noAuthAction(array $data);
 	
 	public function getAuthKey();
 

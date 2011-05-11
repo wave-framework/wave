@@ -106,7 +106,7 @@ class Wave_Router {
 							'The current user does not have the required level to access this page', 403);
 				}
 			}
-												
+														
 			Wave_Controller::invoke($destination['action'], $var_stack, $this);
 			
 		}
