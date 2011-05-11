@@ -50,7 +50,10 @@ class Wave_DB_Query{
 	
 	public function with($table){
 	
-		$this->with[] = array('table' => $table);
+		$this->with[] = array(
+			'table' => $table,
+			'class' => Wave_DB::getClassNameForTable($table, $this->database, true)
+		);
 		return $this;
 	}
 	
@@ -171,10 +174,10 @@ class Wave_DB_Query{
 						$join_class = '';
 						
 						foreach($foreign_class::_getFields() as $field => $data)
-							$select_fields[] = $with['table'].'.'.$field.' AS '.$with['table'].self::TABLE_ALIAS_SPLIT.$field;
+							$select_fields[] = $with['class'].'.'.$field.' AS '.$with['class'].self::TABLE_ALIAS_SPLIT.$field;
 										
-						$with_joins .= self::JOIN_LEFT.' '.$relation['foreign_schema'].'.'.$relation['foreign_table'].' AS '.$with['table'].' ';
-						$with_joins .= 'ON '.$with['table'].'.'.$relation['foreign_column'].' = '.$from.'.'.$relation['column_name']."\n";	
+						$with_joins .= self::JOIN_LEFT.' '.$relation['foreign_schema'].'.'.$relation['foreign_table'].' AS '.$with['class'].' ';
+						$with_joins .= 'ON '.$with['class'].'.'.$relation['foreign_column'].' = '.$from.'.'.$relation['column_name']."\n";	
 						break;
 						
 					case Wave_DB_Model::RELATION_MANY_TO_MANY:
@@ -189,11 +192,11 @@ class Wave_DB_Query{
 						$with_joins .= 'ON '.$join_class.'.'.$relation['foreign_column'].' = '.$from.'.'.$relation['column_name']."\n";						
 						
 						foreach($foreign_class::_getFields() as $field => $data)
-							$select_fields[] = $with['table'].'.'.$field.' AS '.$with['table'].self::TABLE_ALIAS_SPLIT.$field;
+							$select_fields[] = $with['class'].'.'.$field.' AS '.$with['class'].self::TABLE_ALIAS_SPLIT.$field;
 						
 						$join_relation = $join_class::_getRelationByName($relation['target_class']);
-						$with_joins .= self::JOIN_LEFT.' '.$join_relation['foreign_schema'].'.'.$join_relation['foreign_table'].' AS '.$with['table'].' ';
-						$with_joins .= 'ON '.$with['table'].'.'.$join_relation['foreign_column'].' = '.$join_class.'.'.$join_relation['column_name']."\n";	
+						$with_joins .= self::JOIN_LEFT.' '.$join_relation['foreign_schema'].'.'.$join_relation['foreign_table'].' AS '.$with['class'].' ';
+						$with_joins .= 'ON '.$with['class'].'.'.$join_relation['foreign_column'].' = '.$join_class.'.'.$join_relation['column_name']."\n";	
 						
 						break;
 				}
@@ -310,7 +313,12 @@ class Wave_DB_Query{
 			for(;;) {				
 				//Load in relations.
 				foreach($this->with as $with){
-					$joined_object = new $with['foreign_class']($this->_last_row, $with['table'].self::TABLE_ALIAS_SPLIT);
+							
+					$joined_object = new $with['foreign_class']($this->_last_row, $with['class'].self::TABLE_ALIAS_SPLIT);
+					
+					// if the joined bit is empty, dont bother
+					if($joined_object->pkNull()) continue;
+					
 					if($joined_object->_isLoaded()){
 					
 						switch($with['relation']['relation_type']){
