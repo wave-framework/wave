@@ -52,7 +52,7 @@ class Wave_DB_Query{
 	
 		$this->with[] = array(
 			'table' => $table,
-			'class' => Wave_DB::getClassNameForTable($table, $this->database, true)
+			'class' => Wave_DB::getClassNameForTable(Wave_Inflector::singularize($table), $this->database, true)
 		);
 		return $this;
 	}
