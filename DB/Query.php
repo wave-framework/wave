@@ -13,6 +13,7 @@ class Wave_DB_Query{
 	private $having;
 	private $offset;
 	private $limit;
+	private $paginate = false;
 	private $_statement;
 	private $_last_row;
 	private $_built = false;
@@ -145,6 +146,15 @@ class Wave_DB_Query{
 		return $this;
 	}
 	
+	public function paginate($offset, $limit){
+		
+		$this->paginate = true;
+		
+		$this->offset($offset);
+		$this->limit($limit);
+		
+		return $this;
+	}
 	
 	private function buildSQL(){
 			
@@ -216,7 +226,8 @@ class Wave_DB_Query{
 
 		}
 		
-		$query = 'SELECT '.implode(',',$select_fields).' FROM `'.$from::_getTableName().'` AS '.$from."\n";
+		$query = 'SELECT ' . ($this->paginate ? 'SQL_CALC_FOUND_ROWS ' : '');
+		$query .= implode(',',$select_fields).' FROM `'.$from::_getTableName().'` AS '.$from."\n";
 		$query .= $with_joins;
 		$query .= $manual_joins;
 		
@@ -369,6 +380,23 @@ class Wave_DB_Query{
 		
 		return $row === false ? null : $row;
 	
+	}
+	
+	public function fetchRowCount(){
+		
+		if($this->paginate === false)
+			throw new Wave_Exception('Wave_DB::fetchRowCount can only be used when paginating');
+		
+		$sql = 'SELECT FOUND_ROWS() AS row_count;';
+	
+		$statement = $this->database->getConnection()->prepare($sql);		
+		$statement->execute();
+		
+		self::$query_count++;
+		
+		$rslt = $statement->fetch(Wave_DB_Connection::FETCH_ASSOC);
+		
+		return $rslt['row_count'];
 	}
 	
 	

@@ -29,6 +29,22 @@ abstract class Wave_Utils {
 		return $extract;
 	}
 
+	public static function shorten($string, $length = 20, $by_word = true, $elipsis = true){
+		
+		$str = substr($string, 0, $length);
+		
+		if($by_word){
+			$pos = strrpos($str, ' ');
+			if($pos !== false)
+				$str = substr($str, 0, $pos);
+		}
+		
+		if($elipsis)
+			$str .= '&hellip;';
+		
+		return $str;
+		
+	}
 
 }
 

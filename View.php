@@ -32,6 +32,7 @@ class Wave_View {
 		    return false;
 		});
 		$this->twig->addFilter('last', new Twig_Filter_Function('Wave_Utils::array_peek'));
+		$this->twig->addFilter('short', new Twig_Filter_Function('Wave_Utils::shorten'));
 		
 		// global variables
 		$this->twig->addGlobal('_assets', Wave_Config::get('deploy')->assets);

@@ -117,6 +117,15 @@ class Wave_DB {
 
 	
 	}
+	
+	public function rawQuery($sql){
+		
+		$db = $this->getConnection();
+		
+		$db->exec($sql);
+		
+	}
+	
 	//FOR BOTH OF THESE ^^^^^^^^^^
 	
 	
