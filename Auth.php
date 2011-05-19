@@ -72,17 +72,19 @@ class Wave_Auth {
 		return Wave_Registry::destroy('__wave_identity');
 	}
 		
-	public static function persistIdentity($identity, $type = null){
+	public static function persistIdentity($identity, $type = null, $expires = null){
 		$config = Wave_Config::get('deploy')->auth;
 		if($type === null)
 			$type = $config->persist_type;
-				
+		if($expires === null)
+			$expires = $config->$type->expires;
+			
 		if($type == 'cookie'){
 				
 			Wave_Storage_Cookie::store(
 				$config->cookie->name,
 				$identity,
-				strtotime($config->cookie->expires),
+				strtotime($expires),
 				$config->cookie->path,
 				$config->cookie->domain
 			);

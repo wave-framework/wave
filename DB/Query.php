@@ -156,7 +156,7 @@ class Wave_DB_Query{
 		return $this;
 	}
 	
-	private function buildSQL(){
+	public function buildSQL(){
 			
 		$from = $this->from;
 	
@@ -243,12 +243,16 @@ class Wave_DB_Query{
 					if(is_array($condition[2]) && count($condition[2]) === 0) continue;
 
 					//Determine whether there is more than one condition for the prepred stmt.
-					$value = is_array($condition[2]) ? '('.implode(',', array_fill(0, count($condition[2]), '?')).')' : '?';
+					$is_in = is_array($condition[2]);
+					$value = $is_in ? '('.implode(',', array_fill(0, count($condition[2]), '?')).')' : '?';
 					//Special NULL handling
 					if(!is_null($condition[2])){
 						//Add the values to the prep params and cast if needed.
 						$this->_params = array_merge($this->_params, (array) $condition[2]);
-						$where_conditions[] = $condition[0].' '.$condition[1].' '.$value;
+						if($is_in)
+							$where_conditions[] = $condition[0].' '.($condition[1] == '=' ? 'IN' : 'NOT IN').' '.$value;
+						else
+							$where_conditions[] = $condition[0].' '.$condition[1].' '.$value;
 					} else {
 						$where_conditions[] = $condition[0].' '.($condition[1] == '=' ? 'IS' : 'IS NOT').' NULL';
 					}
