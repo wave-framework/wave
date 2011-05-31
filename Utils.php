@@ -31,6 +31,8 @@ abstract class Wave_Utils {
 
 	public static function shorten($string, $length = 20, $by_word = true, $elipsis = true){
 		
+		if(strlen($string) <= $length) return $string;
+		
 		$str = substr($string, 0, $length);
 		
 		if($by_word){
