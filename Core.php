@@ -22,6 +22,7 @@ class Wave_Core {
 		spl_autoload_register(array('Wave_Core', 'autoload'));
 		
 		set_exception_handler(array('Wave_Exception', 'handle'));
+		set_error_handler(array('Wave_Exception', 'handleError'));
 		
 		include_once(WAVE_CORE_PATH . 'Enums.php');
 		

@@ -12,8 +12,16 @@ class Wave_Exception extends Exception {
 	}
 	
 	public static function handle(Exception $e){
-		
 		Wave_Controller::invoke("ExceptionController", array('exception' => $e));
+	}
+	
+	public static function handleError($level, $message, $file, $line, $context) {
+	    //Handle user errors, warnings, and notices here
+	    if($level === E_USER_ERROR || $level === E_USER_WARNING || $level === E_USER_NOTICE) {
+	        echo $message;
+	        return(true); //And prevent the PHP error handler from continuing
+	    }
+	    return(false); //Otherwise, use PHP's error handler
 	}
 	
 	
@@ -69,7 +77,5 @@ class Wave_Exception extends Exception {
 	}
 	
 }
-
-
 
 ?>

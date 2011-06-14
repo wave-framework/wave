@@ -174,19 +174,28 @@ abstract class Wave_DB_Model {
 	//After a lot of consideration, benefits > small performance hit.
 	public function __set($property, $data){
 			
-		if($this->$property === $data)
+		if(method_exists($this, $this->getGetter($property)) && $this->$property === $data)
 			return;
 			
 		$this->_dirty[$property] = true;
-		$this->{'_set'.$property}($data);
+		
+		if(method_exists($this, $this->getSetter($property)))
+			return $this->{'_set'.$property}($data);
+		else
+			$this->$property = $data;
 	
 	}
 	
 	public function __get($property){
-		//if(!method_exists($this, '_get'.$property))
-		//	trigger_error(print_r(debug_backtrace(false), true));
-			
-		return $this->{'_get'.$property}();	
+		$method = $this->getGetter($property);
+		if(!method_exists($this, $method)){
+			//	trigger_error(print_r(debug_backtrace(false), true));
+			$stack = debug_backtrace(false);
+			array_shift($stack);
+			trigger_error('Notice: Undefined property '. get_called_class() . '::' . $property . ' in ' . $stack[0]['file'] . ' on line' . $stack[0]['line'] . "\n");
+		}
+		else 
+			return $this->$method();	
 	}
 	
 	public function __isset($property){
@@ -202,6 +211,14 @@ abstract class Wave_DB_Model {
 		}
 		
 		return $props;
+	}
+	
+	private function getSetter($property){
+		return '_set' . $property;
+	}
+	
+	private function getGetter($property){
+		return '_get' . $property;
 	}
 	
 }

@@ -35,6 +35,8 @@ class Wave_Controller {
 					$controller->_is_post = true;
 				}
 				
+				$controller->_request_uri = $router->request_uri;
+				
 				self::$_response_method = $router->response_method;			
 			}
 					
@@ -117,6 +119,7 @@ class Wave_Controller {
 	protected function _buildDataSet(){
 		$response = array(
 			'assets' => Wave_Config::get('deploy')->assets,
+			'_request_uri' => isset($this->_request_uri) ? $this->_request_uri : $_SERVER['REQUEST_URI'],
 			'_identity' => $this->_identity,
 			'input' => isset($this->_sanitized) ? $this->_sanitized : $this->_data,
 			'errors' => isset($this->_input_errors) ? $this->_input_errors : array()
