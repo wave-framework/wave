@@ -75,7 +75,9 @@ class Wave_Inflector {
         'money',
         'rice',
         'information',
-        'equipment'
+        'equipment',
+        'meta',
+        'media'
     );
 
     public static function pluralize($string){
