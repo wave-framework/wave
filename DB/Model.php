@@ -189,13 +189,14 @@ abstract class Wave_DB_Model {
 	public function __get($property){
 		$method = $this->getGetter($property);
 		if(!method_exists($this, $method)){
-			//	trigger_error(print_r(debug_backtrace(false), true));
 			$stack = debug_backtrace(false);
 			array_shift($stack);
 			trigger_error('Notice: Undefined property '. get_called_class() . '::' . $property . ' in ' . $stack[0]['file'] . ' on line' . $stack[0]['line'] . "\n");
 		}
-		else 
-			return $this->$method();	
+		else {
+			return $this->$method();
+		}
+				
 	}
 	
 	public function __isset($property){

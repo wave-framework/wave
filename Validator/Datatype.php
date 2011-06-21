@@ -44,7 +44,7 @@ abstract class Wave_Validator_Datatype {
 			return Wave_Validator::ERROR_NOT_IN_ARRAY;
 			
 		if(isset($this->params[self::UNIQUE]) && !$this->checkUniqueness($this->params[self::UNIQUE]))
-			return Wave_Validator::ERROR_NOT_UNIQUE;	
+			return Wave_Validator::ERROR_NOT_UNIQUE;
 	
 		return true;
 	}
@@ -93,14 +93,14 @@ abstract class Wave_Validator_Datatype {
 	
 	protected function checkUniqueness($props){
 	
-		if(!isset($props['table']) || (!isset($props['column']))) 
+		if(!isset($props['model']) || (!isset($props['property']))) 
 			throw new Wave_Exception("A class name and a column must be defined for unique field.");
-		$q = db()->from($props['table'])
-				 ->where($props['column'] . ' = ?', $this->input);
+		$q = Wave_DB::get()->from($props['model'])
+				 ->where($props['property'], '=', $this->input);
 		
-		print_r($q->findOne());
+		$obj = $q->fetchRow();
 		
-		return ($q->findOne() !== null);
+		return ($obj === null);
 	}
 
 
