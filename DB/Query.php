@@ -109,7 +109,7 @@ class Wave_DB_Query{
 			$column = explode(' ', $column);
 		
 		$this->group = array_merge($this->group, $column);
-		
+				
 		return $this;
 	
 	}
@@ -263,7 +263,7 @@ class Wave_DB_Query{
 			$query .= $this->checkClassNames('WHERE '.implode(' '. self::WHERE_AND .' ', $where_rows)."\n");
 		}
 		
-		if (isset($this->group[0])) $query .= 'GROUP BY ' . implode(',', $this->group)."\n";
+		if (isset($this->group[0])) $query .= $this->checkClassNames('GROUP BY ' . implode(',', $this->group)."\n");
 		if (isset($this->order[0])) $query .= $this->checkClassNames('ORDER BY ' . $this->order . "\n");
 		if (isset($this->having))	$query .= $this->checkClassNames('HAVING ' . $this->having . "\n");
 				
