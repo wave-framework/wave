@@ -10,7 +10,7 @@ class Wave_View_Tag_Register extends Twig_TokenParser {
 	public function parse(Twig_Token $token) {
 		$lineno = $token->getLine();
 		
-		$extras = array();
+		$extras = '';
 		
 		$type = $this->parser->getStream()->expect(Twig_Token::NAME_TYPE)->getValue();
 		
@@ -19,11 +19,19 @@ class Wave_View_Tag_Register extends Twig_TokenParser {
 		
 		$file = $this->parser->getStream()->expect(Twig_Token::STRING_TYPE)->getValue();
 		
-		if($type == self::TYPE_CSS && $this->parser->getStream()->test(Twig_Token::STRING_TYPE))
-			$extras['media'] = $this->parser->getStream()->expect(Twig_Token::STRING_TYPE)->getValue();
-		else
-			$extras['media'] = 'screen print';
-			
+		if($type == self::TYPE_CSS){
+			if($this->parser->getStream()->test(Twig_Token::STRING_TYPE))
+				$extras = $this->parser->getStream()->expect(Twig_Token::STRING_TYPE)->getValue();
+			else
+				$extras = 'screen, print';
+		}
+		else if($type == self::TYPE_JS){
+			if($this->parser->getStream()->test(Twig_Token::NUMBER_TYPE))
+				$extras = $this->parser->getStream()->expect(Twig_Token::NUMBER_TYPE)->getValue();
+			else
+				$extras = 0;
+		}
+		
 		$this->parser->getStream()->expect(Twig_Token::BLOCK_END_TYPE);
 		
 		return new Wave_View_Tag_Register_Node($type, $file, $extras, $lineno, $this->getTag());
@@ -53,7 +61,7 @@ class Wave_View_Tag_Register_Node extends Twig_Node {
 				
 		$compiler
 			->addDebugInfo($this)
-			->write('$this->env->_wave_register("'.$type.'", "'.$file.'");')
+			->write('$this->env->_wave_register("'.$type.'", "'.$file.'", "'.$extras.'");')
 			->raw("\n");
 	}
 	

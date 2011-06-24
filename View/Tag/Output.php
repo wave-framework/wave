@@ -45,14 +45,14 @@ class Wave_View_Tag_Output_Node extends Twig_Node {
 			
 			$compiler->write('foreach($this->env->_wave_register["'.$type.'"] as $file => $extra):')->raw("\n\t")
 				->write('$code = sprintf("'.$template.'", $file);')->raw("\n\t")
-					->write('echo $code . "\n";')->raw("\n")
+					->write('echo $code . "<!-- $extra -->\n";')->raw("\n")
 				->write('endforeach;')->raw("\n");
 		}
 		else if($type == Wave_View_Tag_Register::TYPE_CSS){
 			$template = self::FORMAT_CSS;
 			
 			$compiler->write('foreach($this->env->_wave_register["'.$type.'"] as $file => $extra):')->raw("\n\t")
-				->write('$code = sprintf("'.$template.'", $file, $extra["media"]);')->raw("\n\t")
+				->write('$code = sprintf("'.$template.'", $file, $extra);')->raw("\n\t")
 					->write('echo $code . "\n";')->raw("\n")
 				->write('endforeach;')->raw("\n");
 		}	
