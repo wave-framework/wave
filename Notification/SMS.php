@@ -27,7 +27,7 @@ class Wave_Notification_SMS extends SMSGateway {
 		
 		
 		
-		$instance = new self();
+		$instance = new self(self::$conf->server);
 		$instance->setParameter('account_id', self::$conf->account_id)
 				 ->setParameter('auth_key', self::$conf->auth_key);
 	

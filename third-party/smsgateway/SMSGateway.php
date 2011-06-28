@@ -14,12 +14,15 @@ class SMSGateway {
 		'account_id', 'auth_key'
 	);
 	
-	public function __construct(){
+	public function __construct($server = null){
 			
-		$this->handle = curl_init(self::API_URL); 
+		if($server == null)
+			$server = self::API_URL;
+				
+		$this->handle = curl_init($server); 
         curl_setopt($this->handle, CURLOPT_POST, true); 
         curl_setopt($this->handle, CURLOPT_RETURNTRANSFER, true); 
-
+		
 	}
 
     public function __destruct(){
@@ -29,6 +32,7 @@ class SMSGateway {
 	
 	public function setParameter($key, $value){
 		$this->params[$key] = $value;
+		
 		return $this;
 	}
 	
@@ -37,7 +41,6 @@ class SMSGateway {
 	}
 	
 	public function submit(){
-		
 		if($this->static_args == ''){
 			$args = array();
 			foreach(self::$static as $parameter){
@@ -62,8 +65,7 @@ class SMSGateway {
 		curl_setopt($this->handle, CURLOPT_POSTFIELDS, $session_args); 
 	
 		$output = curl_exec($this->handle); 
-        
-        
+                
     	if(stripos($output, 'K') !== false)
     		return 1;
     	else return 0;
