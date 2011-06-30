@@ -55,7 +55,7 @@ class SMSGateway {
 		}
 		
 		if(!isset($this->params['number']) || !isset($this->params['message']))
-			new ApplicationException('Missing parameter "to" or "text" when attempting to send SMS');
+			new Exception('Missing parameter "to" or "message" when attempting to send SMS');
 
 		$session_args = $this->static_args;
 

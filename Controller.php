@@ -34,6 +34,9 @@ class Wave_Controller {
 					$data = array_merge($_POST, $data);
 					$controller->_is_post = true;
 				}
+				else if($router->request_method == Wave_Method::CLI){
+					$data = array_merge($_SERVER['argv'], $data);
+				}
 				
 				$controller->_request_uri = $router->request_uri;
 				
