@@ -28,6 +28,7 @@ class Wave_Validator {
 	const ERROR_NOT_IN_ARRAY = 'not_member';
 	const ERROR_NOT_EQUAL = 'not_equal';
 	const ERROR_NOT_UNIQUE = 'not_unique';
+	const ERROR_NOT_EXISTS = 'not_exists';
 	
 	const ERROR_NO_FILE = -20;
 	

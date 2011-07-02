@@ -23,6 +23,7 @@ abstract class Wave_Validator_Datatype {
 	const MAX_LENGTH = 'max_length';
 	const MEMBER_OF  = 'member_of';
 	const UNIQUE     = 'unique';
+	const EXISTS     = 'exists';
 
 	
 	public function __construct($params, $input){
@@ -45,6 +46,9 @@ abstract class Wave_Validator_Datatype {
 			
 		if(isset($this->params[self::UNIQUE]) && !$this->checkUniqueness($this->params[self::UNIQUE]))
 			return Wave_Validator::ERROR_NOT_UNIQUE;
+		
+		if(isset($this->params[self::EXISTS]) && !$this->checkExistance($this->params[self::EXISTS]))
+			return Wave_Validator::ERROR_NOT_EXISTS;
 	
 		return true;
 	}
@@ -97,12 +101,25 @@ abstract class Wave_Validator_Datatype {
 			throw new Wave_Exception("A class name and a column must be defined for unique field.");
 		$q = Wave_DB::get()->from($props['model'])
 				 ->where($props['property'], '=', $this->input);
-		
+				 
 		$obj = $q->fetchRow();
 		
 		return ($obj === null);
 	}
+	
+	protected function checkExistance($props){
+	
+		if(!isset($props['model']) || (!isset($props['property']))) 
+			throw new Wave_Exception("A class name and a column must be defined for exists field.");
+		$q = Wave_DB::get()->from($props['model'])
+				 ->where($props['property'], '=', $this->input);
 
+		
+		$obj = $q->fetchRow();
+		
+		return ($obj !== null);
+	}
+	
 
 }
 
