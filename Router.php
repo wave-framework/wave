@@ -111,7 +111,7 @@ class Wave_Router {
 			
 		}
 		else {
-			throw new Wave_Exception('The requested URL does not exist', 404);
+			throw new Wave_Exception('The requested URL '.$url.' does not exist', 404);
 		}
 	}
 	
