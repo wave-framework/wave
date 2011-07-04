@@ -40,8 +40,8 @@ class Wave_Auth {
 			// check the secondary credentials
 			foreach($secondary as $key => $value){
 				if(!isset($auth_object->$key) || $auth_object->$key != $value){
-					self::$_auth_problems['secondary'][] = array(
-						$key => $auth_object->$key, 
+					self::$_auth_problems['secondary'][$key] = array(
+						'value' => $auth_object->$key, 
 						'reason' => self::FAILURE_BAD_CREDENTIAL, 
 						'match' => $value);
 					$_is_valid = false;
