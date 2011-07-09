@@ -95,6 +95,10 @@ class Wave_Controller {
 	public static function _setResponseMethod($method){
 		self::$_response_method = $method;
 	}
+
+	public static function _getResponseMethod(){
+		return self::$_response_method;
+	}
 	
 	
 	final public function __construct(){
