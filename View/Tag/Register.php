@@ -23,18 +23,17 @@ class Wave_View_Tag_Register extends Twig_TokenParser {
 			if($this->parser->getStream()->test(Twig_Token::STRING_TYPE))
 				$extras = $this->parser->getStream()->expect(Twig_Token::STRING_TYPE)->getValue();
 			else
-				$extras = 'screen, print';
+				$extras = 'all';
 		}
-		else if($type == self::TYPE_JS){
-			if($this->parser->getStream()->test(Twig_Token::NUMBER_TYPE))
-				$extras = $this->parser->getStream()->expect(Twig_Token::NUMBER_TYPE)->getValue();
-			else
-				$extras = 0;
-		}
+	
+		if($this->parser->getStream()->test(Twig_Token::NUMBER_TYPE))
+			$priority = $this->parser->getStream()->expect(Twig_Token::NUMBER_TYPE)->getValue();
+		else
+			$priority = 0;
 		
 		$this->parser->getStream()->expect(Twig_Token::BLOCK_END_TYPE);
 		
-		return new Wave_View_Tag_Register_Node($type, $file, $extras, $lineno, $this->getTag());
+		return new Wave_View_Tag_Register_Node($type, $file, $extras, $priority, $lineno, $this->getTag());
 	}
 	
 	public function getTag(){
@@ -46,8 +45,8 @@ class Wave_View_Tag_Register extends Twig_TokenParser {
 
 class Wave_View_Tag_Register_Node extends Twig_Node {
 		
-	public function __construct($type, $file, $extras, $line, $tag = null){
-		parent::__construct(array(), array('type' => $type, 'file' => $file, 'extras' => $extras), $line, $tag);
+	public function __construct($type, $file, $extras, $priority, $line, $tag = null){
+		parent::__construct(array(), array('type' => $type, 'file' => $file, 'extras' => $extras, 'priority' => $priority), $line, $tag);
 	}
 	
 	public function compile(Twig_Compiler $compiler){
@@ -55,13 +54,14 @@ class Wave_View_Tag_Register_Node extends Twig_Node {
 		$type = $this->getAttribute('type');
 		$file = $this->getAttribute('file');
 		$extras = $this->getAttribute('extras');
+		$priority = $this->getAttribute('priority');
 		
 		if(!preg_match('/http(s)?\:\/\//', $file))
 			$file = Wave_Config::get('deploy')->assets . $file;
 				
 		$compiler
 			->addDebugInfo($this)
-			->write('$this->env->_wave_register("'.$type.'", "'.$file.'", "'.$extras.'");')
+			->write('$this->env->_wave_register("'.$type.'", "'.$file.'", "'.$extras.'", "'.$priority.'");')
 			->raw("\n");
 	}
 	

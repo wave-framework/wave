@@ -40,22 +40,15 @@ class Wave_View_Tag_Output_Node extends Twig_Node {
 		
 		$type = $this->getAttribute('type');
 					
-		if($type == Wave_View_Tag_Register::TYPE_JS){
-			$template = self::FORMAT_JS;
+		$template = $type == Wave_View_Tag_Register::TYPE_JS ? self::FORMAT_JS : self::FORMAT_CSS ;
+		
+		$compiler->write('foreach($this->env->_wave_register["'.$type.'"] as $priority => $files):')->raw("\n\t")
+				->write('foreach($files as $file => $extra):')->raw("\n\t")
+					->write('$code = sprintf("'.$template.'", $file, $extra);')->raw("\n\t")
+					->write('echo $code . "<!-- $priority -->\n";')->raw("\n\t")
+				->write('endforeach;')->raw("\n")
+			->write('endforeach;')->raw("\n");
 			
-			$compiler->write('foreach($this->env->_wave_register["'.$type.'"] as $file => $extra):')->raw("\n\t")
-				->write('$code = sprintf("'.$template.'", $file);')->raw("\n\t")
-					->write('echo $code . "<!-- $extra -->\n";')->raw("\n")
-				->write('endforeach;')->raw("\n");
-		}
-		else if($type == Wave_View_Tag_Register::TYPE_CSS){
-			$template = self::FORMAT_CSS;
-			
-			$compiler->write('foreach($this->env->_wave_register["'.$type.'"] as $file => $extra):')->raw("\n\t")
-				->write('$code = sprintf("'.$template.'", $file, $extra);')->raw("\n\t")
-					->write('echo $code . "\n";')->raw("\n")
-				->write('endforeach;')->raw("\n");
-		}	
 		
 	}
 	
