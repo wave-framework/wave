@@ -94,6 +94,7 @@ class Wave_DB {
 		
 		
 		foreach($dirty as $key => $value){
+			if(!isset($data[$key])) continue;
 			if($data[$key] === null)
 				$sql .= "`$key` = NULL,";
 			elseif($data[$key] instanceof DateTime)
