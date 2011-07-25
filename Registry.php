@@ -5,9 +5,7 @@
 class Wave_Registry {
 
 	private static $store = array();
-	
-	
-	
+
 	public static function store($key, $value){
 		
 		self::$store[$key] = $value;
@@ -30,6 +28,10 @@ class Wave_Registry {
 			return true;
 		}
 		return false;
+	}
+	
+	public static function _isset($key){
+		return isset(self::$store[$key]);
 	}
 	
 }
