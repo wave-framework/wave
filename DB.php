@@ -37,8 +37,7 @@ class Wave_DB {
 		}
 		
 	}
-	
-	
+
 	//CRUDE IMPLEMENTATION TO BE REPLACED   vvvvvvvv (euphemism?)
 	public static function insert($object){
 	
@@ -120,11 +119,8 @@ class Wave_DB {
 	}
 	
 	public function rawQuery($sql){
-		
 		$db = $this->getConnection();
-		
 		$db->exec($sql);
-		
 	}
 	
 	//FOR BOTH OF THESE ^^^^^^^^^^

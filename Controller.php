@@ -84,12 +84,10 @@ class Wave_Controller {
         $v = new Wave_Validator($data, $schema_path);
         $r = $v->validate();
         $this->_sanitized = $v->getSanitizedData();
-        if ($r == Wave_Validator::RESULT_VALID) {
-            return true;
-        } else {
-            $this->_input_errors = $v->getErrors();
-            return false;
-    	}
+		$this->_input_errors = $v->getErrors();        
+		
+		unset($v);
+		return $r == Wave_Validator::RESULT_VALID;
     }
 	
 	public static function _setResponseMethod($method){

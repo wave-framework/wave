@@ -37,18 +37,21 @@ class Wave_Validator {
 	const TYPE_INTEGER = 3;
 	const TYPE_ARRAY   = 4;
 	
+	private static $_schema_cache = array();
 
 	public function __construct($data, $schema_path){
 		//check schema exisits
-		 if(file_exists($schema_path)){
-			$this->_schema = include $schema_path;
-			$this->_data = $data;
+		 if(!isset(self::$_schema_cache[$schema_path])){
+			if(file_exists($schema_path)){
+				self::$_schema_cache[$schema_path] = include $schema_path; // cache the included file to reduce memory usage
+			}
+			else {
+				$this->_status = self::ERROR_NO_FILE;
+				throw new Wave_Exception("Schema file '".$schema_path."' does not exist");
+			}
 		}
-		else {
-			$this->_status = self::ERROR_NO_FILE;
-			throw new Wave_Exception("Schema file '".$schema_path."' does not exist");
-		}
-	
+		$this->_data = $data;
+		$this->_schema =& self::$_schema_cache[$schema_path];
 	}
 	
 	public function validate(){
@@ -89,8 +92,7 @@ class Wave_Validator {
 	            $result = $validator->validate();
 	            $this->_sanitized[$field_name] = $validator->sanitize();
 	            if($result !== Wave_Validator::INPUT_VALID)
-	                $this->addError($field_name, $properties, $result);			
-			
+	                $this->addError($field_name, $properties, $result);
 			}
 		}
 
@@ -115,7 +117,6 @@ class Wave_Validator {
 	}
 	
 	public function addSearchPath($path){
-	
 		if (file_exists($path)){
 			if (substr($path, -1, 1) != DS)
 				$path .= DS;
