@@ -100,7 +100,8 @@ class Wave_Router {
 									
 					if(!$auth_class::noAuthAction(array(
 						'destination' => $destination,
-						'auth_obj' => $auth_obj
+						'auth_obj' => $auth_obj,
+						'args' => $var_stack
 					)))
 						throw new Wave_Exception(
 							'The current user does not have the required level to access this page', 403);
