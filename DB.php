@@ -198,7 +198,7 @@ class Wave_DB {
 		if($database === null)
 			 $database = self::$default;
 	
-		return self::$instances[$database];
+		return isset(self::$instances[$database]) ? self::$instances[$database] : null;
 	}
 	
 	public static function getNumDatabases(){

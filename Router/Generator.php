@@ -4,8 +4,9 @@
 class Wave_Router_Generator {
 	
 	public static function generate(){
-		$reflector = new Wave_Reflector(cfg('wave')->path->controllers);				
+		$reflector = new Wave_Reflector(Wave_Config::get('wave')->path->controllers);				
 		$reflected_options = $reflector->execute();
+			
 		$all_routes = self::buildRoutes($reflected_options);
 
 		foreach($all_routes as $d => $routes){					
@@ -18,6 +19,7 @@ class Wave_Router_Generator {
 	}
 	
 	public static function buildRoutes($controllers){
+	
 		$config_baseurl = Wave_Config::get('deploy')->baseurl;
 		if(strpos($config_baseurl, 'http://') !== false)
 			$config_baseurl = substr($config_baseurl, 7);

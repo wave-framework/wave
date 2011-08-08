@@ -6,7 +6,7 @@ class Wave_Cache {
 	private static $_cachepath = null;
 	
 	public static function init(){
-		self::$_cachepath = cfg('wave')->path->cache;
+		self::$_cachepath = Wave_Config::get('wave')->path->cache;
 		self::$_ready = true;
 	}
 	

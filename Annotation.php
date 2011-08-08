@@ -38,7 +38,6 @@ abstract class Wave_Annotation {
 			@eval('$array = ' . $value);
 			if(!isset($array)) { 
 				throw new Wave_Exception('There is an unparseable annotation value: "~' . $annotation . ': ' . $values[$key] . '"',0);
-				//throw new Wave_Exception('There is an unparseable annotation value: "~' . $annotation . ': ' . $values[$key] . '"',0,0,'',0,array());
 			}
 			
 			$annotationClass = 'Wave_Annotation_' . $annotation;
@@ -47,14 +46,15 @@ abstract class Wave_Annotation {
 				$annotation = new $annotationClass;
 				$annotation->init($array)
 					->validate($originating_class);
-				$annotation->build();
-								
+	
 				if(isset($annotation->errors)){
 					throw new Wave_Exception('Annotation format error, '.implode(', ', $annotation->errors), 0);
 				}
+				else{
+					$annotation->build();
+				}
 			} else {
 				throw new Wave_Exception('Unknown annotation: "' . $annotation . '"',0);
-				//throw new Wave_Exception('Unknown annotation: "' . $annotation . '"',0,0,'',0,get_defined_vars());
 			}
 			
 			$returns[] = $annotation;
@@ -111,7 +111,7 @@ abstract class Wave_Annotation {
 	}
 	
 	protected function validOnSubclassesOf($annotatedClass, $baseClass) {
-		if( !is_subclass_of($annotatedClass, $baseClass) ) {
+		if( $annotatedClass != $baseClass && !is_subclass_of($annotatedClass, $baseClass) ) {
 			$this->errors[] = get_class($this) . " is only valid on objects of type $baseClass.";
 		}
 	}

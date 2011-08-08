@@ -3,6 +3,12 @@
 
 class Wave_Exception extends Exception {
 		
+	
+	public static function register(){
+		set_exception_handler(array('Wave_Exception', 'handle'));
+		set_error_handler(array('Wave_Exception', 'handleError'));
+	}
+	
 	public function __construct($message, $code = null){
 		if($code == null && is_numeric($message)){
 			$code = intval($message);

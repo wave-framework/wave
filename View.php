@@ -1,7 +1,5 @@
 <?php
 
-
-
 class Wave_View {
 	
 	private $twig;
