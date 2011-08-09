@@ -18,7 +18,7 @@ class Wave_Controller {
 		$invoke = explode('.', $action);
 		
 		if(!isset($invoke[1]))
-			$invoke[1] = cfg('wave')->controller->default_method;
+			$invoke[1] = Wave_Config::get('wave')->controller->default_method;
 		
 		if(class_exists($invoke[0], true)){
 						

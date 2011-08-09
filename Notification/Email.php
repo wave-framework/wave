@@ -2,7 +2,7 @@
 /**
  *	Load third party email handler. Must be loaded out here so the extends call works correctly
 **/
-include_once cfg('deploy')->email->loader;
+include_once Wave_Config::get('deploy')->email->loader;
 
 /**
  *	Extends the Swift Message class for sending emails within the application.
@@ -25,7 +25,7 @@ class Wave_Notification_Email extends Swift_Message {
 	public static function create(){		
 		
 		if(!self::$_isbuilt){
-			self::$config = cfg('deploy')->email;
+			self::$config = Wave_Config::get('deploy')->email;
 
 			if(self::$config->transport === 'SMTP'){
 				self::$transport = Swift_SmtpTransport::newInstance(self::$config->server, self::$config->port);

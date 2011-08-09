@@ -10,7 +10,7 @@ class Wave_Logger_File extends Wave_Logger {
 
 	public function __construct($name, $dir = null, $segment = null, $echo = false){
 		if($dir === null){
-			$dir = cfg('wave')->path->logs;
+			$dir = Wave_Config::get('wave')->path->logs;
 		}
 		if($segment === null || !is_bool($segment)){
 			$segment = Wave_Config::get('wave')->logger->segment;
