@@ -47,12 +47,12 @@ class Wave_Router_Action {
 		$this->mergeArrays('requires_level', $levels, $inherit);
 		return $this;
 	}
-	public function checkRequiredLevel(){
+	public function checkRequiredLevel($var_stack){
 		if(!empty($this->requires_level)){
 			$auth_obj = Wave_Auth::getIdentity();
 			
 			if($auth_obj instanceof Wave_IAuthable)
-				return $auth_obj->hasAccess($this->requires_level, array());
+				return $auth_obj->hasAccess($this->requires_level, $var_stack);
 			else
 				return false;
 		}

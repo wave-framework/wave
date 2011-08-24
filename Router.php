@@ -79,7 +79,7 @@ class Wave_Router {
 					' can not respond with '.$this->response_method.
 					'. (Accepts: '.implode(', ', $action->getRespondsWith().')'));
 			}
-			elseif(!$action->checkRequiredLevel()){
+			elseif(!$action->checkRequiredLevel($var_stack)){
 					
 				$auth_obj = Wave_Auth::getIdentity();
 				$auth_class = Wave_Auth::getHandlerClass();
