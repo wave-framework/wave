@@ -56,7 +56,7 @@ class Wave_Router {
 		// put the response method onto the controller class in case we need it for exceptions
 		Wave_Controller::_setResponseMethod($this->response_method);
 		
-		if($method === null)			
+		if($method === null)
 			$this->request_method = $_SERVER['REQUEST_METHOD'];
 		else
 			$this->request_method = $method;
@@ -66,54 +66,37 @@ class Wave_Router {
 	}
 
 	public function findRoute($url){
-		$parts = explode('/', $url);
-		$parts_count = count($parts);
-		$pos = 0;
-		$node = self::$root;
 		
 		$var_stack = array();
 		
-		while($pos < $parts_count){
-			$child = $node->getChild($parts[$pos]);
-			if($child === null)
-				break;
-			if($child->isVarNode()){
-				$var_stack[$child->getVarName()] = $parts[$pos];
-			}
-			$node = $child;
-			$pos++;
-		}
-				
-		if($pos == $parts_count && $node !== null && $node->isLeaf()){	
-			$destination = $node->getDestination();
-			$auth_obj = Wave_Auth::getIdentity();			
+		$node = self::$root->findChild($url, $var_stack);
+		
+		if($node instanceof Wave_Router_Node && $action = $node->getAction()){
 						
-			if(!in_array($this->response_method, $destination['respondswith'])){
+			if(!$action->canRespondWith($this->response_method)){
 				throw new Wave_Exception(
-					'The requested action '.$destination['action'].
+					'The requested action '.$action->getAction().
 					' can not respond with '.$this->response_method.
-					'. (Accepts: '.implode(', ', $destination['respondswith']).')');
+					'. (Accepts: '.implode(', ', $action->getRespondsWith().')'));
 			}
-			else if($destination['requireslevel'] !== null && Wave_Auth::$_is_loaded){
-				if(!($auth_obj instanceof Wave_IAuthable) || !$auth_obj->hasAccess($destination['requireslevel'], $var_stack)){
-					$auth_class = Wave_Auth::getHandlerClass();
-									
-					if(!$auth_class::noAuthAction(array(
-						'destination' => $destination,
-						'auth_obj' => $auth_obj,
-						'args' => $var_stack
-					)))
-						throw new Wave_Exception(
-							'The current user does not have the required level to access this page', 403);
-				}
+			elseif(!$action->checkRequiredLevel()){
+					
+				$auth_obj = Wave_Auth::getIdentity();
+				$auth_class = Wave_Auth::getHandlerClass();
+																
+				if(!$auth_class::noAuthAction(array(
+					'destination' => $destination,
+					'auth_obj' => $auth_obj,
+					'args' => $var_stack
+				)))
+					throw new Wave_Exception(
+						'The current user does not have the required level to access this page', 403);
 			}
-														
-			Wave_Controller::invoke($destination['action'], $var_stack, $this);
 			
+			Wave_Controller::invoke($action->getAction(), $var_stack, $this);
 		}
-		else {
+		else
 			throw new Wave_Exception('The requested URL '.$url.' does not exist', 404);
-		}
 	}
 	
 	public static function loadRoutesCache($host){
@@ -121,7 +104,7 @@ class Wave_Router {
 			
 		$routes = Wave_Cache::load($cache_name);
 		if($routes == null){
-			$defaultdomain = Wave_Config::get('deploy')->baseurl;
+			$defaultdomain = Wave_Config::get('deploy')->profiles->default->baseurl;
 			$routes = Wave_Cache::load(self::getCacheName($defaultdomain));
 		}
 		if($routes == null)

@@ -43,7 +43,7 @@ class Wave_Reflector {
 
 	}
 	
-	public function execute(){
+	public function execute($include_inherited_members = false){
 		
 		if(!isset($this->_classes[0]))
 			throw new Wave_Exception('No files to reflect on');
@@ -65,6 +65,11 @@ class Wave_Reflector {
 			
 			$methods = array();
 			foreach($reflector->getMethods() as $method){
+				$declaring_class = $method->getDeclaringClass()->getName();
+				// don't put inherited methods on here plz
+				if($declaring_class != $class['classname'] && !$include_inherited_members)
+					continue; 
+					
 				$annotations = Wave_Annotation::parse($method->getDocComment(), $class['classname']);
 				$method_annotations = array();
 				foreach($annotations as $annotation){
@@ -84,6 +89,11 @@ class Wave_Reflector {
 			
 			$properties = array();
 			foreach($reflector->getProperties() as $property){
+				$declaring_class = $property->getDeclaringClass()->getName();
+				// don't put inherited methods on here plz
+				if($declaring_class != $class['classname'] && !$include_inherited_members)
+					continue; 
+				
 				$annotations = Wave_Annotation::parse($property->getDocComment(), $class['classname']);
 				$property_annotations = array();
 				foreach($annotations as $annotation){
@@ -111,7 +121,10 @@ class Wave_Reflector {
 	private static function fileIsClass($file){
 		if(!is_file($file)) return false;
 		
-		$contents = file_get_contents($file);
+		// get the first little bit of a file
+		$handle = fopen($file, "r");
+		$contents = fread($handle, 256);
+		fclose($handle);
 			
 		preg_match('/class[ ]+(?<classname>[A-Za-z0-9_]+)([ ]+extends[ ]+(?<extends>[A-Za-z0-9_]+))?([ ]+implements[ ]+(?<implements>[A-Za-z0-9_, ]+))?[ ]+{/', $contents, $matches);
 		

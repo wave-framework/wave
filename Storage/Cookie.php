@@ -7,7 +7,7 @@ class Wave_Storage_Cookie extends Wave_Storage {
 
 	public static function store($key, $data, $expires = 0, $path = '/', $domain = null){
 		if($domain === null) $domain = $_SERVER['SERVER_NAME'];
-		return setcookie($key, $data, $expires, $path);
+		return setcookie($key, $data, $expires, $path, $domain);
 	}
 	
 	public static function fetch($key){

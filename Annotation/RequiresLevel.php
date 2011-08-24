@@ -14,11 +14,11 @@ class Wave_Annotation_RequiresLevel extends Wave_Annotation {
 	}
 
 	public function build(){
+		$this->inherit = true;
 		if(isset($this->parameters['inherit'])){
 			$this->inherit = $this->parameters['inherit'] == 'true';
 			unset($this->parameters['inherit']);
 		}
-		
 		$this->methods = $this->parameters;	
 	}
 

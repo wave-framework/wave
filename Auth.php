@@ -93,8 +93,7 @@ class Wave_Auth {
 		
 	}
 	
-	public static function ceaseIdentity($type = null){
-		
+	public static function ceaseIdentity($type = null){		
 		$config = Wave_Config::get('deploy')->auth;
 		if($type === null)
 			$type = $config->persist_type;
