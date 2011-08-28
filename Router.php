@@ -85,7 +85,7 @@ class Wave_Router {
 				$auth_class = Wave_Auth::getHandlerClass();
 																
 				if(!$auth_class::noAuthAction(array(
-					'destination' => $destination,
+					'destination' => $action,
 					'auth_obj' => $auth_obj,
 					'args' => $var_stack
 				)))
