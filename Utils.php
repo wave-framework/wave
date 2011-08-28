@@ -12,9 +12,19 @@ abstract class Wave_Utils {
 		return $element;
 	}
 
-	public static function redirect($uri, $permanent = false){
+	public static function redirect($uri, $profile = 'default', $permanent = false){
 		if($permanent)
 			header("Status: 302 Moved Permanently");
+		
+		if($profile !== null){
+			$conf = Wave_Config::get('deploy')->profiles->$profile;
+			$domain = $conf->baseurl;
+			$protocol = 'http';
+			if(isset($conf->ssl) && $conf->ssl == true)
+				$protocol .= 's';
+			$uri = $protocol . '://' . $domain . $uri;
+		}
+			
 		header('Location: '.$uri);
 	}
 	

@@ -5,6 +5,7 @@ class Wave_View {
 	private $twig;
 	
 	private static $_filters = array();
+	private static $_globals = array();
 	
 	private static $instance = null;
 	
@@ -37,6 +38,10 @@ class Wave_View {
 		//$this->twig->addGlobal('_protocol', Wave_Router::$protocol);
 		$this->twig->addGlobal('_host', Wave_Config::get('deploy')->baseurl);
 		$this->twig->addGlobal('_mode', Wave_Core::$_MODE);
+		
+		foreach(self::$_globals as $key => $value)
+			$this->twig->addGlobal($key, $value);
+		
 	}
 	
 	public static function getInstance(){
@@ -61,6 +66,10 @@ class Wave_View {
 	
 	public static function registerFilter($filter, $action){
 		self::$_filters[$filter] = $action;
+	}
+	
+	public static function registerGlobal($name, $value){
+		self::$_globals[$name] = $value;
 	}
 	
 	public static function generate(){
