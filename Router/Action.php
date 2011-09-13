@@ -31,7 +31,7 @@ class Wave_Router_Action {
 
 		if(array_search(Wave_Method::ANY, $methods) !== false)
 			$methods = Wave_Method::$ALL;
-		
+				
 		foreach($methods as $method){
 			$this->routes[] = $method . $route;
 		}

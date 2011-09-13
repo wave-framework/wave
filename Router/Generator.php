@@ -54,10 +54,7 @@ class Wave_Router_Generator {
 		$annotation_type = get_class($annotation);
 		switch ($annotation_type){
 			case 'Wave_Annotation_BaseRoute': 
-				$basepath = $annotation->parameters[0];
-				if($basepath[0] == '/') 
-					$basepath = substr($basepath, 1);
-					
+				$basepath = $annotation->parameters[0];					
 				return $route->setBaseRoute($basepath);
 			
 			case 'Wave_Annotation_Route': 

@@ -3,8 +3,9 @@
 
 class Wave_Core {
 	
-	const MODE_DEVELOPMENT = 1;
-	const MODE_PRODUCTION = 2;
+	const MODE_TEST			= 0;
+	const MODE_DEVELOPMENT 	= 1;
+	const MODE_PRODUCTION 	= 2;
 	
 	static $_MODE = self::MODE_PRODUCTION; 
 	

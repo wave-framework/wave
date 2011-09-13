@@ -24,7 +24,9 @@ abstract class Wave_Utils {
 				$protocol .= 's';
 			$uri = $protocol . '://' . $domain . $uri;
 		}
-			
+		
+		
+		
 		header('Location: '.$uri);
 	}
 	
