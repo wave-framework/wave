@@ -18,7 +18,7 @@
  * optimizer mode.
  *
  * @package twig
- * @author  Fabien Potencier <fabien.potencier@symfony-project.com>
+ * @author  Fabien Potencier <fabien@symfony.com>
  */
 class Twig_NodeVisitor_Optimizer implements Twig_NodeVisitorInterface
 {
@@ -67,6 +67,38 @@ class Twig_NodeVisitor_Optimizer implements Twig_NodeVisitorInterface
 
         if (self::OPTIMIZE_RAW_FILTER === (self::OPTIMIZE_RAW_FILTER & $this->optimizers)) {
             $node = $this->optimizeRawFilter($node, $env);
+        }
+
+        $node = $this->optimizePrintNode($node, $env);
+
+        return $node;
+    }
+
+    /**
+     * Optimizes print nodes.
+     *
+     * It replaces:
+     *
+     *   * "echo $this->render(Parent)Block()" with "$this->display(Parent)Block()"
+     *   * "echo $this->getContext('...')" with "if (isset('...')) { echo '...' }"
+     *
+     * @param Twig_NodeInterface $node A Node
+     * @param Twig_Environment   $env  The current Twig environment
+     */
+    protected function optimizePrintNode($node, $env)
+    {
+        if (!$node instanceof Twig_Node_Print) {
+            return $node;
+        }
+
+        if (
+            $node->getNode('expr') instanceof Twig_Node_Expression_BlockReference ||
+            $node->getNode('expr') instanceof Twig_Node_Expression_Parent ||
+            ($node->getNode('expr') instanceof Twig_Node_Expression_Name && !$env->hasExtension('sandbox') && !$env->isStrictVariables())
+        ) {
+            $node->getNode('expr')->setAttribute('output', true);
+
+            return $node->getNode('expr');
         }
 
         return $node;

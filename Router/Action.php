@@ -19,6 +19,8 @@ class Wave_Router_Action {
 	
 	public function setBaseRoute($baseroute){
 		$this->baseroute = $baseroute;
+		if(substr($this->baseroute, -1, 1) !== '/')
+			$this->baseroute .= '/';
 	}
 		
 	public function addRoute($methods, $route){

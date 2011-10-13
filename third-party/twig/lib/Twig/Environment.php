@@ -13,11 +13,11 @@
  * Stores the Twig configuration.
  *
  * @package twig
- * @author  Fabien Potencier <fabien.potencier@symfony-project.com>
+ * @author  Fabien Potencier <fabien@symfony.com>
  */
 class Twig_Environment
 {
-    const VERSION = '1.0.0-RC2';
+    const VERSION = '1.4.0-DEV';
 
     protected $charset;
     protected $loader;
@@ -270,6 +270,19 @@ class Twig_Environment
     }
 
     /**
+     * Renders a template.
+     *
+     * @param string $name    The template name
+     * @param array  $context An array of parameters to pass to the template
+     *
+     * @return string The rendered template
+     */
+    public function render($name, array $context = array())
+    {
+        return $this->loadTemplate($name)->render($context);
+    }
+
+    /**
      * Loads a template by name.
      *
      * @param  string  $name  The template name
@@ -288,7 +301,7 @@ class Twig_Environment
             if (false === $cache = $this->getCacheFilename($name)) {
                 eval('?>'.$this->compileSource($this->loader->getSource($name), $name));
             } else {
-                if (!file_exists($cache) || ($this->isAutoReload() && !$this->loader->isFresh($name, filemtime($cache)))) {
+                if (!is_file($cache) || ($this->isAutoReload() && !$this->isTemplateFresh($name, filemtime($cache)))) {
                     $this->writeCacheFile($cache, $this->compileSource($this->loader->getSource($name), $name));
                 }
 
@@ -301,6 +314,54 @@ class Twig_Environment
         }
 
         return $this->loadedTemplates[$cls] = new $cls($this);
+    }
+
+    /**
+     * Returns true if the template is still fresh.
+     *
+     * Besides checking the loader for freshness information,
+     * this method also checks if the enabled extensions have
+     * not changed.
+     *
+     * @param string    $name The template name
+     * @param timestamp $time The last modification time of the cached template
+     *
+     * @return Boolean true if the template is fresh, false otherwise
+     */
+    public function isTemplateFresh($name, $time)
+    {
+        foreach ($this->extensions as $extension) {
+            $r = new ReflectionObject($extension);
+            if (filemtime($r->getFileName()) > $time) {
+                return false;
+            }
+        }
+
+        return $this->loader->isFresh($name, $time);
+    }
+
+    public function resolveTemplate($names)
+    {
+        if (!is_array($names)) {
+            $names = array($names);
+        }
+
+        foreach ($names as $name) {
+            if ($name instanceof Twig_Template) {
+                return $name;
+            }
+
+            try {
+                return $this->loadTemplate($name);
+            } catch (Twig_Error_Loader $e) {
+            }
+        }
+
+        if (1 === count($names)) {
+            throw $e;
+        }
+
+        throw new Twig_Error_Loader(sprintf('Unable to find one of the following templates: "%s".', implode('", "', $names)));
     }
 
     /**
@@ -446,7 +507,14 @@ class Twig_Environment
      */
     public function compileSource($source, $name = null)
     {
-        return $this->compile($this->parse($this->tokenize($source, $name)));
+        try {
+            return $this->compile($this->parse($this->tokenize($source, $name)));
+        } catch (Twig_Error $e) {
+            $e->setTemplateFile($name);
+            throw $e;
+        } catch (Exception $e) {
+            throw new Twig_Error_Runtime(sprintf('An exception has been thrown during the compilation of a template ("%s").', $e->getMessage()), -1, $name, $e);
+        }
     }
 
     /**
@@ -785,7 +853,8 @@ class Twig_Environment
         $this->functionCallbacks[] = $callable;
     }
 
-    protected function loadFunctions() {
+    protected function loadFunctions()
+    {
         $this->functions = array();
         foreach ($this->getExtensions() as $extension) {
             $this->functions = array_merge($this->functions, $extension->getFunctions());

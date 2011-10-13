@@ -18,7 +18,7 @@
  * control, you need to take care of clearing the old cache file by yourself.
  *
  * @package    twig
- * @author     Fabien Potencier <fabien.potencier@symfony-project.com>
+ * @author     Fabien Potencier <fabien@symfony.com>
  */
 class Twig_Loader_Array implements Twig_LoaderInterface
 {
@@ -37,6 +37,17 @@ class Twig_Loader_Array implements Twig_LoaderInterface
         foreach ($templates as $name => $template) {
             $this->templates[$name] = $template;
         }
+    }
+
+    /**
+     * Adds or overrides a template.
+     *
+     * @param string $name     The template name
+     * @param string $template The template source
+     */
+    public function setTemplate($name, $template)
+    {
+        $this->templates[$name] = $template;
     }
 
     /**
