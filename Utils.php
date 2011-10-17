@@ -12,7 +12,7 @@ abstract class Wave_Utils {
 		return $element;
 	}
 
-	public static function redirect($uri, $profile = 'default', $permanent = false){
+	public static function redirect($uri, $profile = null, $permanent = false){
 		if($permanent)
 			header("Status: 302 Moved Permanently");
 		
