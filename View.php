@@ -65,11 +65,14 @@ class Wave_View {
 	}
 	
 	public static function registerFilter($filter, $action){
-		self::$_filters[$filter] = $action;
+		if(self::$instance == null) self::$_filters[$filter] = $action;
+		else self::$instance->twig->addFilter($filter, $action);
 	}
 	
 	public static function registerGlobal($name, $value){
-		self::$_globals[$name] = $value;
+		if(self::$instance == null) self::$_globals[$name] = $value;
+		else self::$instance->twig->addGlobal($name, $value);
+		
 	}
 	
 	public static function generate(){
