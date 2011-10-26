@@ -11,6 +11,7 @@ class Wave_Controller {
 	
 	protected $_is_post = false;
 	protected $_is_get = false;
+	protected $_check_csrf = false;
 	//protected $_response_method;
 	
 	public static final function invoke($action, $data, $router = null){
@@ -33,6 +34,7 @@ class Wave_Controller {
 				else if($router->request_method == Wave_Method::POST){
 					$data = array_merge($_POST, $data);
 					$controller->_is_post = true;
+					$controller->_check_csrf = Wave_Config::get('deploy')->auth->csrf->enabled;
 				}
 				else if($router->request_method == Wave_Method::CLI){
 					$data = array_merge($_SERVER['argv'], $data);
@@ -80,7 +82,15 @@ class Wave_Controller {
         $schema_name = strtr($schema, '_', DS);
         $schema_file = sprintf(Wave_Config::get('wave')->schemas->file_format, $schema_name);
         $schema_path = Wave_Config::get('wave')->path->schemas . $schema_file;
-
+		
+		if($this->_check_csrf && isset($this->_identity) && $this->_identity instanceof Wave_IAuthable){
+			$field_name = Wave_Config::get('deploy')->auth->csrf->form_name;
+			if(!isset($this->_data[$field_name]) || !$this->_identity->confirmCSRFKey($this->_data[$field_name])){
+				$this->_input_errors = array($field_name => array('reason' => Wave_Validator::ERROR_INVALID));
+				return false;
+			}
+		}
+		
         $v = new Wave_Validator($data, $schema_path);
         $r = $v->validate();
         $this->_sanitized = $v->getSanitizedData();
@@ -122,16 +132,9 @@ class Wave_Controller {
 	}
 	
 	protected function _buildDataSet(){
-		$response = array(
-			'assets' => Wave_Config::get('deploy')->assets,
-			'_request_uri' => isset($this->_request_uri) ? $this->_request_uri : $_SERVER['REQUEST_URI'],
-			'_identity' => $this->_identity,
-			'input' => isset($this->_sanitized) ? $this->_sanitized : $this->_data,
-			'errors' => isset($this->_input_errors) ? $this->_input_errors : array()
-		);
-				
+		$this->_setTemplatingGlobals();
 		$properties = $this->_getResponseProperties();
-		return array_merge($properties, $response);
+		return array_merge($properties);
 	}
 	
 	protected function _getResponseProperties(){
@@ -143,7 +146,13 @@ class Wave_Controller {
         }
         return $arr;
 	}
-
+	
+	protected function _setTemplatingGlobals(){
+		Wave_View::registerGlobal('input', isset($this->_sanitized) ? $this->_sanitized : $this->_data);
+		Wave_View::registerGlobal('errors', isset($this->_input_errors) ? $this->_input_errors : array());
+		Wave_View::registerGlobal('_identity', $this->_identity);
+		Wave_View::registerGlobal('_request_uri', isset($this->_request_uri) ? $this->_request_uri : $_SERVER['REQUEST_URI']);
+	}
 	
 	final protected function respond(){
 		return $this->_invoke('respond');
