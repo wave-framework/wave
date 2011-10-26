@@ -52,7 +52,7 @@ class Wave_Inflector {
         '/(h|bl)ouses$/i'           => "$1ouse",
         '/(corpse)s$/i'             => "$1",
         '/(us)es$/i'                => "$1",
-        '/[^s]s$/i'                 => ""
+        '/([^s])s$/i'               => "$1"
     );
 
     private static $irregular = array(
