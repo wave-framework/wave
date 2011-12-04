@@ -72,12 +72,12 @@ class Wave_Router {
 		$node = self::$root->findChild($url, $var_stack);
 		
 		if($node instanceof Wave_Router_Node && $action = $node->getAction()){
-						
+			
 			if(!$action->canRespondWith($this->response_method)){
 				throw new Wave_Exception(
 					'The requested action '.$action->getAction().
 					' can not respond with '.$this->response_method.
-					'. (Accepts: '.implode(', ', $action->getRespondsWith().')'));
+					'. (Accepts: '.implode(', ', $action->getRespondsWith()).')');
 			}
 			elseif(!$action->checkRequiredLevel($var_stack)){
 					

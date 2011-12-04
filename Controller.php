@@ -83,14 +83,8 @@ class Wave_Controller {
         $schema_file = sprintf(Wave_Config::get('wave')->schemas->file_format, $schema_name);
         $schema_path = Wave_Config::get('wave')->path->schemas . $schema_file;
 		
-		if($this->_check_csrf && isset($this->_identity) && $this->_identity instanceof Wave_IAuthable){
-			$field_name = Wave_Config::get('deploy')->auth->csrf->form_name;
-			if(!isset($this->_data[$field_name]) || !$this->_identity->confirmCSRFKey($this->_data[$field_name])){
-				$this->_input_errors = array($field_name => array('reason' => Wave_Validator::ERROR_INVALID));
-				return false;
-			}
-		}
-		
+		if(!$this->confirmCSRFToken($data)) return false;
+			
         $v = new Wave_Validator($data, $schema_path);
         $r = $v->validate();
         $this->_sanitized = $v->getSanitizedData();
@@ -98,6 +92,20 @@ class Wave_Controller {
 		
 		unset($v);
 		return $r == Wave_Validator::RESULT_VALID;
+    }
+    
+    public function confirmCSRFToken($data = null){
+    	if($data == null)
+    		$data = $this->_data;
+    		
+    	if($this->_check_csrf && isset($this->_identity) && $this->_identity instanceof Wave_IAuthable){
+			$field_name = Wave_Config::get('deploy')->auth->csrf->form_name;
+			if(!isset($this->_data[$field_name]) || !$this->_identity->confirmCSRFKey($this->_data[$field_name])){
+				$this->_input_errors = array($field_name => array('reason' => Wave_Validator::ERROR_INVALID));
+				return false;
+			}
+		}
+		return true;
     }
 	
 	public static function _setResponseMethod($method){
