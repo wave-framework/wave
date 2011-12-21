@@ -92,8 +92,11 @@ abstract class Wave_Validator_Datatype {
 	}
 	
 	protected function checkMembership($container){
-		return in_array($this->input, $container);
-	}
+       if (is_array($this->input))
+           return sizeof(array_diff($this->input, $container)) == 0;
+       else
+           return in_array($this->input, $container);
+    }
 	
 	protected function checkUniqueness($props){
 	
