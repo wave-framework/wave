@@ -16,7 +16,7 @@
 */
 
 
-class <<class_name>> extends <<base_model>> {
+abstract class <<class_name>> extends <<base_model>> {
 
 	//Table name
 	protected static $_schema_name = '<<database_namespace>>';
