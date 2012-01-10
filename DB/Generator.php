@@ -86,7 +86,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_end');
 		$t->setData($database, $table);
 
-		file_put_contents($filename, $t->get(), FILE_APPEND);
+		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 			
 	}
 	
@@ -98,7 +98,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_field_end');
 		$t->setData($database, $table);
 
-		file_put_contents($filename, $t->get(), FILE_APPEND);
+		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 			
 	}
 	
@@ -136,7 +136,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_field');
 		$t->setData($database, $column);
 		
-		file_put_contents($filename, $t->get(), FILE_APPEND);
+		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 	
 	}
 	
@@ -152,7 +152,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_relation');
 		$t->setData($database, $key);
 		
-		file_put_contents($filename, $t->get(), FILE_APPEND);
+		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 				
 		//REVERSE KEY		      
 		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($reversed_key['table_name']).'.php';
@@ -160,7 +160,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_relation');
 		$t->setData($database, $reversed_key);
 		
-		file_put_contents($filename, $t->get(), FILE_APPEND);
+		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 	
 	}
 	
@@ -171,7 +171,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_relation_end');
 		$t->setData($database, $table);
 
-		file_put_contents($filename, $t->get(), FILE_APPEND);
+		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 			
 	}
 	
@@ -182,7 +182,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_field_gs');
 		$t->setData($database, $table);
 
-		file_put_contents($filename, $t->get(), FILE_APPEND);
+		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 			
 	}
 		
@@ -198,7 +198,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_relation_'.$key['relation_type']);
 		$t->setData($database, $key);
 		
-		file_put_contents($filename, $t->get(), FILE_APPEND);
+		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 		
 		
 		//print_r($reversed_key);
@@ -208,7 +208,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_relation_'.$reversed_key['relation_type']);
 		$t->setData($database, $reversed_key);
 		
-		file_put_contents($filename, $t->get(), FILE_APPEND);
+		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 		
 	}
 	
