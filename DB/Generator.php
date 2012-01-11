@@ -2,12 +2,18 @@
 
 class Wave_DB_Generator {
 
+	const LOCK_FILE = '.wave_lock';
+
 	public static function generate(){
-	
+		
 		$databases = Wave_DB::getAllDatabases();
 		
 		foreach($databases as $database){
-			
+			$lock_file = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.self::LOCK_FILE;
+			while(file_exists($lock_file))
+				sleep(1);
+			touch($lock_file);
+					
 			self::createModelDirectory($database);
 			
 			$driver_class = $database->getConnection()->getDriverClass();
@@ -48,10 +54,9 @@ class Wave_DB_Generator {
 			foreach($tables as $table){
 				self::closeBaseClass($database, $table);
 			}
-
-		
+			
+			unlink($lock_file);
 		}
-		
 	}
 	
 	private static function createModelDirectory($database){
@@ -75,7 +80,7 @@ class Wave_DB_Generator {
 		$t = new Wave_DB_Generator_Template('base_start');
 		$t->setData($database, $table);
 
-		file_put_contents($filename, $t->get());
+		file_put_contents($filename, $t->get(), LOCK_EX);
 			
 	}
 	
