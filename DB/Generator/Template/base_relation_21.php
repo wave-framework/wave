@@ -4,7 +4,7 @@
 		$key = '<<relation_alias>>.' . md5(serialize($args));
 		if(!isset($this->_data[$key])){
 			
-			$query = Wave_DB::get('<<namespace>>')->from('<<Wave_DB::tableNameToClass(referenced_table_name)>>')
+			$query = Wave_DB::get('<<namespace>>')->from('<<namespace>>_<<Wave_DB::tableNameToClass(referenced_table_name)>>')
 										->where('<<Wave_DB::tableNameToClass(referenced_table_name)>>.<<referenced_column_name>>', '=', $this->_data['<<column_name>>']);
 			
 			foreach($args as $func => $props)
