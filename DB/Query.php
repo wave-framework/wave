@@ -345,7 +345,8 @@ class Wave_DB_Query{
 								break;
 							case Wave_DB_Model::RELATION_MANY_TO_MANY:
 								//Object that holds the m2m join
-								$join_object = new $with['join_class']($this->_last_row, $with['join_class'].self::TABLE_ALIAS_SPLIT);
+								$classname = Wave_DB::getClassNameForTable($with['join_class'], $this->database);
+								$join_object = new $classname($this->_last_row, $with['join_class'].self::TABLE_ALIAS_SPLIT);
 								$joined_object->_addRelationObject($with['relation']['target_class'], $join_object);
 								$row->{'add'.$with['relation']['target_class']}($joined_object, false, $join_object);
 								break;		
