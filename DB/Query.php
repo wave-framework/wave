@@ -281,15 +281,20 @@ class Wave_DB_Query{
 	
 	
 	public function execute($debug = false){
-	
+		
 		$sql = $this->buildSQL();
+		
+		$statement = $this->database->getConnection()->prepare($sql);	
 
-		$statement = $this->database->getConnection()->prepare($sql);		
+		$start = microtime(true);
 		$statement->execute( $this->_params );
+		$time = microtime(true) - $start;           
+		
+		Wave_Debug::getInstance()->addQuery($time, $statement);
 		
 		if($debug)
 			$statement->debugDumpParams();
-		
+
 		self::$query_count++;
 		
 		$this->_statement = $statement;

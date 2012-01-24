@@ -17,7 +17,7 @@ class Wave_DB_Connection extends PDO {
 		$this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('Wave_DB_Statement', array($this)));
 	
 	}
-	
+
 	public function getDriverClass(){
 		return $this->driver_class;
 	}

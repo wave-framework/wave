@@ -39,6 +39,9 @@ class Wave_View {
 		$this->twig->addGlobal('_host', Wave_Config::get('deploy')->baseurl);
 		$this->twig->addGlobal('_mode', Wave_Core::$_MODE);
 		
+		if(Wave_Config::get('deploy')->mode == Wave_Core::MODE_DEVELOPMENT || isset($_REQUEST['_wave_show_debugger']))
+			$this->twig->addGlobal('_debugger', Wave_Debug::getInstance());
+		
 		foreach(self::$_globals as $key => $value)
 			$this->twig->addGlobal($key, $value);
 		

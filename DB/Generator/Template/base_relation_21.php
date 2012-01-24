@@ -1,7 +1,9 @@
 <<?php>>
 
 	protected function _get<<relation_alias>>($args = array()){
-		$key = '<<relation_alias>>.' . md5(serialize($args));
+		$key = '<<relation_alias>>';
+		if(!empty($args)) $key .= '.' . md5(serialize($args));
+		
 		if(!isset($this->_data[$key])){
 			
 			$query = Wave_DB::get('<<namespace>>')->from('<<namespace>>_<<Wave_DB::tableNameToClass(referenced_table_name)>>')

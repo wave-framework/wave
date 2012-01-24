@@ -137,8 +137,11 @@ class Wave_DB {
 			$params = array($params);
 		
 		$statement = $this->connection->prepare($sql);
-		$statement->execute($params);
+		$start = microtime(true);
+		$statement->execute( $params );
+		$time = microtime(true) - $start;           
 		
+		Wave_Debug::getInstance()->addQuery($time, $statement);
 		//$statement->debugDumpParams();
 			
 		return $statement->fetchAll();
@@ -170,7 +173,6 @@ class Wave_DB {
 
 		foreach($databases as $database){
 		
-			
 			$driver_class = self::getDriverClass($database->driver);
 			
 			//Check PDO driver is installed on system
@@ -195,6 +197,9 @@ class Wave_DB {
 	}
 	
 	public static function get($database = null){
+		
+		if(empty(self::$instances))
+			Wave_DB::init(Wave_Config::get('db'));
 		
 		//if no db spec, return default
 		if($database === null)

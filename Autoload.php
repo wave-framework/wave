@@ -40,7 +40,7 @@ class Wave_Autoload {
 			
 		foreach ($search_paths as $search_path){
 			if(file_exists($search_path) && include_once($search_path)){
-				//debug()->addUsedFile($search_path, __FUNCTION__);
+				Wave_Debug::getInstance()->addUsedFile($search_path, __FUNCTION__);
 				return;
 			}
 		}
@@ -50,6 +50,7 @@ class Wave_Autoload {
 			$alias_class = Wave_DB::get()->getNamespace().Wave_DB::NS_SEPARATOR.$class;
 			$filename = Wave_Config::get('wave')->path->models . strtr($alias_class, '_', DS) . '.php';
 			if(file_exists($filename) && include_once($filename)){
+				Wave_Debug::getInstance()->addUsedFile($filename, __FUNCTION__);
 				class_alias($alias_class, $class);			
 			}
 		}
