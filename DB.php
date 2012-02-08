@@ -49,7 +49,7 @@ class Wave_DB {
 		
 		$values = '';
 		foreach($data as $key => $value){
-			if($value === null)
+			if($value === null || (is_string($value) && $value === ''))
 				$values .= 'NULL,';
 			elseif($value instanceof DateTime)
 				$values .= '"'.$value->format('Y-m-d H:i:s').'",';
@@ -94,7 +94,7 @@ class Wave_DB {
 		$updates = array();
 		foreach($dirty as $key => $value){
 			if(!isset($data[$key])) continue;
-			if($data[$key] === null)
+			if($data[$key] === null || (is_string($data[$key]) && $data[$key] === ''))
 				$updates[] = "`$key` = NULL";
 			elseif($data[$key] instanceof DateTime)
 				$updates[] = "`$key` = '".$data[$key]->format('Y-m-d H:i:s')."'";
