@@ -93,7 +93,8 @@ class Wave_DB {
 		
 		$updates = array();
 		foreach($dirty as $key => $value){
-			if(!isset($data[$key])) continue;
+			if(!array_key_exists($key, $data)) continue;
+			
 			if($data[$key] === null || (is_string($data[$key]) && $data[$key] === ''))
 				$updates[] = "`$key` = NULL";
 			elseif($data[$key] instanceof DateTime)
@@ -101,6 +102,7 @@ class Wave_DB {
 			elseif(!is_object($data[$key]) && !is_array($data[$key]))
 				$updates[] = "`$key` = '".addslashes($data[$key])."'";
 		}
+
 		if(!isset($updates[0]))
 			return true;
 
@@ -109,15 +111,13 @@ class Wave_DB {
 		
 		$sql .= " WHERE ";
 		
+		$_keys = array();		
 		foreach($keys as $key){
-			$sql .= "`$key` = '{$object->$key}',";
+			$_keys[] = "`$key` = '{$object->$key}'";
 		}
-		//remove comma
-		$sql = substr($sql, 0, strlen($sql)-1);
+		$sql .= implode(' AND ', $_keys);
 		
 		return $db->exec($sql);
-
-	
 	}
 	
 	public function rawQuery($sql){
