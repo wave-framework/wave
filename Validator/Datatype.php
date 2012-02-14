@@ -8,6 +8,8 @@ abstract class Wave_Validator_Datatype {
 	protected $params;
 	protected $input;
 	
+	protected $sanitized_value;
+	
 	const COMPARATOR_ARRAY = 1;
 	const COMPARATOR_NUMERIC = 2;
 	const COMPARATOR_STRING = 3;
@@ -54,7 +56,7 @@ abstract class Wave_Validator_Datatype {
 	}
 
 	public function sanitize(){
-		return htmlentities($this->input);
+		return $this->sanitized_value == null ? htmlentities($this->input) : $this->sanitized_value;
 	}
 	
 	
@@ -106,7 +108,7 @@ abstract class Wave_Validator_Datatype {
 				 ->where($props['property'], '=', $this->input);
 				 
 		$obj = $q->fetchRow();
-		
+		$this->sanitized_value = $obj;
 		return ($obj === null);
 	}
 	
@@ -119,7 +121,7 @@ abstract class Wave_Validator_Datatype {
 
 		
 		$obj = $q->fetchRow();
-		
+		$this->sanitized_value = $obj;
 		return ($obj !== null);
 	}
 	
