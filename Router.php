@@ -83,7 +83,10 @@ class Wave_Router {
 					
 				$auth_obj = Wave_Auth::getIdentity();
 				$auth_class = Wave_Auth::getHandlerClass();
-																
+				
+				if(!is_subclass_of($auth_class, 'Wave_IAuthable'))
+					throw new Wave_Exception('A valid Wave_IAuthable class is required to use RequiresLevel annotations', 500);
+				
 				if(!$auth_class::noAuthAction(array(
 					'destination' => $action,
 					'auth_obj' => $auth_obj,
