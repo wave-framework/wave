@@ -43,10 +43,12 @@ abstract class Wave_Response {
 	const XML 		= 'xml';
 	const DIALOG 	= 'dialog';
 	const CLI		= 'cli';
+	const INTERNAL  = 'internal';
 	
 	static $ALL = array(
 		self::HTML, self::JSON,
-		self::XML, self::DIALOG, self::CLI
+		self::XML, self::DIALOG, 
+		self::CLI, self::INTERNAL
 	);
 	
 	public static function register($method){

@@ -54,8 +54,7 @@ class Wave_Controller {
 			
 			if(method_exists($controller, $invoke[1])){
 				$controller->init();
-				$controller->{$invoke[1]}();
-				return true;
+				return $controller->{$invoke[1]}();
 			}
 			else 
 				throw new Wave_Exception('Could not invoke action '.$action.'. Method '.$invoke[0].'::'.$invoke[1].'() does not exist');
@@ -239,6 +238,13 @@ class Wave_Controller {
 		if(!isset($this->_status)) $this->_status = Wave_Response::STATUS_INPUT_REQUIRED;
 		if(!isset($this->_message)) $this->_message = Wave_Response::getMessageForCode($this->_status);
 		return $this->respondXML();
+	}
+	
+	protected function respondInternal(){
+    	return $this->_getResponseProperties();
+	}
+	protected function requestInternal(){
+    	return $this->_getResponseProperties();
 	}
 
 }

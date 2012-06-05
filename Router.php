@@ -22,7 +22,7 @@ class Wave_Router {
 		return new self($host);
 	}
 	
-	public function route($url = null, $method = null){
+	public function route($url = null, $method = null, $data = array()){
 		
 		if($url === null){
 			if(isset($_SERVER['PATH_INFO']))
@@ -62,12 +62,12 @@ class Wave_Router {
 			$this->request_method = $method;
 			
 			
-		$this->findRoute($this->request_method.$this->request_uri);
+		return $this->findRoute($this->request_method.$this->request_uri, $data);
 	}
 
-	public function findRoute($url){
+	public function findRoute($url, $data = array()){
 		
-		$var_stack = array();
+		$var_stack = $data;
 		
 		$node = self::$root->findChild($url, $var_stack);
 		
@@ -96,7 +96,7 @@ class Wave_Router {
 						'The current user does not have the required level to access this page', 403);
 			}
 			
-			Wave_Controller::invoke($action->getAction(), $var_stack, $this);
+			return Wave_Controller::invoke($action->getAction(), $var_stack, $this);
 		}
 		else
 			throw new Wave_Exception('The requested URL '.$url.' does not exist', 404);
