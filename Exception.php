@@ -3,6 +3,7 @@
 
 class Wave_Exception extends Exception {
 		
+	public static $_response_method = null;
 	
 	public static function register(){
 		set_exception_handler(array('Wave_Exception', 'handle'));

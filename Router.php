@@ -53,8 +53,9 @@ class Wave_Router {
 			$this->request_uri = substr($this->request_uri, 0, -(strlen($this->response_method)+1));
 		}
 		else $this->response_method = Wave_Config::get('wave')->controller->default_response;
-		// put the response method onto the controller class in case we need it for exceptions
-		Wave_Controller::_setResponseMethod($this->response_method);
+		
+		if(Wave_Exception::$_response_method === null)
+			Wave_Exception::$_response_method = $this->response_method;
 		
 		if($method === null)
 			$this->request_method = $_SERVER['REQUEST_METHOD'];

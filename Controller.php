@@ -4,7 +4,7 @@
 class Wave_Controller { 
 	
 	
-	protected static $_response_method;
+	protected $_response_method;
 	
 	protected $_data;
 	protected $_action;
@@ -22,7 +22,7 @@ class Wave_Controller {
 			$invoke[1] = Wave_Config::get('wave')->controller->default_method;
 		
 		if(class_exists($invoke[0], true)){
-						
+					
 			$controller = new $invoke[0]();		
 			
 			if($router instanceof Wave_Router){
@@ -42,15 +42,16 @@ class Wave_Controller {
 				
 				$controller->_request_uri = $router->request_uri;
 				
-				self::$_response_method = $router->response_method;			
+				$controller->_response_method = $router->response_method;			
+
 			}
-					
+				
 			$controller->_data = $data;
 			$controller->_action = $action;
 			unset($data, $router);
 			
-			if(self::$_response_method == null)
-				self::$_response_method = Wave_Config::get('wave')->controller->default_response;
+			if($controller->_response_method == null)
+				$controller->_response_method = Wave_Config::get('wave')->controller->default_response;
 			
 			if(method_exists($controller, $invoke[1])){
 				$controller->init();
@@ -107,12 +108,12 @@ class Wave_Controller {
 		return true;
     }
 	
-	public static function _setResponseMethod($method){
-		self::$_response_method = $method;
+	public function _setResponseMethod($method){
+		$this->_response_method = $method;
 	}
 
-	public static function _getResponseMethod(){
-		return self::$_response_method;
+	public function _getResponseMethod(){
+		return $this->_response_method;
 	}
 	
 	
@@ -170,19 +171,19 @@ class Wave_Controller {
 	}
 	
 	final private function _invoke($type){
-		$response_method = $type.strtoupper(self::$_response_method);
+		$response_method = $type.strtoupper($this->_response_method);
 		if(method_exists($this, $response_method))
 			return $this->{$response_method}();
 		else
 			throw new Wave_Exception(
 				'The action "'.$this->_action.'" tried to respond with "'.
-				self::$_response_method.'" but the method does not exist'
+				$this->_response_method.'" but the method does not exist'
 			);
 	}
 
 	protected function respondHTML(){
 		if(!isset($this->_template))
-			throw new Wave_Exception('Template not set for '.self::$_response_method.' in action '.$this->_action);
+			throw new Wave_Exception('Template not set for '.$this->_response_method.' in action '.$this->_action);
 		
 		header('Content-type: text/html; charset=utf-8');
 		echo Wave_View::getInstance()->render($this->_template, $this->_buildDataSet());
@@ -241,10 +242,13 @@ class Wave_Controller {
 	}
 	
 	protected function respondInternal(){
+    	if(isset($this->_input_errors)){
+	    	$this->validation = $this->_input_errors;
+    	}
     	return $this->_getResponseProperties();
 	}
 	protected function requestInternal(){
-    	return $this->_getResponseProperties();
+    	return $this->respondInternal();
 	}
 
 }
