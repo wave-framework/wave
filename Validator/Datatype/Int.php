@@ -21,7 +21,7 @@ class Wave_Validator_Datatype_Int extends Wave_Validator_Datatype {
 	}
 	
 	public function sanitize(){
-		return intval($this->input);
+		return $this->sanitized_value == null ? intval($this->input) : $this->sanitized_value;
 	}
 
 }
