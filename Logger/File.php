@@ -37,14 +37,15 @@ class Wave_Logger_File extends Wave_Logger {
 	}
 
 	
-	public function write($message){
+	public function write($message, $script_name = null){
 	
 		$log_when = date('Y/m/d H:i:s');
 		
-		$trace = debug_backtrace(false);
-		$caller = $trace[1];
-		
-		$script_name =& $caller['class'];
+		if($script_name === null){
+			$trace = debug_backtrace(false);
+			$caller = $trace[1];
+			$script_name =& $caller['class'];
+		}
 		
 		$str = "[$log_when]\t$script_name\t$message\n";
 		if($this->echo)
