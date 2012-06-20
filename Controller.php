@@ -172,7 +172,7 @@ class Wave_Controller {
 	
 	final private function _invoke($type){
 		$response_method = $type.strtoupper($this->_response_method);
-		if(method_exists($this, $response_method))
+		if(method_exists($this, $response_method) && $response_method !== $type)
 			return $this->{$response_method}();
 		else
 			throw new Wave_Exception(
