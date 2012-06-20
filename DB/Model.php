@@ -101,6 +101,9 @@ abstract class Wave_DB_Model {
 			case Wave_DB_Column::TYPE_INT:
 				return (int) $data;
 				break;
+			
+			case Wave_DB_Column::TYPE_FLOAT:
+				return (float) $data;
 				
 			case Wave_DB_Column::TYPE_STRING:
 				return (string) $data;
