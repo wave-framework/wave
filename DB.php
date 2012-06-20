@@ -133,6 +133,13 @@ class Wave_DB {
 	*/
 	public function basicQuery($sql, $params = array()){
 		
+		
+		$statement = $this->basicStatement($sql, $params);
+			
+		return $statement->fetchAll();
+	}
+	
+	public function basicStatement($sql, $params = array()){
 		if(!is_array($params))
 			$params = array($params);
 		
@@ -142,9 +149,8 @@ class Wave_DB {
 		$time = microtime(true) - $start;           
 		
 		Wave_Debug::getInstance()->addQuery($time, $statement);
-		//$statement->debugDumpParams();
-			
-		return $statement->fetchAll();
+		
+		return $statement;
 	}
 	
 	public function getConnection(){
