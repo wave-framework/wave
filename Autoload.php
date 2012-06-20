@@ -33,6 +33,10 @@ class Wave_Autoload {
            $path = Wave_Config::get('wave')->path->third_party . 'twig' . DS . 'lib' . DS;
            $path .= str_replace('_', '/', $class).'.php';
            $search_paths[] = $path;
+        } else if (0 === strpos($class, 'Event_')) {
+           $path = Wave_Config::get('wave')->path->events;
+           $path .= substr(str_replace('_', DS, $class), 6).'.php';
+           $search_paths[] = $path;
         } else {
 			$search_paths[] = Wave_Config::get('wave')->path->models . strtr($class, '_', DS) . '.php';
 			$search_paths[] = Wave_Config::get('wave')->path->libraries . strtr($class, '_', DS) . '.php';
