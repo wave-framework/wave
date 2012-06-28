@@ -125,7 +125,7 @@ class Wave_DB_Query{
 	
 	public function having($having){
 	
-		$this->having = $having;
+		$this->having[] = $having;
 		
 		return $this;
 	}
@@ -264,8 +264,8 @@ class Wave_DB_Query{
 		}
 		
 		if (isset($this->group[0])) $query .= $this->checkClassNames('GROUP BY ' . implode(',', $this->group)."\n");
+		if (isset($this->having))	$query .= $this->checkClassNames('HAVING ' . implode('AND ', $this->having) . "\n");
 		if (isset($this->order[0])) $query .= $this->checkClassNames('ORDER BY ' . $this->order . "\n");
-		if (isset($this->having))	$query .= $this->checkClassNames('HAVING ' . $this->having . "\n");
 				
 		if (isset($this->limit)){
 			$query .= 'LIMIT '.$this->limit;
@@ -293,7 +293,8 @@ class Wave_DB_Query{
 		Wave_Debug::getInstance()->addQuery($time, $statement);
 		
 		if($debug)
-			$statement->debugDumpParams();
+			echo $sql;
+			//$statement->debugDumpParams();
 
 		self::$query_count++;
 		
@@ -333,17 +334,19 @@ class Wave_DB_Query{
 			for(;;) {				
 				//Load in relations.
 				foreach($this->with as $with){
-							
+					
 					$joined_object = new $with['foreign_class']($this->_last_row, $with['class'].self::TABLE_ALIAS_SPLIT);
 					
-					// if the joined bit is empty, dont bother
-					if($joined_object->pkNull()) continue;
+					// if the joined bit is empty, put an empty value in the parent
+					if($joined_object->pkNull()) {						
+						continue;
+					};
 					
 					if($joined_object->_isLoaded()){
-					
+
 						switch($with['relation']['relation_type']){
 							case Wave_DB_Model::RELATION_MANY_TO_ONE:
-								$row->{$with['table']} = $joined_object;
+								$row->{'_set'.$with['table']}($joined_object);
 								break;
 							case Wave_DB_Model::RELATION_ONE_TO_MANY:
 								$row->{'add'.$with['relation']['target_class']}($joined_object, false);

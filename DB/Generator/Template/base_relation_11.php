@@ -18,7 +18,7 @@
 		return $this->_data[$key];
 	}
 	
-	public function _set<<relation_alias>>($object){
+	protected function _set<<relation_alias>>($object){
 
 		return $this->_data['<<relation_alias>>'] = $object;
 	}

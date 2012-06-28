@@ -171,47 +171,49 @@ class Wave_DB {
 	
 	
 
-	public static function init($config){
+	public static function init($database){
 	
-		$databases = $config->databases;
 		
 		$installed_drivers = Wave_DB_Connection::getAvailableDrivers();
 
-		foreach($databases as $database){
+		$driver_class = self::getDriverClass($database->driver);
 		
-			$driver_class = self::getDriverClass($database->driver);
-			
-			//Check PDO driver is installed on system
-			if(!in_array($driver_class::getDriverName(), $installed_drivers))
-				throw new Wave_DB_Exception(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
-			
-			self::$instances[$database->namespace] = new self($database);
-			
-			/*
-			* Define default database if it is either first or flagged as default.
-			* First db is always flagged as default to avoid the case where there is no default, 
-			* (it'll be overwritten by any db with the default flag).
-			*/
-			
-			if(self::$num_databases == 0 || isset($database->default) && $database->default == true)
-				self::$default = $database->namespace;
-			
-			self::$num_databases++;
-			
-		}
+		//Check PDO driver is installed on system
+		if(!in_array($driver_class::getDriverName(), $installed_drivers))
+			throw new Wave_DB_Exception(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
+		
+		self::$instances[$database->namespace] = new self($database);
+		
+		/*
+		* Define default database if it is either first or flagged as default.
+		* First db is always flagged as default to avoid the case where there is no default, 
+		* (it'll be overwritten by any db with the default flag).
+		*/
+		
+		if(self::$num_databases == 0 || isset($database->default) && $database->default == true)
+			self::$default = $database->namespace;
+		
+		self::$num_databases++;
 		
 	}
 	
-	public static function get($database = null){
-		
-		if(empty(self::$instances))
-			Wave_DB::init(Wave_Config::get('db'));
+	public static function get($namespace = null){
+
+		$databases = Wave_Config::get('db')->databases;
 		
 		//if no db spec, return default
-		if($database === null)
-			 $database = self::$default;
-	
-		return isset(self::$instances[$database]) ? self::$instances[$database] : null;
+		if($namespace === null)
+			 $namespace = isset(self::$default) ? self::$default : $databases[0]['namespace'];
+		
+		if(!isset(self::$instances[$namespace])){
+			
+			foreach($databases as $database){
+				if($database->namespace === $namespace)
+					self::init($database);
+			}			
+		}
+		
+		return isset(self::$instances[$namespace]) ? self::$instances[$namespace] : null;	
 	}
 	
 	public static function getNumDatabases(){
@@ -219,6 +221,11 @@ class Wave_DB {
 	}
 	
 	public static function getAllDatabases(){
+
+		$databases = Wave_Config::get('db')->databases;
+		foreach($databases as $database)
+			self::init($database);
+		
 		return self::$instances;
 	}
 	

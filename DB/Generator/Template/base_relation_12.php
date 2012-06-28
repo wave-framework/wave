@@ -3,7 +3,7 @@
 	//<<target_class>>
 	//<<referenced_table_name>>
 	
-	protected function _get<<relation_alias>>($args = array()){
+	public function _get<<relation_alias>>($args = array()){
 		$key = '<<relation_alias>>';
 		if(!empty($args)) $key .= '.' . md5(serialize($args));
 		
