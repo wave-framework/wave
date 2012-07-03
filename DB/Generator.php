@@ -11,6 +11,7 @@ class Wave_DB_Generator {
 		foreach($databases as $database){
 			$lock_file = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.self::LOCK_FILE;
 			if(file_exists($lock_file)){
+				sleep(3);
 				error_log('Not generating routes, the lock file already exists');
 				return;
 			}
