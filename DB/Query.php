@@ -240,7 +240,7 @@ class Wave_DB_Query{
 				foreach($where['conditions'] as $condition){
 				
 					//if nothing in array, eg. WHERE IN array(), ingnore clause.
-					if(is_array($condition[2]) && count($condition[2]) === 0) continue;
+					if(is_array($condition[2]) && count($condition[2]) === 0) continue 2;
 
 					//Determine whether there is more than one condition for the prepred stmt.
 					$is_in = is_array($condition[2]);
