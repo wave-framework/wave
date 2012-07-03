@@ -56,7 +56,7 @@ abstract class Wave_Validator_Datatype {
 	}
 
 	public function sanitize(){
-		return $this->sanitized_value == null ? htmlentities($this->input) : $this->sanitized_value;
+		return $this->sanitized_value == null ? $this->input : $this->sanitized_value;
 	}
 	
 	

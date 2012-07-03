@@ -79,8 +79,10 @@ class Wave_Validator {
 					}
 				}
 				// if its not in the data array, or it is empty and it is not required, dont bother validating it.
-				else if($properties['required'] === false && (!isset($this->_data[$field_name]) || empty($this->_data[$field_name])))
+				else if($properties['required'] === false && (!isset($this->_data[$field_name]) || empty($this->_data[$field_name]))){
+					$this->_sanitized[$field_name] = null;
 					continue;
+				}
 					
 				// try load the validating class
 	            if(class_exists($this->datatypeClassPrefix . ucfirst($properties['type']), true))
@@ -114,6 +116,10 @@ class Wave_Validator {
 
 	public function getErrors(){
 		return $this->_invalid_keys;
+	}
+	
+	public function getSchema(){
+		return $this->_schema;
 	}
 	
 	public function addSearchPath($path){
