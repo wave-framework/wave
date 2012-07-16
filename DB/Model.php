@@ -193,8 +193,8 @@ abstract class Wave_DB_Model {
 		$method = $this->getGetter($property);
 		if(!method_exists($this, $method)){
 			$stack = debug_backtrace(false);
-			array_shift($stack);
-			trigger_error('Notice: Undefined property '. get_called_class() . '::' . $property . ' in ' . $stack[0]['file'] . ' on line' . $stack[0]['line'] . "\n");
+			$stack = array_shift($stack);
+			trigger_error('Notice: Undefined property '. get_called_class() . '::' . $property . ' in ' . $stack['file'] . ' on line ' . $stack['line'] . " (via by Wave_DB_Model::__get())\n");
 		}
 		else {
 			return $this->$method();
