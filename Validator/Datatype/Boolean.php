@@ -18,7 +18,11 @@ class Wave_Validator_Datatype_Boolean extends Wave_Validator_Datatype {
 			$this->converted = false;
 		else
 			$this->converted = $this->input;
-		return $this->converted === true ? Wave_Validator::INPUT_VALID : Wave_Validator::ERROR_INVALID;
+		
+		if(!isset($this->params['must_be_true']) || $this->params['must_be_true'])
+			return $this->converted === true ? Wave_Validator::INPUT_VALID : Wave_Validator::ERROR_INVALID;
+		else
+			return is_bool($this->converted) ? Wave_Validator::INPUT_VALID : Wave_Validator::ERROR_INVALID;
 	}
 	
 	public function sanitize(){
