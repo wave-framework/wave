@@ -8,18 +8,22 @@ class Wave_Router {
 	
 	public $request_method;
 	public $request_uri;
+	public $profile;
 	
 	public $response_method;
 	
-	public function __construct($host){	
-		self::$root = self::loadRoutesCache($host);
+	public function __construct($host){
+		self::$root = $this->loadRoutesCache($host);
 	}
 	
 	public static function init($host = null){
+		Wave_Hook::triggerAction('router.before_init', array(&$host));
 		if($host === null){
 			$host = $_SERVER['HTTP_HOST'];
 		}
-		return new self($host);
+		$instance = new self($host);
+		Wave_Hook::triggerAction('router.after_init', array(&$instance));
+		return $instance;
 	}
 	
 	public function route($url = null, $method = null, $data = array()){
@@ -62,7 +66,7 @@ class Wave_Router {
 		else
 			$this->request_method = $method;
 			
-			
+		Wave_Hook::triggerAction('router.before_routing', array(&$this, &$data));
 		return $this->findRoute($this->request_method.$this->request_uri, $data);
 	}
 
@@ -103,18 +107,30 @@ class Wave_Router {
 			throw new Wave_Exception('The requested URL '.$url.' does not exist', 404);
 	}
 	
-	public static function loadRoutesCache($host){
+	public function loadRoutesCache($host){
+		$profiles = Wave_Config::get('deploy')->profiles;
 		$cache_name = self::getCacheName($host);
-			
+		
+		$host_profile = $host;	
 		$routes = Wave_Cache::load($cache_name);
 		if($routes == null){
-			$defaultdomain = Wave_Config::get('deploy')->profiles->default->baseurl;
+			$defaultdomain = $profiles->default->baseurl;
+			$host_profile = $defaultdomain;	
 			$routes = Wave_Cache::load(self::getCacheName($defaultdomain));
 		}
+		
 		if($routes == null)
 			throw new Wave_Exception('Could not load routes for domain: '.$host.' nor default domain: '.$defaultdomain);
-		else
+		else {
+			foreach($profiles as $name => $profile){
+				if($profile->baseurl == $host_profile){
+					$this->profile = $name;
+					break;	
+				}
+			}
 			return $routes;	
+		}
+		
 	}
 	
 	public static function getCacheName($host){

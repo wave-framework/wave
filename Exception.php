@@ -7,7 +7,7 @@ class Wave_Exception extends Exception {
 	
 	public static function register(){
 		set_exception_handler(array('Wave_Exception', 'handle'));
-		set_error_handler(array('Wave_Exception', 'handleError'));
+		//set_error_handler(array('Wave_Exception', 'handleError'));
 	}
 	
 	public function __construct($message, $code = null){
@@ -23,6 +23,11 @@ class Wave_Exception extends Exception {
 	}
 	
 	public static function handleError($level, $message, $file, $line, $context) {
+	    if(error_reporting() & $level){
+		    throw new Wave_Exception($message, 0, $file, $line);
+	    }
+	    else return;
+	    
 	    //Handle user errors, warnings, and notices here
 	    if($level === E_USER_ERROR || $level === E_USER_WARNING || $level === E_USER_NOTICE) {
 	        echo $message;
