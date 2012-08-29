@@ -376,7 +376,12 @@ class Wave_DB_Query{
 				
 				$new_row = $this->_statement->fetch(Wave_DB_Connection::FETCH_ASSOC);
 				//Kill loop when all join rows are taken out.
-				foreach($primary_object::_getKeys(Wave_DB_Column::INDEX_PRIMARY) as $pk){
+				$primary_keys = $primary_object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
+				
+				if(!isset($primary_keys[0]))
+					break;
+					
+				foreach($primary_keys as $pk){
 					$index = $primary_object.self::TABLE_ALIAS_SPLIT.$pk;
 					if($this->_last_row[$index] !== $new_row[$index])
 						break 2; //kill for(;;) loop
