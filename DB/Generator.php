@@ -3,12 +3,18 @@
 class Wave_DB_Generator {
 
 	const LOCK_FILE = '.wave_lock';
+	
+	static $oto_primaries = array();
+	static $oto_exclude = array();
 
 	public static function generate(){
 		
 		$databases = Wave_DB::getAllDatabases();
 		
 		foreach($databases as $database){
+							
+			self::createModelDirectory($database);
+	
 			$lock_file = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.self::LOCK_FILE;
 			if(file_exists($lock_file)){
 				sleep(3);
@@ -16,9 +22,7 @@ class Wave_DB_Generator {
 				return;
 			}
 			touch($lock_file);
-					
-			self::createModelDirectory($database);
-			
+				
 			$driver_class = $database->getConnection()->getDriverClass();
 			
 			$tables = $driver_class::getTables($database);
@@ -31,9 +35,22 @@ class Wave_DB_Generator {
 			}
 					
 			foreach($columns as $column){
+				//populate one-to-one array with pks that don't reflect the table name
+				if(isset($column['column_key']) && $driver_class::translateSQLIndexType($column['column_key']) == Wave_DB_Column::INDEX_PRIMARY){
+					$test_tables = explode('_has_', $column['table_name']);
+					
+					//is the column name not part of the table name?
+					if(!in_array(substr($column['column_name'],0,-3), $test_tables) && !isset(self::$oto_exclude[self::getTableIdentifier($column)])){
+						self::$oto_primaries[self::getTableIdentifier($column)] = $column['column_name'];
+					} else if(isset(self::$oto_primaries[self::getTableIdentifier($column)])){
+						unset(self::$oto_primaries[self::getTableIdentifier($column)]);
+						self::$oto_exclude[self::getTableIdentifier($column)] = true;
+					}					
+				} 
+								
 				self::addClassField($database, $column);
 			}			
-			
+									
 			foreach($tables as $table){
 				self::closeBaseFields($database, $table);
 			}
@@ -149,7 +166,7 @@ class Wave_DB_Generator {
 	}
 	
 	private static function addClassKey($database, $key){
-		
+				
 		if(!isset($key['referenced_column_name']) || $key['referenced_column_name'] === '')
 			return false;
 				
@@ -222,13 +239,18 @@ class Wave_DB_Generator {
 	
 	
 	private static function buildRelationshipData($database, $key){
-		
+				
 		$replacement_start = $key['referenced_table_name'].'_has_';
 		$replacement_end = '_has_'.$key['referenced_table_name'];
 		$replacement_length = strlen($replacement_end);
 		$target_length = strlen($key['table_name']) - $replacement_length;
-				  
-		if(strpos($key['table_name'], $replacement_start) === 0){
+		
+		if(isset(self::$oto_primaries[self::getTableIdentifier($key)]) && self::$oto_primaries[self::getTableIdentifier($key)] === $key['column_name']){
+			
+			$target_table = '';
+			$relation_type = Wave_DB_Model::RELATION_ONE_TO_ONE;
+
+		} else if(strpos($key['table_name'], $replacement_start) === 0){
 		
 			$target_table = substr($key['table_name'], $replacement_length);
 			$relation_type = Wave_DB_Model::RELATION_MANY_TO_MANY;
@@ -283,6 +305,9 @@ class Wave_DB_Generator {
 		
 	}
 
+	private static function getTableIdentifier($column){
+		return $column['table_schema'].'-'.$column['table_name'];
+	}
 }
 
 

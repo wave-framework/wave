@@ -97,6 +97,20 @@ class Wave_DB_Driver_MySQL extends Wave_DB_Driver implements Wave_DB_IDriver {
 		}
 	}
 	
+	public static function convertValueForSQL($value){
+	
+		switch(true){
+			case is_null($value):
+				return 'NULL';
+				
+			case $value instanceof Wave_DateTime:
+				return $value->format('Y-m-d H:i:s');
+				
+			default:
+				return $value;
+		}
+	}
+	
 	
 
 }

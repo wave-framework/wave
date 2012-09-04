@@ -52,6 +52,11 @@ abstract class Wave_DB_Model {
 		return Wave_DB::save($this, $save_relations);
 	}
 	
+	public function delete(){
+	
+		return Wave_DB::delete($this);
+	}
+	
 	
 	public function _getid(){
 		return $this->_data[self::_getTableName().'_id'];
@@ -67,12 +72,21 @@ abstract class Wave_DB_Model {
 	
 	}
 	
+	public function _removeRelationObject($type, $object){
+		
+		$key = array_search($object, $this->_relation_data);
+		
+		if($key !== false)
+			unset($this->_relation_data[$key]);
+	}
+
+	
 	public function _isLoaded(){
 		return $this->_loaded;
 	}
 	
-	public function _setLoaded(){
-		return $this->_loaded = true;
+	public function _setLoaded($value = true){
+		return $this->_loaded = $value;
 	}
 
 	public function _isDirty(){

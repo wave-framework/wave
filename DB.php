@@ -37,36 +37,28 @@ class Wave_DB {
 		}
 		
 	}
-
-	//CRUDE IMPLEMENTATION TO BE REPLACED   vvvvvvvv (euphemism?)
-	public static function insert($object){
 	
-		$schema = $object::_getSchemaName();
-		$db = self::get($schema)->getConnection();
+	
+	
+	public static function insert($object){
 	
 		$table = $object::_getTableName();
 		$data = $object->_getDataArray();
 		
-		$values = '';
-		foreach($data as $key => $value){
-			if($value === null || (is_string($value) && $value === ''))
-				$values .= 'NULL,';
-			elseif($value instanceof DateTime)
-				$values .= '"'.$value->format('Y-m-d H:i:s').'",';
-			else
-				$values .= '"'.addslashes($value).'",';
-		}
-			
-		$fields = '`'.implode('`,`', array_keys($data)).'`';
-		$values = trim($values,',');
-					
-		$sql = "INSERT INTO `$table` ($fields) VALUES ($values)";
+		$schema = $object::_getSchemaName();
+		$conn = self::get($schema)->getConnection();
 		
-		// WHAT THE HELL, SOMEONE PUT A GROSS ON HERE
+		$params = array();
+		$values = array_map(array($conn->getDriverClass(), 'convertValueForSQL'), array_values($data));
+							
+		$fields = implode('`,`', array_keys($data));
+		$placeholders = implode(',', array_fill(0, count($values), '?'));
 		
-		$db->exec($sql);
+		$sql = sprintf('INSERT INTO `%s` (`%s`) VALUES (%s)', $table, $fields, $placeholders);
 		
-		$liid = $db->lastInsertId();
+		$conn->prepare($sql)->execute($values);
+		
+		$liid = $conn->lastInsertId();
 		if($liid !== 0){
 			$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
 			if(count($keys) === 1){
@@ -78,54 +70,74 @@ class Wave_DB {
 		return true;
 	}
 	
-	
 	public static function update($object){
 	
-		$schema = $object::_getSchemaName();
-		$db = self::get($schema)->getConnection();
-	
-		$table = $object::_getTableName();
-		$data = $object->_getDataArray();
-		$dirty = $object->_getDirtyArray();
 		$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
+		$table = $object::_getTableName();
+		$schema = $object::_getSchemaName();
 		
-		$sql = "UPDATE $table SET ";
+		if(count($keys) === 0)
+			throw new Wave_Exception("No primary key defined for $schema.");
+		
+		$dirty = $object->_getDirtyArray();
+
+		$conn = self::get($schema)->getConnection();
 		
 		$updates = array();
+		$params = array();
+		$func = "{$conn->getDriverClass()}::convertValueForSQL";
 		foreach($dirty as $key => $value){
-			if(!array_key_exists($key, $data)) continue;
-			
-			if($data[$key] === null || (is_string($data[$key]) && $data[$key] === ''))
-				$updates[] = "`$key` = NULL";
-			elseif($data[$key] instanceof DateTime)
-				$updates[] = "`$key` = '".$data[$key]->format('Y-m-d H:i:s')."'";
-			elseif(!is_object($data[$key]) && !is_array($data[$key]))
-				$updates[] = "`$key` = '".addslashes($data[$key])."'";
+			$updates[] = "`$key` = ?";
+			$params[] = $func($value);
 		}
-
-		if(!isset($updates[0]))
-			return true;
-
-		//remove comma
-		$sql .= implode(', ', $updates);
 		
-		$sql .= " WHERE ";
-		
-		$_keys = array();		
+		$where = array();
 		foreach($keys as $key){
-			$_keys[] = "`$key` = '{$object->$key}'";
+			$where[] = "`$key` = ?";
+			$params[] = $object->$key;
 		}
-		$sql .= implode(' AND ', $_keys);
 		
-		return $db->exec($sql);
+		$sql = sprintf('UPDATE `%s` SET %s WHERE %s LIMIT 1;', $table, implode(',', $updates), implode(' AND ', $where));
+		$conn->prepare($sql)->execute($params);
+			
+		return true;
 	}
+
+	public static function delete(&$object){
+	
+		$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
+		$table = $object::_getTableName();
+		$schema = $object::_getSchemaName();
+		
+		if(count($keys) === 0)
+			throw new Wave_Exception("No primary key defined for $schema.");
+		
+		$conn = self::get($schema)->getConnection();
+		
+		$params = array();
+		$where = array();
+		foreach($keys as $key){
+			$where[] = "`$key` = ?";
+			$params[] = $object->$key;
+		}
+		
+		$sql = sprintf('DELETE FROM `%s` WHERE %s LIMIT 1;', $table, implode(' AND ', $where));
+		
+		$conn->prepare($sql)->execute($params);
+		
+		$object->_setLoaded(false);			
+		
+		return true;
+	}
+	
+	
+	
 	
 	public function rawQuery($sql){
 		$db = $this->getConnection();
 		$db->exec($sql);
 	}
 	
-	//FOR BOTH OF THESE ^^^^^^^^^^
 	
 	
 	/**
@@ -167,9 +179,7 @@ class Wave_DB {
 	
 	public function isDefault(){
 		return isset($database->default) && $database->default == true;
-	}
-	
-	
+	}	
 
 	public static function init($database){
 	
