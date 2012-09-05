@@ -112,23 +112,23 @@ abstract class Wave_DB_Model {
 		
 		switch($field['data_type']){
 		
+			case Wave_DB_Column::TYPE_BOOL:
+				return (bool) $data;
+		
 			case Wave_DB_Column::TYPE_INT:
 				return (int) $data;
-				break;
 			
 			case Wave_DB_Column::TYPE_FLOAT:
 				return (float) $data;
 				
 			case Wave_DB_Column::TYPE_STRING:
 				return (string) $data;
-				break;
 				
 			case Wave_DB_Column::TYPE_DATE:
 			case Wave_DB_Column::TYPE_TIMESTAMP:
 				if($data == 'CURRENT_TIMESTAMP')
 					$data = 'now';
 				return new DateTime($data);
-				break;
 		
 			default:
 				return $data;

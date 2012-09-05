@@ -43,8 +43,13 @@ class Wave_DB {
 	public static function insert($object){
 	
 		$table = $object::_getTableName();
-		$data = $object->_getDataArray();
-		
+		$data = array();
+		$object_data = $object->_getDataArray();
+		foreach(array_keys($object->_getFields()) as $field){
+			if(isset($object_data[$field]))
+				$data[$field] = $object_data[$field];
+		}
+
 		$schema = $object::_getSchemaName();
 		$conn = self::get($schema)->getConnection();
 		
@@ -71,7 +76,7 @@ class Wave_DB {
 	}
 	
 	public static function update($object){
-	
+		
 		$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
 		$table = $object::_getTableName();
 		$schema = $object::_getSchemaName();
@@ -80,15 +85,19 @@ class Wave_DB {
 			throw new Wave_Exception("No primary key defined for $schema.");
 		
 		$dirty = $object->_getDirtyArray();
-
+		$data = $object->_getDataArray();
+		$fields = $object->_getFields();
+		
 		$conn = self::get($schema)->getConnection();
 		
 		$updates = array();
 		$params = array();
-		$func = "{$conn->getDriverClass()}::convertValueForSQL";
+		$driver_class = $conn->getDriverClass();
 		foreach($dirty as $key => $value){
+			if(!isset($fields[$key])) continue;
+			
 			$updates[] = "`$key` = ?";
-			$params[] = $func($value);
+			$params[] = $driver_class::convertValueForSQL($data[$key]);
 		}
 		
 		$where = array();
@@ -96,6 +105,8 @@ class Wave_DB {
 			$where[] = "`$key` = ?";
 			$params[] = $object->$key;
 		}
+		
+		if(!isset($updates[0])) return false;
 		
 		$sql = sprintf('UPDATE `%s` SET %s WHERE %s LIMIT 1;', $table, implode(',', $updates), implode(' AND ', $where));
 		$conn->prepare($sql)->execute($params);
@@ -144,10 +155,7 @@ class Wave_DB {
 	* Function to return the results of a basic query
 	*/
 	public function basicQuery($sql, $params = array()){
-		
-		
 		$statement = $this->basicStatement($sql, $params);
-			
 		return $statement->fetchAll();
 	}
 	
