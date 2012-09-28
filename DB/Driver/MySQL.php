@@ -101,7 +101,7 @@ class Wave_DB_Driver_MySQL extends Wave_DB_Driver implements Wave_DB_IDriver {
 	
 		switch(true){
 			case is_null($value):
-				return 'NULL';
+				return null;
 
 			case $value instanceof DateTime:
 				return $value->format('Y-m-d H:i:s');
