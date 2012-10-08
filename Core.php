@@ -3,12 +3,12 @@
 
 class Wave_Core {
 	
-	const MODE_TEST			= 0;
-	const MODE_DEVELOPMENT 	= 1;
-	const MODE_PRODUCTION 	= 2;
+	const MODE_TEST			= 'test';
+	const MODE_DEVELOPMENT 	= 'development';
+	const MODE_PRODUCTION 	= 'production';
 	
-	static $_MODE = self::MODE_PRODUCTION; 
-	
+	static $_MODE = self::MODE_PRODUCTION;
+
 	public static function bootstrap($mode = null){
 			
 		if($mode == null)

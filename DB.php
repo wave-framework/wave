@@ -16,8 +16,8 @@ class Wave_DB {
 	
 		$this->connection = new Wave_DB_Connection($config);
 		$this->config = $config;
-		
-		if(Wave_Core::$_MODE == Wave_Core::MODE_DEVELOPMENT)
+
+		if(Wave_Core::$_MODE | (Wave_Core::MODE_DEVELOPMENT + Wave_Core::MODE_TEST))
 			$this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	}
 	
@@ -215,23 +215,55 @@ class Wave_DB {
 		
 	}
 	
-	public static function get($namespace = null){
+	public static function get($namespace = null, $mode = null){
 
 		$databases = Wave_Config::get('db')->databases;
-		
-		//if no db spec, return default
-		if($namespace === null)
-			 $namespace = isset(self::$default) ? self::$default : $databases[0]['namespace'];
-		
-		if(!isset(self::$instances[$namespace])){
-			
-			foreach($databases as $database){
-				if($database->namespace === $namespace)
-					self::init($database);
-			}			
+
+		if($namespace === null){
+			if(isset(self::$default))
+				$namespace = self::$default;
+			else {
+				$namespace = self::getDefaultNamespace();
+			}
 		}
-		
-		return isset(self::$instances[$namespace]) ? self::$instances[$namespace] : null;	
+
+		if(!isset($databases[$namespace])){
+			throw new Wave_Exception("There is no database configuration for {$namespace}");
+		}
+
+		if($mode === null) 
+			$mode = isset($databases[$namespace][Wave_Core::$_MODE]) 
+					? Wave_Core::$_MODE 
+					: Wave_Core::MODE_PRODUCTION;
+
+		if(!isset($databases[$namespace][$mode])){
+			throw new Wave_Exception('There must be at least a PRODUCTION database defined');
+		}
+		else {
+			$databases[$namespace][$mode]->namespace = $namespace;
+			$databases[$namespace][$mode]->mode = $mode;
+
+			self::init($databases[$namespace][$mode]);
+			return isset(self::$instances[$namespace]) 
+				? self::$instances[$namespace] 
+				: null;	
+		}
+	}
+
+	public static function set($namespace, Wave_DB_Connection $connection){
+		if(isset(self::$instances[$namespace])){
+			self::$instances[$namespace]->connection = $connection;
+			return self::$instances[$namespace];
+		}
+		return null;
+	}
+
+	public static function getDefaultNamespace(){
+		if(!Wave_Config::get('db')) return null;
+
+		foreach(Wave_Config::get('db')->databases as $ns => $database){
+			return $ns;
+		}
 	}
 	
 	public static function getNumDatabases(){
@@ -241,8 +273,8 @@ class Wave_DB {
 	public static function getAllDatabases(){
 
 		$databases = Wave_Config::get('db')->databases;
-		foreach($databases as $database)
-			self::init($database);
+		foreach($databases as $namespace => $modes)
+			self::get($namespace);
 		
 		return self::$instances;
 	}

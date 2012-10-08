@@ -22,7 +22,7 @@ class Wave_Autoload {
 	static public function autoload($class){
 		$search_paths = array();
 	 	$skip_app = false;
-	
+
 	 	if (substr($class, 0, 5) === 'Wave_') {
 			$filename = substr($class, 5);
 			$search_paths[] = WAVE_CORE_PATH . strtr($filename, '_', DS).'.php';
@@ -50,8 +50,9 @@ class Wave_Autoload {
 		}
 
 		//if still not found, try with alias for model
-		if(Wave_DB::get() !== null){
-			$alias_class = Wave_DB::get()->getNamespace().Wave_DB::NS_SEPARATOR.$class;
+		if(Wave_DB::getDefaultNamespace() !== null){
+			$alias_class = Wave_DB::getDefaultNamespace().Wave_DB::NS_SEPARATOR.$class;
+
 			$filename = Wave_Config::get('wave')->path->models . strtr($alias_class, '_', DS) . '.php';
 			if(file_exists($filename) && include_once($filename)){
 				Wave_Debug::getInstance()->addUsedFile($filename, __FUNCTION__);
