@@ -191,7 +191,6 @@ class Wave_DB {
 
 	public static function init($database){
 	
-		
 		$installed_drivers = Wave_DB_Connection::getAvailableDrivers();
 
 		$driver_class = self::getDriverClass($database->driver);
@@ -213,6 +212,9 @@ class Wave_DB {
 		
 		self::$num_databases++;
 		
+
+		return self::$instances[$database->namespace];
+
 	}
 	
 	public static function get($namespace = null, $mode = null){
@@ -243,10 +245,9 @@ class Wave_DB {
 			$databases[$namespace][$mode]->namespace = $namespace;
 			$databases[$namespace][$mode]->mode = $mode;
 
-			self::init($databases[$namespace][$mode]);
 			return isset(self::$instances[$namespace]) 
 				? self::$instances[$namespace] 
-				: null;	
+				: self::init($databases[$namespace][$mode]);	
 		}
 	}
 
