@@ -17,7 +17,7 @@ class Wave_DB {
 		$this->connection = new Wave_DB_Connection($config);
 		$this->config = $config;
 
-		if(Wave_Core::$_MODE | (Wave_Core::MODE_DEVELOPMENT + Wave_Core::MODE_TEST))
+		if(in_array(Wave_Core::$_MODE, array(Wave_Core::MODE_DEVELOPMENT, Wave_Core::MODE_TEST)))
 			$this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	}
 	
@@ -63,7 +63,7 @@ class Wave_DB {
 		
 		$conn->prepare($sql)->execute($values);
 		
-		$liid = $conn->lastInsertId();
+		$liid = intval($conn->lastInsertId());
 		if($liid !== 0){
 			$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
 			if(count($keys) === 1){
@@ -72,7 +72,7 @@ class Wave_DB {
 			}
 		}
 			
-		return true;
+		return $object->_isLoaded();
 	}
 	
 	public static function update($object){
