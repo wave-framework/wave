@@ -62,6 +62,7 @@ class Wave_DB_Driver_MySQL extends Wave_DB_Driver implements Wave_DB_IDriver {
 			case 'tinyint':
 				return Wave_DB_Column::TYPE_BOOL;
 			
+			case 'datetime':
 			case 'timestamp':
 				return Wave_DB_Column::TYPE_TIMESTAMP;
 			
