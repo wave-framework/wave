@@ -331,10 +331,14 @@ class Wave_DB_Query{
 			if($this->_last_row === false) return null;			
 			$row = new $primary_object($this->_last_row, $primary_object.self::TABLE_ALIAS_SPLIT);
 
+			$loaded_relation_cache = array();
+
 			for(;;) {				
 				//Load in relations.
 				foreach($this->with as $with){
 					
+					if(!isset($loaded_relation_cache['foreign_table'])) $loaded_relation_cache['foreign_table'] = array();
+
 					$joined_object = new $with['foreign_class']($this->_last_row, $with['class'].self::TABLE_ALIAS_SPLIT);
 					
 					// if the joined bit is empty, put an empty value in the parent
@@ -342,6 +346,10 @@ class Wave_DB_Query{
 						continue;
 					};
 					
+					if(!isset($loaded_relation_cache['foreign_table'][$joined_object->id]))
+						$loaded_relation_cache['foreign_table'][$joined_object->id] = true;
+					else continue;
+
 					if($joined_object->_isLoaded()){
 
 						switch($with['relation']['relation_type']){
