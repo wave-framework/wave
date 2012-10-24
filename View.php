@@ -80,17 +80,24 @@ class Wave_View {
 	
 	public static function generate(){
 		
+		$cache_dir = Wave_Config::get('wave')->view->cache;
+		if(!file_exists($cache_dir))
+			@mkdir($cache_dir, 0770, true);
+
+		if(!file_exists($cache_dir))
+			throw new Wave_Exception('Could not generate routes, the cache directory does not exist or is not writable');
+
 		// delete caches		
-		$dir_iterator = new RecursiveDirectoryIterator(Wave_Config::get('wave')->view->cache);
+		$dir_iterator = new RecursiveDirectoryIterator($cache_dir);
 		$iterator = new RecursiveIteratorIterator($dir_iterator);
 		foreach($iterator as $cache_file){
 			@unlink ($cache_file);
 		}
 		$self = self::getInstance();
 		
-		$dir_iterator = new RecursiveDirectoryIterator(Wave_Config::get('wave')->path->views);
+		$dir_iterator = new RecursiveDirectoryIterator($cache_dir);
 		$iterator = new RecursiveIteratorIterator($dir_iterator);
-		$l = strlen(Wave_Config::get('wave')->path->views);
+		$l = strlen($cache_dir);
 		foreach($iterator as $template){
 			$i = pathinfo($template);
 			if($i['extension'] != 'phtml') continue; 
