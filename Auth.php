@@ -88,7 +88,9 @@ class Wave_Auth {
 				$identity,
 				strtotime($expires),
 				$config->cookie->path,
-				$config->cookie->domain
+				$config->cookie->domain,
+				isset($config->cookie->secure) ? $config->cookie->secure : false,
+				isset($config->cookie->httponly) ? $config->cookie->httponly : true
 			);
 		}
 				
