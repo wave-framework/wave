@@ -18,7 +18,7 @@ class Wave_Hook {
 		if(!isset(self::$handlers[$action][$priority]))
 			self::$handlers[$action][$priority] = array();
 		
-		self::$handlers[$action][$priority] = $callback;
+		self::$handlers[$action][$priority][] = $callback;
 		
 	}
 	
@@ -26,9 +26,8 @@ class Wave_Hook {
 	 *	Fire the specified action, calling all the registered handlers for that action.
 	**/
 	public static function triggerAction($action, $data){
-		
 		if(isset(self::$handlers[$action])){
-			foreach(self::$handlers as $priority => $handlers){
+			foreach(self::$handlers[$action] as $priority => $handlers){
 				foreach($handlers as $handler){
 					if(is_callable($handler)){
 						call_user_func_array($handler, $data);
