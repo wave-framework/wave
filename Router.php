@@ -100,7 +100,7 @@ class Wave_Router {
 					throw new Wave_Exception(
 						'The current user does not have the required level to access this page', 403);
 			}
-			
+			Wave_Hook::triggerAction('router.before_invoke', array(&$action, &$var_stack, &$this));
 			return Wave_Controller::invoke($action->getAction(), $var_stack, $this);
 		}
 		else
