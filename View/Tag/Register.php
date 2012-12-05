@@ -55,13 +55,17 @@ class Wave_View_Tag_Register_Node extends Twig_Node {
 		$file = $this->getAttribute('file');
 		$extras = $this->getAttribute('extras');
 		$priority = $this->getAttribute('priority');
-		
-		if(!preg_match('/http(s)?\:\/\//', $file))
+		$cache_tag = null;
+		if(!preg_match('/http(s)?\:\/\//', $file)){
 			$file = Wave_Config::get('deploy')->assets . $file;
+			$cache_tag = @file_get_contents($file);
+			if($cache_tag !== false) $cache_tag = md5($cache_tag);
+			else $cache_tag = null;
+		}
 				
 		$compiler
 			->addDebugInfo($this)
-			->write('$this->env->_wave_register("'.$type.'", "'.$file.'", "'.$extras.'", "'.$priority.'");')
+			->write("\$this->env->_wave_register('{$type}', '{$file}', '{$extras}', '{$priority}', '{$cache_tag}');")
 			->raw("\n");
 	}
 	
