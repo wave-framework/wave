@@ -6,8 +6,8 @@
 		
 		if(!isset($this->_data[$key])){
 			
-			$query = Wave_DB::get('<<namespace>>')->from('<<namespace>>_<<Wave_DB::tableNameToClass(referenced_table_name)>>')
-										->where('<<Wave_DB::tableNameToClass(referenced_table_name)>>.<<referenced_column_name>>', '=', $this->_data['<<column_name>>']);
+			$query = Wave\DB::get('<<namespace>>')->from('<<namespace>>\\<<Wave\DB::tableNameToClass(referenced_table_name)>>')
+										->where('<<Wave\DB::tableNameToClass(referenced_table_name)>>.<<referenced_column_name>>', '=', $this->_data['<<column_name>>']);
 			
 			foreach($args as $func => $props)
 				$query->$func($props);

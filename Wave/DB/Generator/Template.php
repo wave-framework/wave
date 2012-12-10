@@ -1,6 +1,9 @@
 <?php
 
-class Wave_DB_Generator_Template {
+namespace Wave\DB\Generator;
+use Wave;
+
+class Template {
 
 	private $template;
 	private $data;

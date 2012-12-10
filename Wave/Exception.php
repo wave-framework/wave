@@ -20,7 +20,7 @@ class Exception extends \Exception {
 	}
 	
 	public static function handle(\Exception $e){
-		Controller::invoke("ExceptionController", array('exception' => $e));
+		Controller::invoke("\\Controller\\Exception", array('exception' => $e));
 	}
 	
 	public static function handleError($level, $message, $file, $line, $context) {

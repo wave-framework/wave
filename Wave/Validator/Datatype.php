@@ -104,7 +104,7 @@ abstract class Wave_Validator_Datatype {
 	
 		if(!isset($props['model']) || (!isset($props['property']))) 
 			throw new Wave_Exception("A class name and a column must be defined for unique field.");
-		$q = Wave_DB::get()->from($props['model'])
+		$q = Wave\DB::get()->from($props['model'])
 				 ->where($props['property'], '=', $this->input);
 				 
 		$obj = $q->fetchRow();
@@ -116,7 +116,7 @@ abstract class Wave_Validator_Datatype {
 	
 		if(!isset($props['model']) || (!isset($props['property']))) 
 			throw new Wave_Exception("A class name and a column must be defined for exists field.");
-		$q = Wave_DB::get()->from($props['model'])
+		$q = Wave\DB::get()->from($props['model'])
 				 ->where($props['property'], '=', $this->input);
 
 		

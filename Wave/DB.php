@@ -12,7 +12,7 @@ class DB {
 	private $config;
 	
 	
-	const NS_SEPARATOR		= '_';
+	const NS_SEPARATOR		= '\\';
 
 	public function __construct($config){
 	
@@ -313,7 +313,7 @@ class DB {
 	
 	
 	public static function getDriverClass($driver){
-		return '\Wave\DB\\Driver\\'.$driver;
+		return '\\Wave\DB\\Driver\\'.$driver;
 	}
 	
 	public static function getClassNameForTable($table, $database = null, $raw_table = false){

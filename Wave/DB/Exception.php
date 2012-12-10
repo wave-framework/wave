@@ -1,5 +1,6 @@
 <?php
 
-class Wave_DB_Exception extends Wave_Exception {};
+namespace Wave\DB;
+use Wave;
 
-?>
+class Exception extends Wave\Exception {};
