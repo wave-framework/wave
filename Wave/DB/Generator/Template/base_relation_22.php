@@ -6,9 +6,9 @@
 		
 		if(!isset($this->_data[$key])){
 			
-			$query = Wave_DB::get('<<namespace>>')->from('<<namespace>>_<<Wave_DB::tableNameToClass(target_table)>>')
-											->innerJoin('<<Wave_DB::tableNameToClass(referenced_table_name)>>', '<<namespace>>_<<Wave_DB::tableNameToClass(referenced_table_name)>>.<<target_table>>_id = <<namespace>>_<<Wave_DB::tableNameToClass(target_table)>>.<<target_table>>_id', false) //@mod by Patrick, was '<<referenced_table_name>>.<<target_table>>_id = <<target_table>>.<<target_table>>_id'
-											->where('<<Wave_DB::tableNameToClass(referenced_table_name)>>.<<referenced_column_name>>', '=', $this->_data['<<column_name>>']);
+			$query = Wave\DB::get('<<namespace>>')->from('<<namespace>>_<<Wave\DB::tableNameToClass(target_table)>>')
+											->innerJoin('<<Wave\DB::tableNameToClass(referenced_table_name)>>', '<<namespace>>_<<Wave\DB::tableNameToClass(referenced_table_name)>>.<<target_table>>_id = <<namespace>>_<<Wave\DB::tableNameToClass(target_table)>>.<<target_table>>_id', false) //@mod by Patrick, was '<<referenced_table_name>>.<<target_table>>_id = <<target_table>>.<<target_table>>_id'
+											->where('<<Wave\DB::tableNameToClass(referenced_table_name)>>.<<referenced_column_name>>', '=', $this->_data['<<column_name>>']);
 			foreach($args as $func => $props)
 				$query->$func($props);
 				
@@ -29,7 +29,7 @@
 		
 			//it's many to many so get the relation class
 			if($create_relation){
-				$rc = new <<Wave_DB::tableNameToClass(referenced_table_name)>>();
+				$rc = new <<Wave\DB::tableNameToClass(referenced_table_name)>>();
 				$rc-><<target_table>>_id = $object-><<target_table>>_id;
 				$rc-><<referenced_column_name>> = $this-><<referenced_column_name>>;
 				$rc->save();
@@ -46,7 +46,7 @@
 				
 			$sql = 'DELETE FROM `<<referenced_table_name>>` WHERE `<<target_table>>_id` = ? AND `<<referenced_column_name>>` = ? LIMIT 1;';
 
-			$conn = Wave_DB::get('<<namespace>>')->getConnection();		
+			$conn = Wave\DB::get('<<namespace>>')->getConnection();		
 			$conn->prepare($sql)->execute(array($object-><<target_table>>_id, $this-><<referenced_column_name>>));
 			
 			$object->_removeRelationObject(null, $object);	

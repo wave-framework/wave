@@ -54,26 +54,26 @@ class MySQL extends DB\Driver implements DB\IDriver {
 
 		switch($type){
 			case 'varchar':
-				return Wave_DB_Column::TYPE_STRING;
+				return DB\Column::TYPE_STRING;
 				
 			case 'int':
-				return Wave_DB_Column::TYPE_INT;
+				return DB\Column::TYPE_INT;
 
 			case 'float':
-				return Wave_DB_Column::TYPE_FLOAT;
+				return DB\Column::TYPE_FLOAT;
 				
 			case 'tinyint':
-				return Wave_DB_Column::TYPE_BOOL;
+				return DB\Column::TYPE_BOOL;
 			
 			case 'datetime':
 			case 'timestamp':
-				return Wave_DB_Column::TYPE_TIMESTAMP;
+				return DB\Column::TYPE_TIMESTAMP;
 			
 			case 'date' :
-				return Wave_DB_Column::TYPE_DATE;
+				return DB\Column::TYPE_DATE;
 			
 			default:
-				return Wave_DB_Column::TYPE_UNKNOWN;
+				return DB\Column::TYPE_UNKNOWN;
 		}
 	}
 
@@ -82,11 +82,11 @@ class MySQL extends DB\Driver implements DB\IDriver {
 	
 		switch($type){
 			case 'PRI':
-				return Wave_DB_Column::INDEX_PRIMARY;
+				return DB\Column::INDEX_PRIMARY;
 			
 			case 'MUL':			
 			default:
-				return Wave_DB_Column::INDEX_UNKNOWN;
+				return DB\Column::INDEX_UNKNOWN;
 		}
 	}
 	
@@ -107,7 +107,7 @@ class MySQL extends DB\Driver implements DB\IDriver {
 			case is_null($value):
 				return null;
 
-			case $value instanceof DateTime:
+			case $value instanceof \DateTime:
 				return $value->format('Y-m-d H:i:s');
 
 			default:

@@ -1,6 +1,8 @@
 <?php
 
-class Wave_Inflector {
+namespace Wave;
+
+class Inflector {
 
 	private static $plural = array(
         '/(quiz)$/i'               => "$1zes",
