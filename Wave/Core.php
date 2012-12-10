@@ -15,13 +15,12 @@ class Core {
 		if($mode == null)
 			$mode = Config::get('deploy')->mode;
 		self::$_MODE = $mode;
+
+		// include the file with the enum classes manually
+		include_once dirname(__FILE__) . '/Enums.php';
 		
-		require_once(WAVE_CORE_PATH . 'Autoload.php');
 		Autoload::register();
-				
 		\Wave\Exception::register();
-				
-		include_once(WAVE_CORE_PATH . 'Enums.php');
 		
 		self::checkDependencies();
 		Cache::init();
