@@ -1,13 +1,14 @@
 <?php
 
+namespace Wave;
 
-class Wave_Exception extends Exception {
+class Exception extends \Exception {
 		
 	public static $_response_method = null;
 	
 	public static function register(){
-		set_exception_handler(array('Wave_Exception', 'handle'));
-		//set_error_handler(array('Wave_Exception', 'handleError'));
+		set_exception_handler(array('\Wave\Exception', 'handle'));
+		//set_error_handler(array('\Wave\Exception', 'handleError'));
 	}
 	
 	public function __construct($message, $code = null){
@@ -18,13 +19,13 @@ class Wave_Exception extends Exception {
 		parent::__construct($message, $code);	
 	}
 	
-	public static function handle(Exception $e){
-		Wave_Controller::invoke("ExceptionController", array('exception' => $e));
+	public static function handle(\Exception $e){
+		Controller::invoke("ExceptionController", array('exception' => $e));
 	}
 	
 	public static function handleError($level, $message, $file, $line, $context) {
 	    if(error_reporting() & $level){
-		    throw new Wave_Exception($message, 0, $file, $line);
+		    throw new \Wave\Exception($message, 0, $file, $line);
 	    }
 	    else return;
 	    
@@ -39,32 +40,32 @@ class Wave_Exception extends Exception {
 	protected function getInternalMessage($type){
 		
 		switch($type){
-			case Wave_Response::STATUS_NOT_FOUND : 
+			case Response::STATUS_NOT_FOUND : 
 				return 'The requested resource was not found';
-			case Wave_Response::STATUS_FORBIDDEN : 
+			case Response::STATUS_FORBIDDEN : 
 				return 'You do not have permission to access the requested resource';
-			case Wave_Response::STATUS_UNAUTHORISED :  
+			case Response::STATUS_UNAUTHORISED :  
 				return 'Authorisation is required to complete this action';
-			case Wave_Response::STATUS_OK :
+			case Response::STATUS_OK :
 				return 'Request OK';
-			case Wave_Response::STATUS_BAD_REQUEST :
+			case Response::STATUS_BAD_REQUEST :
 				return 'Bad request format or the format was not understood';
-			case Wave_Response::STATUS_CREATED :
-			case Wave_Response::STATUS_ACCEPTED :
-			case Wave_Response::STATUS_MOVED_PERMANENTLY :
-			case Wave_Response::STATUS_NOT_MODIFIED :
-			case Wave_Response::STATUS_MOVED_TEMPORARILY :
-			case Wave_Response::STATUS_INPUT_REQUIRED : 
-			case Wave_Response::STATUS_EXCEPTION :
-			case Wave_Response::STATUS_SERVER_ERROR :  
-			case Wave_Response::STATUS_NOT_IMPLEMENTED :
+			case Response::STATUS_CREATED :
+			case Response::STATUS_ACCEPTED :
+			case Response::STATUS_MOVED_PERMANENTLY :
+			case Response::STATUS_NOT_MODIFIED :
+			case Response::STATUS_MOVED_TEMPORARILY :
+			case Response::STATUS_INPUT_REQUIRED : 
+			case Response::STATUS_EXCEPTION :
+			case Response::STATUS_SERVER_ERROR :  
+			case Response::STATUS_NOT_IMPLEMENTED :
 			default :
 				return 'Unknown error';
 		}
 	}
 	
 	public static function getResponseMethod(){
-		return (self::$_response_method == null) ? Wave_Config::get('wave')->controller->default_response : self::$_response_method;
+		return (self::$_response_method == null) ? \Wave\Config::get('wave')->controller->default_response : self::$_response_method;
 	}
 }
 

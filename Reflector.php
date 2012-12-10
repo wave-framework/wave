@@ -1,7 +1,8 @@
 <?php
 
+namespace Wave;
 
-class Wave_Reflector {
+class Reflector {
 	
 	const SCAN_DIRECTORY = 1;
 	const SCAN_FILE = 2;
@@ -16,7 +17,7 @@ class Wave_Reflector {
 	
 	public function __construct($handle, $type = self::SCAN_DIRECTORY, $filter = self::DEFAULT_FILE_FILTER, $recursive = true){
 		if(!file_exists($handle))
-			throw new Wave_Exception('Directory '.$handle.' cannot be resolved in Wave_Refector', 0);
+			throw new \Wave\Exception('Directory '.$handle.' cannot be resolved in \Wave\Refector', 0);
 		
 		$this->_classes = array();
 		if($type == self::SCAN_FILE && is_file($handle)){
@@ -27,12 +28,12 @@ class Wave_Reflector {
 		else if($type == self::SCAN_DIRECTORY && is_dir($handle)){
 
 			if($recursive === true){
-				$dir_iterator = new RecursiveDirectoryIterator($handle);
-				$iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
+				$dir_iterator = new \RecursiveDirectoryIterator($handle);
+				$iterator = new \RecursiveIteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST);
 			}
 			else {
-				$dir_iterator = new FilesystemIterator($handle);
-				$iterator = new IteratorIterator($dir_iterator, RecursiveIteratorIterator::SELF_FIRST);
+				$dir_iterator = new \FilesystemIterator($handle);
+				$iterator = new \IteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST);
 			}
 			foreach ($iterator as $file) {
 			    $class = self::fileIsClass($file);
@@ -46,19 +47,19 @@ class Wave_Reflector {
 	public function execute($include_inherited_members = false){
 		
 		if(!isset($this->_classes[0]))
-			throw new Wave_Exception('No files to reflect on');
+			throw new \Wave\Exception('No files to reflect on');
 		
 		$classes = array();
 				
 		foreach($this->_classes as $class){
-			$reflector = new ReflectionClass($class['classname']);
+			$reflector = new \ReflectionClass($class['classname']);
 			
-			$class_annotations = Wave_Annotation::parse($reflector->getDocComment(), $class['classname']);
+			$class_annotations = Annotation::parse($reflector->getDocComment(), $class['classname']);
 			$parent_class = $reflector->getParentClass();
 			
 			$c = array(
 				'name' 			=> $class['classname'],
-				'subclasses'	=> $parent_class instanceof ReflectionClass ? $parent_class->getName() : '',
+				'subclasses'	=> $parent_class instanceof \ReflectionClass ? $parent_class->getName() : '',
 				'implements'	=> $reflector->getInterfaceNames(),
 				'annotations'	=> $class_annotations
 			);
@@ -70,7 +71,7 @@ class Wave_Reflector {
 				if($declaring_class != $class['classname'] && !$include_inherited_members)
 					continue; 
 					
-				$annotations = Wave_Annotation::parse($method->getDocComment(), $class['classname']);
+				$annotations = Annotation::parse($method->getDocComment(), $class['classname']);
 				$method_annotations = array();
 				foreach($annotations as $annotation){
 					$method_annotations[] = $annotation;
@@ -94,7 +95,7 @@ class Wave_Reflector {
 				if($declaring_class != $class['classname'] && !$include_inherited_members)
 					continue; 
 				
-				$annotations = Wave_Annotation::parse($property->getDocComment(), $class['classname']);
+				$annotations = Annotation::parse($property->getDocComment(), $class['classname']);
 				$property_annotations = array();
 				foreach($annotations as $annotation){
 					$property_annotations[] = $annotation;

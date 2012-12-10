@@ -1,19 +1,19 @@
 <?php
 
+namespace Wave\View\Tag;
 
+class Output extends \Twig_TokenParser {
 
-class Wave_View_Tag_Output extends Twig_TokenParser {
-
-	public function parse(Twig_Token $token) {
+	public function parse(\Twig_Token $token) {
 		$lineno = $token->getLine();	
 		
 		
-		$type = $this->parser->getStream()->expect(Twig_Token::NAME_TYPE)->getValue();
+		$type = $this->parser->getStream()->expect(\Twig_Token::NAME_TYPE)->getValue();
 		
 		
-		$this->parser->getStream()->expect(Twig_Token::BLOCK_END_TYPE);
+		$this->parser->getStream()->expect(\Twig_Token::BLOCK_END_TYPE);
 		
-		return new Wave_View_Tag_Output_Node($type, $lineno, $this->getTag());
+		return new OutputNode($type, $lineno, $this->getTag());
 	}
 	
 	public function getTag(){
@@ -23,7 +23,7 @@ class Wave_View_Tag_Output extends Twig_TokenParser {
 
 }
 
-class Wave_View_Tag_Output_Node extends Twig_Node {
+class OutputNode extends \Twig_Node {
 	
 	
 	const FORMAT_JS 	= '<script type=\"text/javascript\" src=\"%s\"></script>';
@@ -33,14 +33,14 @@ class Wave_View_Tag_Output_Node extends Twig_Node {
 		parent::__construct(array(), array('type' => $type), $line, $tag);
 	}
 	
-	public function compile(Twig_Compiler $compiler){
+	public function compile(\Twig_Compiler $compiler){
 		
 		$compiler
 			->addDebugInfo($this);
 		
 		$type = $this->getAttribute('type');
 					
-		$template = $type == Wave_View_Tag_Register::TYPE_JS ? self::FORMAT_JS : self::FORMAT_CSS ;
+		$template = $type == \Wave\View\Tag\Register::TYPE_JS ? self::FORMAT_JS : self::FORMAT_CSS ;
 		
 		$compiler->write('foreach($this->env->_wave_register["'.$type.'"] as $priority => $files):')->raw("\n\t")
 				->write('foreach($files as $file => $extra):')->raw("\n\t")

@@ -1,7 +1,8 @@
 <?php
 
+namespace Wave;
 
-abstract class Wave_Utils {
+abstract class Utils {
 	
 	const DATE_FORMAT_MYSQL = 'Y-m-d H:i:s';
 	

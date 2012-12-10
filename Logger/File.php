@@ -1,6 +1,9 @@
 <?php
 
-class Wave_Logger_File extends Wave_Logger {
+namespace Wave\Logger;
+use Wave;
+
+class File extends Wave\Logger {
 	
 	private $filename;
 	private $dirname;
@@ -10,12 +13,12 @@ class Wave_Logger_File extends Wave_Logger {
 
 	public function __construct($name, $dir = null, $segment = null, $echo = false){
 		if($dir === null){
-			$dir = Wave_Config::get('wave')->path->logs;
+			$dir = Wave\Config::get('wave')->path->logs;
 		}
 		if($segment === null || !is_bool($segment)){
-			$segment = Wave_Config::get('wave')->logger->segment;
+			$segment = Wave\Config::get('wave')->logger->segment;
 		}
-		$segment_size = Wave_Config::get('wave')->logger->segment_size;
+		$segment_size = Wave\Config::get('wave')->logger->segment_size;
 		
 		$this->filename = $name;
 		$this->dirname = $dir;

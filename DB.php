@@ -1,6 +1,8 @@
 <?php
 
-class Wave_DB {
+namespace Wave;
+
+class DB {
 
 	private static $num_databases	= 0;
 	private static $instances		= array();
@@ -14,26 +16,26 @@ class Wave_DB {
 
 	public function __construct($config){
 	
-		$this->connection = new Wave_DB_Connection($config);
+		$this->connection = new DB\Connection($config);
 		$this->config = $config;
 
-		if(in_array(Wave_Core::$_MODE, array(Wave_Core::MODE_DEVELOPMENT, Wave_Core::MODE_TEST)))
-			$this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		if(in_array(Core::$_MODE, array(Core::MODE_DEVELOPMENT, Core::MODE_TEST)))
+			$this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 	}
 	
 	
 	public function from($table, $fields = null){
-		return Wave_DB_Query::create($this)->from($table, $fields);
+		return DB\Query::create($this)->from($table, $fields);
 	}
 	
 	public static function save($object){
 		
 		if($object->_isLoaded()){
 			if($object->_isDirty()){
-				return Wave_DB::update($object);
+				return self::update($object);
 			}
 		} else {
-			return Wave_DB::insert($object);		
+			return self::insert($object);		
 		}
 		
 	}
@@ -65,7 +67,7 @@ class Wave_DB {
 		
 		$liid = intval($conn->lastInsertId());
 		if($liid !== 0){
-			$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
+			$keys = $object::_getKeys(\Wave\DB_Column::INDEX_PRIMARY);
 			if(count($keys) === 1){
 				$object->{$keys[0]} = $liid;
 				$object->_setLoaded();			
@@ -77,12 +79,12 @@ class Wave_DB {
 	
 	public static function update($object){
 		
-		$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
+		$keys = $object::_getKeys(\Wave\DB_Column::INDEX_PRIMARY);
 		$table = $object::_getTableName();
 		$schema = $object::_getSchemaName();
 		
 		if(count($keys) === 0)
-			throw new Wave_Exception("No primary key defined for $schema.");
+			throw new \Wave\Exception("No primary key defined for $schema.");
 		
 		$dirty = $object->_getDirtyArray();
 		$data = $object->_getDataArray();
@@ -116,12 +118,12 @@ class Wave_DB {
 
 	public static function delete(&$object){
 	
-		$keys = $object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
+		$keys = $object::_getKeys(\Wave\DB_Column::INDEX_PRIMARY);
 		$table = $object::_getTableName();
 		$schema = $object::_getSchemaName();
 		
 		if(count($keys) === 0)
-			throw new Wave_Exception("No primary key defined for $schema.");
+			throw new \Wave\Exception("No primary key defined for $schema.");
 		
 		$conn = self::get($schema)->getConnection();
 		
@@ -168,7 +170,7 @@ class Wave_DB {
 		$statement->execute( $params );
 		$time = microtime(true) - $start;           
 		
-		Wave_Debug::getInstance()->addQuery($time, $statement);
+		\Wave\Debug::getInstance()->addQuery($time, $statement);
 		
 		return $statement;
 	}
@@ -191,13 +193,13 @@ class Wave_DB {
 
 	public static function init($database){
 	
-		$installed_drivers = Wave_DB_Connection::getAvailableDrivers();
+		$installed_drivers = DB\Connection::getAvailableDrivers();
 
 		$driver_class = self::getDriverClass($database->driver);
 		
 		//Check PDO driver is installed on system
 		if(!in_array($driver_class::getDriverName(), $installed_drivers))
-			throw new Wave_DB_Exception(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
+			throw new DB\Exception(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
 		
 		self::$instances[$database->namespace] = new self($database);
 		
@@ -219,7 +221,7 @@ class Wave_DB {
 	
 	public static function get($namespace = null, $mode = null){
 
-		$databases = Wave_Config::get('db')->databases;
+		$databases = \Wave\Config::get('db')->databases;
 
 		if($namespace === null){
 			if(isset(self::$default))
@@ -230,16 +232,16 @@ class Wave_DB {
 		}
 
 		if(!isset($databases[$namespace])){
-			throw new Wave_Exception("There is no database configuration for {$namespace}");
+			throw new \Wave\Exception("There is no database configuration for {$namespace}");
 		}
 
 		if($mode === null) 
-			$mode = isset($databases[$namespace][Wave_Core::$_MODE]) 
-					? Wave_Core::$_MODE 
-					: Wave_Core::MODE_PRODUCTION;
+			$mode = isset($databases[$namespace][\Wave\Core::$_MODE]) 
+					? \Wave\Core::$_MODE 
+					: \Wave\Core::MODE_PRODUCTION;
 
 		if(!isset($databases[$namespace][$mode])){
-			throw new Wave_Exception('There must be at least a PRODUCTION database defined');
+			throw new \Wave\Exception('There must be at least a PRODUCTION database defined');
 		}
 		else {
 			$databases[$namespace][$mode]->namespace = $namespace;
@@ -251,7 +253,7 @@ class Wave_DB {
 		}
 	}
 
-	public static function set($namespace, Wave_DB_Connection $connection){
+	public static function set($namespace, \Wave\DB\Connection $connection){
 		if(isset(self::$instances[$namespace])){
 			self::$instances[$namespace]->connection = $connection;
 			return self::$instances[$namespace];
@@ -260,9 +262,9 @@ class Wave_DB {
 	}
 
 	public static function getDefaultNamespace(){
-		if(!Wave_Config::get('db')) return null;
+		if(!Config::get('db')) return null;
 
-		foreach(Wave_Config::get('db')->databases as $ns => $database){
+		foreach(Config::get('db')->databases as $ns => $database){
 			return $ns;
 		}
 	}
@@ -273,7 +275,7 @@ class Wave_DB {
 	
 	public static function getAllDatabases(){
 
-		$databases = Wave_Config::get('db')->databases;
+		$databases = \Wave\Config::get('db')->databases;
 		foreach($databases as $namespace => $modes)
 			self::get($namespace);
 		
@@ -311,7 +313,7 @@ class Wave_DB {
 	
 	
 	public static function getDriverClass($driver){
-		return 'Wave_DB_Driver_'.$driver;
+		return '\Wave\DB\\Driver\\'.$driver;
 	}
 	
 	public static function getClassNameForTable($table, $database = null, $raw_table = false){
@@ -328,7 +330,7 @@ class Wave_DB {
 		$class_name = $database->getNameSpace().self::NS_SEPARATOR.$table;
 		
 		if(!class_exists($class_name))
-			throw new Wave_DB_Exception("Class does not exist: $table");
+			throw new \Wave\DB_Exception("Class does not exist: $table");
 		
 		return $class_name;
 	

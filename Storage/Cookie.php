@@ -1,8 +1,8 @@
 <?php
 
+namespace Wave\Storage;
 
-
-class Wave_Storage_Cookie extends Wave_Storage {
+class Cookie extends \Wave\Storage {
 
 
 	public static function store($key, $data, $expires = 0, $path = '/', $domain = null, $secure = false, $httponly = true){

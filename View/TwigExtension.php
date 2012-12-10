@@ -1,15 +1,15 @@
 <?php
 
+namespace Wave\View;
 
-
-class Wave_View_TwigExtension extends Twig_Extension {
+class TwigExtension extends \Twig_Extension {
 
 
 	public function getTokenParsers(){
 		return array(
-			new Wave_View_Tag_Register(),
-			new Wave_View_Tag_Output(),
-			new Wave_View_Tag_Img()
+			new Tag\Register(),
+			new Tag\Output(),
+			new Tag\Img()
 		);
 	}
 	

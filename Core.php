@@ -1,7 +1,8 @@
 <?php
 
+namespace Wave;
 
-class Wave_Core {
+class Core {
 	
 	const MODE_TEST			= 'test';
 	const MODE_DEVELOPMENT 	= 'development';
@@ -12,18 +13,18 @@ class Wave_Core {
 	public static function bootstrap($mode = null){
 			
 		if($mode == null)
-			$mode = Wave_Config::get('deploy')->mode;
+			$mode = Config::get('deploy')->mode;
 		self::$_MODE = $mode;
 		
 		require_once(WAVE_CORE_PATH . 'Autoload.php');
-		Wave_Autoload::register();
+		Autoload::register();
 				
-		Wave_Exception::register();
+		\Wave\Exception::register();
 				
 		include_once(WAVE_CORE_PATH . 'Enums.php');
 		
 		self::checkDependencies();
-		Wave_Cache::init();
+		Cache::init();
 	}
 	
 	private static function checkDependencies(){
@@ -38,7 +39,7 @@ class Wave_Core {
 		}
 		
 		if(isset($missing[0]))	
-			throw new Wave_Exception('Wave Framework requires the following extensions: '.implode(', ', $missing));
+			throw new Exception('Wave Framework requires the following extensions: '.implode(', ', $missing));
 		else return true;
 	}	
 }

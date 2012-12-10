@@ -1,6 +1,9 @@
 <?php
 
-abstract class Wave_DB_Model {
+namespace Wave\DB;
+use Wave;
+
+abstract class Model {
 
 	const RELATION_ONE_TO_ONE	= 11;
 	const RELATION_ONE_TO_MANY	= 12;
@@ -49,12 +52,12 @@ abstract class Wave_DB_Model {
 	
 	public function save($save_relations = true){
 	
-		return Wave_DB::save($this, $save_relations);
+		return Wave\DB::save($this, $save_relations);
 	}
 	
 	public function delete(){
 	
-		return Wave_DB::delete($this);
+		return Wave\DB::delete($this);
 	}
 	
 	
@@ -112,20 +115,20 @@ abstract class Wave_DB_Model {
 		
 		switch($field['data_type']){
 		
-			case Wave_DB_Column::TYPE_BOOL:
+			case Column::TYPE_BOOL:
 				return (bool) $data;
 		
-			case Wave_DB_Column::TYPE_INT:
+			case Column::TYPE_INT:
 				return (int) $data;
 			
-			case Wave_DB_Column::TYPE_FLOAT:
+			case Column::TYPE_FLOAT:
 				return (float) $data;
 				
-			case Wave_DB_Column::TYPE_STRING:
+			case Column::TYPE_STRING:
 				return (string) $data;
 				
-			case Wave_DB_Column::TYPE_DATE:
-			case Wave_DB_Column::TYPE_TIMESTAMP:
+			case Column::TYPE_DATE:
+			case Column::TYPE_TIMESTAMP:
 				if($data == 'CURRENT_TIMESTAMP')
 					$data = 'now';
 				return new DateTime($data);
@@ -208,7 +211,7 @@ abstract class Wave_DB_Model {
 		if(!method_exists($this, $method)){
 			$stack = debug_backtrace(false);
 			$stack = array_shift($stack);
-			trigger_error('Notice: Undefined property '. get_called_class() . '::' . $property . ' in ' . $stack['file'] . ' on line ' . $stack['line'] . " (via by Wave_DB_Model::__get())\n");
+			trigger_error('Notice: Undefined property '. get_called_class() . '::' . $property . ' in ' . $stack['file'] . ' on line ' . $stack['line'] . " (via by Wave\DB_Model::__get())\n");
 		}
 		else {
 			return $this->$method();

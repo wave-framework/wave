@@ -1,7 +1,8 @@
 <?php
 
+namespace Wave;
 
-class Wave_Controller { 
+class Controller { 
 	
 	
 	protected $_response_method;
@@ -19,24 +20,24 @@ class Wave_Controller {
 		$invoke = explode('.', $action);
 		
 		if(!isset($invoke[1]))
-			$invoke[1] = Wave_Config::get('wave')->controller->default_method;
+			$invoke[1] = Config::get('wave')->controller->default_method;
 		
 		if(class_exists($invoke[0], true)){
 					
 			$controller = new $invoke[0]();		
 			
-			if($router instanceof Wave_Router){
+			if($router instanceof Router){
 				// build the default data set from the HTTP request based on the request method
-				if($router->request_method == Wave_Method::GET){
+				if($router->request_method == Method::GET){
 					$data = array_merge($_GET, $data);
 					$controller->_is_get = true;
 				}
-				else if($router->request_method == Wave_Method::POST){
+				else if($router->request_method == Method::POST){
 					$data = array_merge($_POST, $data);
 					$controller->_is_post = true;
-					$controller->_check_csrf = Wave_Config::get('deploy')->auth->csrf->enabled;
+					$controller->_check_csrf = Config::get('deploy')->auth->csrf->enabled;
 				}
-				else if($router->request_method == Wave_Method::CLI){
+				else if($router->request_method == Method::CLI){
 					$data = array_merge($_SERVER['argv'], $data);
 				}
 				
@@ -51,18 +52,18 @@ class Wave_Controller {
 			unset($data, $router);
 			
 			if($controller->_response_method == null)
-				$controller->_response_method = Wave_Config::get('wave')->controller->default_response;
+				$controller->_response_method = Config::get('wave')->controller->default_response;
 			
 			if(method_exists($controller, $invoke[1])){
 				$controller->init();
 				return $controller->{$invoke[1]}();
 			}
 			else 
-				throw new Wave_Exception('Could not invoke action '.$action.'. Method '.$invoke[0].'::'.$invoke[1].'() does not exist');
+				throw new \Wave\Exception('Could not invoke action '.$action.'. Method '.$invoke[0].'::'.$invoke[1].'() does not exist');
 
 		}
 		else 
-			throw new Wave_Exception('Could not invoke action '.$action.'. Controller '.$invoke[0].' does not exist');
+			throw new \Wave\Exception('Could not invoke action '.$action.'. Controller '.$invoke[0].' does not exist');
 		
 	}
 	
@@ -80,28 +81,28 @@ class Wave_Controller {
             $data = $this->_data;
 		
         $schema_name = strtr($schema, '_', DS);
-        $schema_file = sprintf(Wave_Config::get('wave')->schemas->file_format, $schema_name);
-        $schema_path = Wave_Config::get('wave')->path->schemas . $schema_file;
+        $schema_file = sprintf(Config::get('wave')->schemas->file_format, $schema_name);
+        $schema_path = Config::get('wave')->path->schemas . $schema_file;
 		
 		if(!$this->confirmCSRFToken($data)) return false;
 			
-        $v = new Wave_Validator($data, $schema_path);
+        $v = new Validator($data, $schema_path);
         $r = $v->validate();
         $this->_sanitized = $v->getSanitizedData();
 		$this->_input_errors = $v->getErrors();        
 		
 		unset($v);
-		return $r == Wave_Validator::RESULT_VALID;
+		return $r == Validator::RESULT_VALID;
     }
     
     public function confirmCSRFToken($data = null){
     	if($data == null)
     		$data = $this->_data;
     		
-    	if($this->_check_csrf && isset($this->_identity) && $this->_identity instanceof Wave_IAuthable){
-			$field_name = Wave_Config::get('deploy')->auth->csrf->form_name;
+    	if($this->_check_csrf && isset($this->_identity) && $this->_identity instanceof IAuthable){
+			$field_name = Config::get('deploy')->auth->csrf->form_name;
 			if(!isset($this->_data[$field_name]) || !$this->_identity->confirmCSRFKey($this->_data[$field_name])){
-				$this->_input_errors = array($field_name => array('reason' => Wave_Validator::ERROR_INVALID));
+				$this->_input_errors = array($field_name => array('reason' => Validator::ERROR_INVALID));
 				return false;
 			}
 		}
@@ -122,7 +123,7 @@ class Wave_Controller {
 		$this->_post =& $_POST;
 		$this->_get =& $_GET;
 		
-		$this->_identity = Wave_Auth::getIdentity();
+		$this->_identity = \Wave\Auth::getIdentity();
 	
 	}
 	
@@ -156,10 +157,10 @@ class Wave_Controller {
 	}
 	
 	protected function _setTemplatingGlobals(){
-		Wave_View::registerGlobal('input', isset($this->_sanitized) ? $this->_sanitized : $this->_data);
-		Wave_View::registerGlobal('errors', isset($this->_input_errors) ? $this->_input_errors : array());
-		Wave_View::registerGlobal('_identity', $this->_identity);
-		Wave_View::registerGlobal('_request_uri', isset($this->_request_uri) ? $this->_request_uri : $_SERVER['REQUEST_URI']);
+		View::registerGlobal('input', isset($this->_sanitized) ? $this->_sanitized : $this->_data);
+		View::registerGlobal('errors', isset($this->_input_errors) ? $this->_input_errors : array());
+		View::registerGlobal('_identity', $this->_identity);
+		View::registerGlobal('_request_uri', isset($this->_request_uri) ? $this->_request_uri : $_SERVER['REQUEST_URI']);
 	}
 	
 	final protected function respond(){
@@ -175,7 +176,7 @@ class Wave_Controller {
 		if(method_exists($this, $response_method) && $response_method !== $type)
 			return $this->{$response_method}();
 		else
-			throw new Wave_Exception(
+			throw new Exception(
 				'The action "'.$this->_action.'" tried to respond with "'.
 				$this->_response_method.'" but the method does not exist'
 			);
@@ -183,10 +184,10 @@ class Wave_Controller {
 
 	protected function respondHTML(){
 		if(!isset($this->_template))
-			throw new Wave_Exception('Template not set for '.$this->_response_method.' in action '.$this->_action);
+			throw new Exception('Template not set for '.$this->_response_method.' in action '.$this->_action);
 		
 		header('Content-type: text/html; charset=utf-8');
-		echo Wave_View::getInstance()->render($this->_template, $this->_buildDataSet());
+		echo View::getInstance()->render($this->_template, $this->_buildDataSet());
 		exit(0);
 	}
 	
@@ -199,7 +200,7 @@ class Wave_Controller {
 	protected function respondDialog(){
 		$this->_template .= '-dialog';
 		
-		$html = Wave_View::getInstance()->render($this->_template, $this->_buildDataSet());
+		$html = View::getInstance()->render($this->_template, $this->_buildDataSet());
 		return $this->respondJSON($html);
 	}
 	
@@ -210,8 +211,8 @@ class Wave_Controller {
 	}
 	
 	protected function respondJSON($payload = null){
-		if(!isset($this->_status)) $this->_status = Wave_Response::STATUS_OK;
-		if(!isset($this->_message)) $this->_message = Wave_Response::getMessageForCode($this->_status);
+		if(!isset($this->_status)) $this->_status = Response::STATUS_OK;
+		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
 		header('Cache-Control: no-cache, must-revalidate');
         header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
         header('Content-type: application/json');
@@ -220,14 +221,14 @@ class Wave_Controller {
 	}
 	
 	protected function requestJSON(){
-		if(!isset($this->_status)) $this->_status = Wave_Response::STATUS_INPUT_REQUIRED;
-		if(!isset($this->_message)) $this->_message = Wave_Response::getMessageForCode($this->_status);
+		if(!isset($this->_status)) $this->_status = Response::STATUS_INPUT_REQUIRED;
+		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
 		return $this->respondJSON();
 	}
 	
 	protected function respondXML(){
-		if(!isset($this->_status)) $this->_status = Wave_Response::STATUS_OK;
-		if(!isset($this->_message)) $this->_message = Wave_Response::getMessageForCode($this->_status);
+		if(!isset($this->_status)) $this->_status = Response::STATUS_OK;
+		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
 		header('Cache-Control: no-cache, must-revalidate');
         header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 		header("content-type: text/xml; charset=utf-8");
@@ -236,8 +237,8 @@ class Wave_Controller {
 	}
 	
 	protected function requestXML(){
-		if(!isset($this->_status)) $this->_status = Wave_Response::STATUS_INPUT_REQUIRED;
-		if(!isset($this->_message)) $this->_message = Wave_Response::getMessageForCode($this->_status);
+		if(!isset($this->_status)) $this->_status = Response::STATUS_INPUT_REQUIRED;
+		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
 		return $this->respondXML();
 	}
 	

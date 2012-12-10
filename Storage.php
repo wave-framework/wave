@@ -1,7 +1,8 @@
 <?php
 
+namespace Wave;
 
-abstract class Wave_Storage {
+abstract class Storage {
 	
 
 }

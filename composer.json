@@ -1,0 +1,22 @@
+{
+    "name": "wave/wave",
+    "type": "library",
+    "description": "Wave is a lightweight PHP5.3 MVC framework",
+    "keywords": ["framework", "mvc", "orm", "lightweight", "controllers", "models", "views"],
+    "homepage": "http://github.com/phindmarsh/wave",
+
+    "authors": [
+        {
+            "name": "Patrick Hindmarsh",
+            "email": "patrick@hindmar.sh",
+            "homepage": "https://github.com/phindmarsh"
+        }
+    ],
+
+    "require": {
+        "php": ">=5.3.2",
+        "twig/twig": "1.*",
+        "swiftmailer/swiftmailer": "4.2.*"
+    }
+
+}

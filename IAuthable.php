@@ -1,8 +1,8 @@
 <?php
 
+namespace Wave;
 
-
-interface Wave_IAuthable {
+interface IAuthable {
 
 	public static function loadByIdentifier(array $params);
 		

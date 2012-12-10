@@ -1,7 +1,8 @@
 <?php
 
+namespace Wave;
 
-class Wave_Auth {
+class Auth {
 
 	const SUCCESS = 'success';
 	const FAILURE_NO_IDENTITY = 'no-identity';
@@ -19,7 +20,7 @@ class Wave_Auth {
 	
 	public static function registerHandler($class, $autoload = true){
 		if(!class_implements($class))
-			throw new Wave_Exception('Auth Handler class ('.$class.') must implement Wave_IAuthable');
+			throw new \Wave\Exception('Auth Handler class ('.$class.') must implement \Wave\IAuthable');
 		
 		if($autoload) $class::loadPersistentAuth();
 		
@@ -34,7 +35,7 @@ class Wave_Auth {
 		$class = self::$_handler;
 		$auth_object = $class::loadByIdentifier($primary);
 							
-		if($auth_object instanceof Wave_IAuthable){
+		if($auth_object instanceof \Wave\IAuthable){
 
 			$_is_valid = true;
 			// check the secondary credentials
@@ -98,13 +99,13 @@ class Wave_Auth {
 	}
 	
 	public static function ceaseIdentity($type = null){		
-		$config = Wave_Config::get('deploy')->auth;
+		$config = Config::get('deploy')->auth;
 		if($type === null)
 			$type = $config->persist_type;
 				
 		if($type == 'cookie'){
 				
-			Wave_Storage_Cookie::store(
+			Storage\Cookie::store(
 				$config->cookie->name,
 				'',
 				time()-86400,
@@ -119,7 +120,7 @@ class Wave_Auth {
 	public static function getAuthProblems() { return self::$_auth_problems; }
 	
 	public static function getIdentity() { 
-		return Wave_Registry::fetch('__wave_identity'); 
+		return Registry::fetch('__wave_identity'); 
 	}
 	
 	public static function getHandlerClass() { return self::$_handler; }

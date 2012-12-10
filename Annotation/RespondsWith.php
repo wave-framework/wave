@@ -1,21 +1,25 @@
 <?php
 
-class Wave_Annotation_RespondsWith extends Wave_Annotation {
+namespace Wave\Annotation;
+
+use \Wave;
+
+class RespondsWith extends Wave\Annotation {
 	
 	public $inherit = true;
 	public $methods = array();
 	
 	public function isFor() {
-		return Annotation::FOR_METHOD;
+		return Wave\Annotation::FOR_METHOD;
 	}
 
 	public function validate($class) {
 		$this->minimumParameterCount(1);
-		$this->validOnSubclassesOf($class, Wave_Annotation::CLASS_CONTROLLER);
+		$this->validOnSubclassesOf($class, Wave\Annotation::CLASS_CONTROLLER);
 		if(isset($this->parameters[0])){
 			foreach($this->parameters as $i => $method){
-				if(is_numeric($i) && !in_array($method, Wave_Response::$ALL))
-					$this->errors[] = "Parameter $i contains \"" . $method . "\". Valid values: " . implode(', ', Wave_Response::$ALL) . '.';
+				if(is_numeric($i) && !in_array($method, Wave\Response::$ALL))
+					$this->errors[] = "Parameter $i contains \"" . $method . "\". Valid values: " . implode(', ', Wave\Response::$ALL) . '.';
 			}
 		}
 	}
@@ -29,6 +33,10 @@ class Wave_Annotation_RespondsWith extends Wave_Annotation {
 		}
 		
 		$this->methods = $this->parameters;	
+	}
+
+	public function apply(Wave\Router\Action &$action){
+		$action->setRespondsWith($this->methods, $this->inherit);
 	}
 }
 

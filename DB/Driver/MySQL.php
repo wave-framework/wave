@@ -1,6 +1,9 @@
 <?php
 
-class Wave_DB_Driver_MySQL extends Wave_DB_Driver implements Wave_DB_IDriver {
+namespace Wave\DB\Driver;
+use Wave\DB;
+
+class MySQL extends DB\Driver implements DB\IDriver {
 
 	public static function constructDSN($config){
 	

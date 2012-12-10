@@ -1,6 +1,8 @@
 <?php
 
-class Wave_Logger {
+namespace Wave;
+
+class Logger {
 	
 	protected function getCaller(){
 	

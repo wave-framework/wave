@@ -1,7 +1,8 @@
 <?php
 
+namespace Wave;
 
-class Wave_Hook {
+class Hook {
 	
 	private static $handlers = array();
 	

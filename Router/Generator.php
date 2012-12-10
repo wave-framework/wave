@@ -1,23 +1,25 @@
 <?php
 
+namespace Wave\Router;
+use Wave;
 
-class Wave_Router_Generator {
+class Generator {
 	
 	public static function generate(){
-		$reflector = new Wave_Reflector(Wave_Config::get('wave')->path->controllers);				
+		$reflector = new Wave\Reflector(Wave\Config::get('wave')->path->controllers);				
 		$reflected_options = $reflector->execute();
 			
 		$all_actions = self::buildRoutes($reflected_options);
 
-		foreach($all_actions as $d => $actions){					
-			$r = new Wave_Router_Node();
+		foreach($all_actions as $domain => $actions){					
+			$route_node = new Node();
 			foreach($actions as $action){
 				foreach($action->getRoutes() as $route){
-					$r->addChild($route, $action);
+					$route_node->addChild($route, $action);
 				}
 			}
 			
-			Wave_Cache::store(Wave_Router::getCacheName($d), $r);
+			Wave\Cache::store(Wave\Router::getCacheName($domain), $route_node);
 		}
 	}
 	
@@ -26,18 +28,20 @@ class Wave_Router_Generator {
 		$compiled_routes = array();
 		// iterate all the controllers and make a tree of all the possible path
 		foreach($controllers as $controller){
-			$base_route = new Wave_Router_Action();
+			$base_route = new Action();
 			// set the route defaults from the Controller annotations (if any)
 			foreach($controller['class']['annotations'] as $annotation){
-				self::applyAnnotation($annotation, $base_route);
+				$annotation->apply($base_route);
+				//self::applyAnnotation($annotation, $base_route);
 			}
 			
 			foreach($controller['methods'] as $method){
 				$route = clone $base_route; // copy from the controller route
 				
-				if($method['visibility'] == Wave_Reflector::VISIBILITY_PUBLIC){
+				if($method['visibility'] == Wave\Reflector::VISIBILITY_PUBLIC){
 					foreach($method['annotations'] as $annotation)
-						self::applyAnnotation($annotation, $route);
+						$annotation->apply($route);
+						//self::applyAnnotation($annotation, $route);
 				}
 				
 				$route->setAction($controller['class']['name'] . '.' . $method['name']);

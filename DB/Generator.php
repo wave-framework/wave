@@ -1,6 +1,10 @@
 <?php
 
-class Wave_DB_Generator {
+namespace Wave\DB;
+use Wave;
+
+
+class Generator {
 
 	const LOCK_FILE = '.wave_lock';
 	
@@ -9,7 +13,7 @@ class Wave_DB_Generator {
 
 	public static function generate(){
 		
-		$databases = Wave_DB::getAllDatabases();
+		$databases = \Wave\DB::getAllDatabases();
 		
 		foreach($databases as $database){
 							
@@ -36,7 +40,7 @@ class Wave_DB_Generator {
 					
 			foreach($columns as $column){
 				//populate one-to-one array with pks that don't reflect the table name
-				if(isset($column['column_key']) && $driver_class::translateSQLIndexType($column['column_key']) == Wave_DB_Column::INDEX_PRIMARY){
+				if(isset($column['column_key']) && $driver_class::translateSQLIndexType($column['column_key']) == \Wave\DB_Column::INDEX_PRIMARY){
 					$test_tables = explode('_has_', $column['table_name']);
 					
 					//is the column name not part of the table name?
@@ -90,14 +94,14 @@ class Wave_DB_Generator {
 	private static function createBaseClass($database, $table){
 
 		
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($table['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($table['table_name']).'.php';
 		
 		//@todo make dynamic
-		$table['base_model'] = 'Wave_DB_Model';
+		$table['base_model'] = '\Wave\DB_Model';
 		$table['database_namespace'] = $database->getNamespace();
-		$table['class_name'] = $database->getNamespace().'_Base_'.Wave_DB::tableNameToClass($table['table_name']);
+		$table['class_name'] = $database->getNamespace().'_Base_'.\Wave\DB::tableNameToClass($table['table_name']);
 		
-		$t = new Wave_DB_Generator_Template('base_start');
+		$t = new \Wave\DB_Generator_Template('base_start');
 		$t->setData($database, $table);
 
 		file_put_contents($filename, $t->get(), LOCK_EX);
@@ -106,9 +110,9 @@ class Wave_DB_Generator {
 	
 	private static function closeBaseClass($database, $table){
 	
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($table['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($table['table_name']).'.php';
 
-		$t = new Wave_DB_Generator_Template('base_end');
+		$t = new \Wave\DB_Generator_Template('base_end');
 		$t->setData($database, $table);
 
 		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
@@ -118,9 +122,9 @@ class Wave_DB_Generator {
 	
 	private static function closeBaseFields($database, $table){
 	
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($table['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($table['table_name']).'.php';
 
-		$t = new Wave_DB_Generator_Template('base_field_end');
+		$t = new \Wave\DB_Generator_Template('base_field_end');
 		$t->setData($database, $table);
 
 		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
@@ -130,21 +134,21 @@ class Wave_DB_Generator {
 	
 	private static function createStubClass($database, $table){
 	
-		$filename = self::getModelPath($database).Wave_DB::tableNameToClass($table['table_name']).'.php';
+		$filename = self::getModelPath($database).\Wave\DB::tableNameToClass($table['table_name']).'.php';
 		
-		$table['base_class_name'] = $database->getNamespace().'_Base_'.Wave_DB::tableNameToClass($table['table_name']);
-		$table['class_name'] = $database->getNamespace().'_'.Wave_DB::tableNameToClass($table['table_name']);
+		$table['base_class_name'] = $database->getNamespace().'_Base_'.\Wave\DB::tableNameToClass($table['table_name']);
+		$table['class_name'] = $database->getNamespace().'_'.\Wave\DB::tableNameToClass($table['table_name']);
 		
 		if(file_exists($filename))
 			return false;
 		
-		$t = new Wave_DB_Generator_Template('class_stub');
+		$t = new \Wave\DB_Generator_Template('class_stub');
 		$t->setData($database, $table);
 		
 		file_put_contents($filename, $t->get());
 		
 		//permissions - make them match model dir
-		$permissions = stat(Wave_Config::get('wave')->path->models);
+		$permissions = stat(\Wave\Config::get('wave')->path->models);
 				
 		chmod($filename, 0775);
 		chown($filename, $permissions['uid']);
@@ -156,9 +160,9 @@ class Wave_DB_Generator {
 	
 	private static function addClassField($database, $column){
 	
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($column['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($column['table_name']).'.php';
 			
-		$t = new Wave_DB_Generator_Template('base_field');
+		$t = new \Wave\DB_Generator_Template('base_field');
 		$t->setData($database, $column);
 		
 		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
@@ -172,17 +176,17 @@ class Wave_DB_Generator {
 				
 		list($key, $reversed_key) = self::buildRelationshipData($database, $key);
 
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($key['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($key['table_name']).'.php';
 				
-		$t = new Wave_DB_Generator_Template('base_relation');
+		$t = new \Wave\DB_Generator_Template('base_relation');
 		$t->setData($database, $key);
 		
 		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
 				
 		//REVERSE KEY		      
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($reversed_key['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($reversed_key['table_name']).'.php';
 		
-		$t = new Wave_DB_Generator_Template('base_relation');
+		$t = new \Wave\DB_Generator_Template('base_relation');
 		$t->setData($database, $reversed_key);
 		
 		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
@@ -191,9 +195,9 @@ class Wave_DB_Generator {
 	
 	private static function closeClassKeys($database, $table){
 	
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($table['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($table['table_name']).'.php';
 
-		$t = new Wave_DB_Generator_Template('base_relation_end');
+		$t = new \Wave\DB_Generator_Template('base_relation_end');
 		$t->setData($database, $table);
 
 		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
@@ -202,9 +206,9 @@ class Wave_DB_Generator {
 	
 	private static function addGetterSetter($database, $table){
 	
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($table['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($table['table_name']).'.php';
 
-		$t = new Wave_DB_Generator_Template('base_field_gs');
+		$t = new \Wave\DB_Generator_Template('base_field_gs');
 		$t->setData($database, $table);
 
 		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
@@ -218,9 +222,9 @@ class Wave_DB_Generator {
 				
 		list($key, $reversed_key) = self::buildRelationshipData($database, $key);
 						
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($key['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($key['table_name']).'.php';
 				
-		$t = new Wave_DB_Generator_Template('base_relation_'.$key['relation_type']);
+		$t = new \Wave\DB_Generator_Template('base_relation_'.$key['relation_type']);
 		$t->setData($database, $key);
 		
 		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
@@ -228,9 +232,9 @@ class Wave_DB_Generator {
 		
 		//print_r($reversed_key);
 		//REVERSE KEY		      
-		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave_DB::tableNameToClass($reversed_key['table_name']).'.php';
+		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.\Wave\DB::tableNameToClass($reversed_key['table_name']).'.php';
 		
-		$t = new Wave_DB_Generator_Template('base_relation_'.$reversed_key['relation_type']);
+		$t = new \Wave\DB_Generator_Template('base_relation_'.$reversed_key['relation_type']);
 		$t->setData($database, $reversed_key);
 		
 		file_put_contents($filename, $t->get(), FILE_APPEND | LOCK_EX);
@@ -248,22 +252,22 @@ class Wave_DB_Generator {
 		if(isset(self::$oto_primaries[self::getTableIdentifier($key)]) && self::$oto_primaries[self::getTableIdentifier($key)] === $key['column_name']){
 			
 			$target_table = '';
-			$relation_type = Wave_DB_Model::RELATION_ONE_TO_ONE;
+			$relation_type = \Wave\DB_Model::RELATION_ONE_TO_ONE;
 
 		} else if(strpos($key['table_name'], $replacement_start) === 0){
 		
 			$target_table = substr($key['table_name'], $replacement_length);
-			$relation_type = Wave_DB_Model::RELATION_MANY_TO_MANY;
+			$relation_type = \Wave\DB_Model::RELATION_MANY_TO_MANY;
 
 		} else if(strpos($key['table_name'], $replacement_end) === $target_length){
 		
 			$target_table = substr($key['table_name'], 0, $target_length);
-			$relation_type = Wave_DB_Model::RELATION_MANY_TO_MANY;
+			$relation_type = \Wave\DB_Model::RELATION_MANY_TO_MANY;
 
 		} else {
 		
 			$target_table = '';
-			$relation_type = Wave_DB_Model::RELATION_ONE_TO_MANY;
+			$relation_type = \Wave\DB_Model::RELATION_ONE_TO_MANY;
 		}
 					
 		$reversed_key = array(
@@ -276,20 +280,20 @@ class Wave_DB_Generator {
 			'constraint_name' 			=> $key['constraint_name'],
 			'relation_type' 			=> $relation_type,
 			'target_table'				=> $target_table,
-			'target_class'				=> Wave_DB::columnToRelationName($key, $target_table),
-			'relation_alias_singular'	=> Wave_DB::columnToRelationName($key, $target_table),
-			'relation_alias'			=> Wave_Inflector::pluralize(Wave_DB::columnToRelationName($key, $target_table)));
+			'target_class'				=> \Wave\DB::columnToRelationName($key, $target_table),
+			'relation_alias_singular'	=> \Wave\DB::columnToRelationName($key, $target_table),
+			'relation_alias'			=> \Wave\Inflector::pluralize(\Wave\DB::columnToRelationName($key, $target_table)));
 			
-		$key['relation_alias'] = Wave_DB::columnToRelationName($reversed_key);
-		$key['relation_type'] = Wave_DB_Model::RELATION_MANY_TO_ONE;
-		$key['target_class'] = Wave_DB::columnToRelationName($reversed_key);		
+		$key['relation_alias'] = \Wave\DB::columnToRelationName($reversed_key);
+		$key['relation_type'] = \Wave\DB_Model::RELATION_MANY_TO_ONE;
+		$key['target_class'] = \Wave\DB::columnToRelationName($reversed_key);		
 		$key['target_table'] = '';
 		
-		if($reversed_key['relation_type'] == Wave_DB_Model::RELATION_ONE_TO_MANY && $key['column_name'] !== $key['referenced_column_name']){
+		if($reversed_key['relation_type'] == \Wave\DB_Model::RELATION_ONE_TO_MANY && $key['column_name'] !== $key['referenced_column_name']){
 			
-			$reversed_key['relation_alias'] = Wave_Inflector::camelize(Wave_Inflector::pluralize($key['table_name']).'_'.$key['column_name'], '_id');
-			$reversed_key['relation_alias_singular'] = Wave_Inflector::camelize($key['table_name'].'_'.$key['column_name'], '_id');
-			$key['relation_alias'] = Wave_Inflector::camelize($key['column_name'], '_id');
+			$reversed_key['relation_alias'] = \Wave\Inflector::camelize(\Wave\Inflector::pluralize($key['table_name']).'_'.$key['column_name'], '_id');
+			$reversed_key['relation_alias_singular'] = \Wave\Inflector::camelize($key['table_name'].'_'.$key['column_name'], '_id');
+			$key['relation_alias'] = \Wave\Inflector::camelize($key['column_name'], '_id');
 		}
 	
 		return array($key, $reversed_key);
@@ -298,7 +302,7 @@ class Wave_DB_Generator {
 	private static function getModelPath($database){
 	
 		$namespace = $database->getNamespace();
-		$model_directory = Wave_Config::get('wave')->path->models;
+		$model_directory = \Wave\Config::get('wave')->path->models;
 
 	
 		return $model_directory.DIRECTORY_SEPARATOR.$namespace.DIRECTORY_SEPARATOR;

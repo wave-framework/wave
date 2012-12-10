@@ -1,8 +1,8 @@
 <?php
 
+namespace Wave;
 
-
-abstract class Wave_Method {
+abstract class Method {
 
 	const ANY  = '*';
 	const POST = 'POST';
@@ -21,7 +21,7 @@ abstract class Wave_Method {
 
 }
 
-abstract class Wave_Response {
+abstract class Response {
 	
 	const STATUS_OK 			= 200;
 	const STATUS_CREATED 		= 201;

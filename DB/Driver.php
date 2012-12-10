@@ -1,8 +1,10 @@
 <?php
 
-abstract class Wave_DB_Driver {}
+namespace Wave\DB;
 
-interface Wave_DB_IDriver {
+abstract class Driver {}
+
+interface IDriver {
 
 	public static function constructDSN($config);
 	public static function getDriverName();

@@ -1,7 +1,8 @@
 <?php
 
+namespace Wave;
 
-class Wave_Config {
+class Config {
 
 	private static $_writable = false;
 	private static $_readable = true;
@@ -16,10 +17,10 @@ class Wave_Config {
     }
 
     public static function loadFromArray($array) {
-		$return = new Wave_Config_Row();
+		$return = new Config\Row();
 		foreach ($array as $k => $v) {
 			if (is_array($v)) {
-				$return->$k = Wave_Config::loadFromArray($v);
+				$return->$k = self::loadFromArray($v);
 			} else {
 				$return->$k = $v;
 			}
@@ -45,21 +46,16 @@ class Wave_Config {
 			if(!file_exists($file_path))
 				return null;
 				
-			$configs[$file] = new Wave_Config($file_path);
+			$configs[$file] = new self($file_path);
 		}
 		return $configs[$file];
 	}
 	
-	
-	public static function buildRoutes($controllers){		
-		trigger_error('Wave_Router::buildRoutes() is depreciated. Use Wave_Router_Generator::buildRoutes() instead', E_USER_DEPRECATED);
-		return Wave_Router_Generator::buildRoutes($controllers);
-	}
-	
-	
 }
 
-class Wave_Config_Row implements ArrayAccess {
+namespace Wave\Config;
+
+class Row implements \ArrayAccess {
 
     public function offsetSet($offset, $value) {
         $this->{$offset} = $value;

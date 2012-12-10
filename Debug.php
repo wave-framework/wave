@@ -1,8 +1,8 @@
 <?php
 
+namespace Wave;
 
-
-class Wave_Debug {
+class Debug {
 
 	private $queries = array();
 	private $used_files = array();
@@ -67,7 +67,7 @@ class Wave_Debug {
 	
 		$sql = $statement->queryString;
 		$rows = $statement->rowCount();
-		$success = $statement->errorCode() == PDO::ERR_NONE ? true : false;
+		$success = $statement->errorCode() == \PDO::ERR_NONE ? true : false;
 		$time = round($time * 1000, true);
 
 		$sql = str_replace(chr(0x0A), ' ', $sql);

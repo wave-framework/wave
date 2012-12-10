@@ -1,7 +1,8 @@
 <?php
 
+namespace Wave;
 
-interface Wave_INotifiable {
+interface INotifiable {
 	
 	const TYPE_EMAIL = 'email';
 	const TYPE_SMS = 'sms';

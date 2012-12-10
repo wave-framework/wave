@@ -1,12 +1,13 @@
 <?php
 
+namespace Wave;
 
-abstract class Wave_Annotation {
+abstract class Annotation {
 	
 	const FOR_CLASS = 'class';
 	
-	const CLASS_CONTROLLER = 'Wave_Controller';
-	const CLASS_MODEL = 'Wave_Model';
+	const CLASS_CONTROLLER = '\Wave\Controller';
+	const CLASS_MODEL = '\Wave\Model';
 	
 	public static function parse($block, $originating_class){
 		preg_match_all('%(?:\s|\*)*~(\S+)[^\n\r\S]*(?:(.*?)(?:\*/)|(.*))%', $block, $result, PREG_PATTERN_ORDER);
@@ -37,10 +38,10 @@ abstract class Wave_Annotation {
 			
 			@eval('$array = ' . $value);
 			if(!isset($array)) { 
-				throw new Wave_Exception('There is an unparseable annotation value: "~' . $annotation . ': ' . $values[$key] . '"',0);
+				throw new \Wave\Exception('There is an unparseable annotation value: "~' . $annotation . ': ' . $values[$key] . '"',0);
 			}
 			
-			$annotationClass = 'Wave_Annotation_' . $annotation;
+			$annotationClass = 'Wave\Annotation\\' . $annotation;
 					
 			if(class_exists($annotationClass, true)) {
 				$annotation = new $annotationClass;
@@ -48,13 +49,13 @@ abstract class Wave_Annotation {
 					->validate($originating_class);
 	
 				if(isset($annotation->errors)){
-					throw new Wave_Exception('Annotation format error, '.implode(', ', $annotation->errors), 0);
+					throw new \Wave\Exception('Annotation format error, '.implode(', ', $annotation->errors), 0);
 				}
 				else{
 					$annotation->build();
 				}
 			} else {
-				throw new Wave_Exception('Unknown annotation: "' . $annotation . '"',0);
+				throw new \Wave\Exception('Unknown annotation: "' . $annotation . '"',0);
 			}
 			
 			$returns[] = $annotation;
@@ -69,6 +70,7 @@ abstract class Wave_Annotation {
 	}
 	
 	public function build() {} 
+	abstract public function apply(Router\Action &$action);
 	
 	protected function acceptedKeys($keys) {
 		foreach($this->parameters as $key => $value) {

@@ -1,8 +1,8 @@
 <?php
 
+namespace Wave;
 
-
-class Wave_Registry {
+class Registry {
 
 	private static $store = array();
 

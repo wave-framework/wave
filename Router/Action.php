@@ -1,6 +1,9 @@
 <?php
 
-class Wave_Router_Action {
+namespace Wave\Router;
+use Wave;
+
+class Action {
 	
 	private $baseurl; 	// the URL this route lives under (subdomain ususally)
 	private $baseroute = '/'; // a URL to prepend to relative routes in this route
@@ -14,7 +17,7 @@ class Wave_Router_Action {
 	
 	public function __construct(){
 		$this->baseurl = self::getBaseURLFromConf('default');
-		$this->response_methods = (array) Wave_Config::get('wave')->router->base->methods;
+		$this->response_methods = (array) Wave\Config::get('wave')->router->base->methods;
 	}
 	
 	public function setBaseRoute($baseroute){
@@ -31,8 +34,8 @@ class Wave_Router_Action {
 		if(substr($route, -1, 1) == '/')
 			$route = substr($route, 0, -1);
 
-		if(array_search(Wave_Method::ANY, $methods) !== false)
-			$methods = Wave_Method::$ALL;
+		if(array_search(Wave\Method::ANY, $methods) !== false)
+			$methods = Wave\Method::$ALL;
 				
 		foreach($methods as $method){
 			$this->routes[] = $method . $route;
@@ -51,9 +54,9 @@ class Wave_Router_Action {
 	}
 	public function checkRequiredLevel($var_stack){
 		if(!empty($this->requires_level)){
-			$auth_obj = Wave_Auth::getIdentity();
+			$auth_obj = Wave\Auth::getIdentity();
 			
-			if($auth_obj instanceof Wave_IAuthable)
+			if($auth_obj instanceof Wave\IAuthable)
 				return $auth_obj->hasAccess($this->requires_level, $var_stack);
 			else
 				return false;
@@ -83,9 +86,9 @@ class Wave_Router_Action {
 	}
 	
 	private static function getBaseURLFromConf($profile){
-		$profiles = Wave_Config::get('deploy')->profiles;
+		$profiles = Wave\Config::get('deploy')->profiles;
 		if(!isset($profiles->$profile)){
-			throw new Wave_Exception('BaseURL profile "'.$profile.'" is not defined in deploy configuration');
+			throw new \Wave\Exception('BaseURL profile "'.$profile.'" is not defined in deploy configuration');
 		}
 		else 
 			return $profiles->$profile->baseurl;

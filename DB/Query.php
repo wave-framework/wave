@@ -1,6 +1,9 @@
 <?php
 
-class Wave_DB_Query{
+namespace Wave\DB;
+use Wave;
+
+class Query{
 
 	private $database;
 	private $fields;
@@ -41,9 +44,9 @@ class Wave_DB_Query{
 	public function from($table, $fields = null){
 		
 		if(is_null($fields))
-			$fields = Wave_DB::getFieldsForTable($table, $this->database);
+			$fields = Wave\DB::getFieldsForTable($table, $this->database);
 			
-		$this->from = Wave_DB::getClassNameForTable($table, $this->database);
+		$this->from = Wave\DB::getClassNameForTable($table, $this->database);
 		$this->fields = $fields;
 		
 		return $this;
@@ -53,7 +56,7 @@ class Wave_DB_Query{
 	
 		$this->with[] = array(
 			'table' => $table,
-			'class' => Wave_DB::getClassNameForTable(Wave_Inflector::singularize($table), $this->database, true)
+			'class' => Wave\DB::getClassNameForTable(Wave_Inflector::singularize($table), $this->database, true)
 		);
 		return $this;
 	}
@@ -175,12 +178,12 @@ class Wave_DB_Query{
 			foreach($this->with as $key => $with){
 				$relation = $from::_getRelationByName($with['table']);	
 				if(!$relation)
-					throw new Wave_DB_Exception('Relationship not found for '.$with['table']);
+					throw new \Wave\DB\Exception('Relationship not found for '.$with['table']);
 				switch($relation['relation_type']){
 					
-					case Wave_DB_Model::RELATION_MANY_TO_ONE:
-					case Wave_DB_Model::RELATION_ONE_TO_MANY:
-						$foreign_class = Wave_DB::getClassNameForTable($relation['foreign_table'], $this->database, true);
+					case Model::RELATION_MANY_TO_ONE:
+					case Model::RELATION_ONE_TO_MANY:
+						$foreign_class = Wave\DB::getClassNameForTable($relation['foreign_table'], $this->database, true);
 						$join_class = '';
 						
 						foreach($foreign_class::_getFields() as $field => $data)
@@ -190,9 +193,9 @@ class Wave_DB_Query{
 						$with_joins .= 'ON '.$with['class'].'.'.$relation['foreign_column'].' = '.$from.'.'.$relation['column_name']."\n";	
 						break;
 						
-					case Wave_DB_Model::RELATION_MANY_TO_MANY:
-						$join_class = Wave_DB::getClassNameForTable($relation['foreign_table'], $this->database, true);
-						$foreign_class = Wave_DB::getClassNameForTable($relation['target_table'], $this->database, true);
+					case Model::RELATION_MANY_TO_MANY:
+						$join_class = Wave\DB::getClassNameForTable($relation['foreign_table'], $this->database, true);
+						$foreign_class = Wave\DB::getClassNameForTable($relation['target_table'], $this->database, true);
 						
 						
 						foreach($join_class::_getFields() as $field => $data)
@@ -218,7 +221,7 @@ class Wave_DB_Query{
 		
 		$manual_joins = '';
 		foreach($this->join as $join){
-			$table = Wave_DB::getClassNameForTable($join['table'], $this->database);
+			$table = Wave\DB::getClassNameForTable($join['table'], $this->database);
 			$manual_joins .= $join['type'].' '.$table::_getTableName().' AS '.$table.' ON '.$join['on']."\n";
 			
 			foreach($table::_getFields() as $field => $data)
@@ -290,7 +293,7 @@ class Wave_DB_Query{
 		$statement->execute( $this->_params );
 		$time = microtime(true) - $start;           
 		
-		Wave_Debug::getInstance()->addQuery($time, $statement);
+		Wave\Debug::getInstance()->addQuery($time, $statement);
 		
 		if($debug)
 			echo $sql;
@@ -327,7 +330,7 @@ class Wave_DB_Query{
 			$primary_object = $this->from;
 			
 			if(!isset($this->_last_row))
-				$this->_last_row = $this->_statement->fetch(Wave_DB_Connection::FETCH_ASSOC);
+				$this->_last_row = $this->_statement->fetch(Connection::FETCH_ASSOC);
 			if($this->_last_row === false) return null;			
 			$row = new $primary_object($this->_last_row, $primary_object.self::TABLE_ALIAS_SPLIT);
 
@@ -353,15 +356,15 @@ class Wave_DB_Query{
 					if($joined_object->_isLoaded()){
 
 						switch($with['relation']['relation_type']){
-							case Wave_DB_Model::RELATION_MANY_TO_ONE:
+							case Model::RELATION_MANY_TO_ONE:
 								$row->{'_set'.$with['table']}($joined_object);
 								break;
-							case Wave_DB_Model::RELATION_ONE_TO_MANY:
+							case Model::RELATION_ONE_TO_MANY:
 								$row->{'add'.$with['relation']['target_class']}($joined_object, false);
 								break;
-							case Wave_DB_Model::RELATION_MANY_TO_MANY:
+							case Model::RELATION_MANY_TO_MANY:
 								//Object that holds the m2m join
-								$classname = Wave_DB::getClassNameForTable($with['join_class'], $this->database);
+								$classname = Wave\DB::getClassNameForTable($with['join_class'], $this->database);
 								$join_object = new $classname($this->_last_row, $with['join_class'].self::TABLE_ALIAS_SPLIT);
 								$joined_object->_addRelationObject($with['relation']['target_class'], $join_object);
 								$row->{'add'.$with['relation']['target_class']}($joined_object, false, $join_object);
@@ -374,7 +377,7 @@ class Wave_DB_Query{
 				}
 				
 				foreach($this->join as $join){
-					$join_object = new $join['table']($this->_last_row, Wave_DB::getClassNameForTable($join['table']).self::TABLE_ALIAS_SPLIT);
+					$join_object = new $join['table']($this->_last_row, Wave\DB::getClassNameForTable($join['table']).self::TABLE_ALIAS_SPLIT);
 					if(!$join_object->pkNull()){
 
 						$row->_addRelationObject($join['table'], $join_object);					
@@ -382,10 +385,10 @@ class Wave_DB_Query{
 				
 				}
 				
-				$new_row = $this->_statement->fetch(Wave_DB_Connection::FETCH_ASSOC);
+				$new_row = $this->_statement->fetch(Connection::FETCH_ASSOC);
 				//Kill loop when all join rows are taken out.
 				
-				$primary_keys = $primary_object::_getKeys(Wave_DB_Column::INDEX_PRIMARY);
+				$primary_keys = $primary_object::_getKeys(Column::INDEX_PRIMARY);
 				
 				if(!isset($primary_keys[0]))
 					break;
@@ -402,7 +405,7 @@ class Wave_DB_Query{
 			$this->_last_row = $new_row;
 
 		} else {
-			$row = $this->_statement->fetch(Wave_DB_Connection::FETCH_ASSOC);
+			$row = $this->_statement->fetch(Connection::FETCH_ASSOC);
 		}		
 		
 		
@@ -413,7 +416,7 @@ class Wave_DB_Query{
 	public function fetchRowCount(){
 		
 		if($this->paginate === false)
-			throw new Wave_Exception('Wave_DB::fetchRowCount can only be used when paginating');
+			throw new Wave_Exception('Wave\DB::fetchRowCount can only be used when paginating');
 		
 		$sql = 'SELECT FOUND_ROWS() AS row_count;';
 	
@@ -422,7 +425,7 @@ class Wave_DB_Query{
 		
 		self::$query_count++;
 		
-		$rslt = $statement->fetch(Wave_DB_Connection::FETCH_ASSOC);
+		$rslt = $statement->fetch(Connection::FETCH_ASSOC);
 		
 		return $rslt['row_count'];
 	}
@@ -440,8 +443,8 @@ class Wave_DB_Query{
 			$class_name = trim(substr($part, $index_of_class === false ? 0 : $index_of_class+1), '`');
 
 			//If class wasn't correct, try to append default ns
-			if(strpos($class_name, Wave_DB::NS_SEPARATOR) === false || !class_exists($class_name))
-				$sql = str_replace(' '.$class_name, ' '.Wave_DB::getClassNameForTable($class_name, $this->database), ' '.$sql);
+			if(strpos($class_name, Wave\DB::NS_SEPARATOR) === false || !class_exists($class_name))
+				$sql = str_replace(' '.$class_name, ' '.Wave\DB::getClassNameForTable($class_name, $this->database), ' '.$sql);
 				
 		}
 		
@@ -454,7 +457,7 @@ class Wave_DB_Query{
 	}
 	
 	/*
-	* Function to return new Wave_DB_Query object. 
+	* Function to return new Query object. 
 	* Enables users to chain SQL construction.
 	*
 	*/

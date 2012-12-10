@@ -1,6 +1,9 @@
 <?php
 
-class Wave_Router_Node {
+namespace Wave\Router;
+use Wave;
+
+class Node {
 
 	const VAR_INT = '<int>';
 	const VAR_STRING = '<string>';
@@ -10,15 +13,15 @@ class Wave_Router_Node {
 	private $children = array();
 	private $action = null;
 	
-	private function setAction(Wave_Router_Action $action){
+	private function setAction(Action $action){
 		if($this->action === null)
 			$this->action = $action;
 		else {
-			throw new Wave_Exception($this->action->getAction() . ' shares a duplicate route with ' . $action->getAction());
+			throw new \Wave\Exception($this->action->getAction() . ' shares a duplicate route with ' . $action->getAction());
 		}
 	}
 	
-	public function addChild($route, Wave_Router_Action $action){
+	public function addChild($route, Action $action){
 		
 		// need to check if this part of the segment is a regex
 		// and extend the segment to contain the whole expression
@@ -39,7 +42,7 @@ class Wave_Router_Node {
 		
 		
 		if(!isset($this->children[$segment])){
-			$this->children[$segment] = new Wave_Router_Node();
+			$this->children[$segment] = new Node();
 		}
 		
 		if(isset($remaining) && $remaining !== null){
@@ -104,7 +107,7 @@ class Wave_Router_Node {
 	}
 	
 	public function hasValidAction(){
-		return $this->action instanceof Wave_Router_Action;
+		return $this->action instanceof Wave\Router\Action;
 	}
 	
 }

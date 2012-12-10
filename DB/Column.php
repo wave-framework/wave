@@ -1,6 +1,8 @@
 <?php
 
-class Wave_DB_Column {
+namespace Wave\DB;
+
+class Column {
 	
 	const TYPE_UNKNOWN 		= 0;
 	const TYPE_INT 			= 1;
