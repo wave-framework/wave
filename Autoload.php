@@ -6,9 +6,10 @@ class Autoload {
 	
 	
 	public static function register(){
+		return;
 		// when unserialising and an undefined class is encountered, call the spl_autoload_call method to 
 		// trigger the autoloader
-		//ini_set('unserialize_callback_func', '\spl_autoload_call');
+		ini_set('unserialize_callback_func', '\spl_autoload_call');
 		spl_autoload_register(array(new self, 'autoload'));
 		
 		include_once WAVE_CORE_PATH . 'Enums.php';
