@@ -11,7 +11,7 @@ class DB {
 	private $connection;
 	private $config;
 	
-	
+	const GLOBAL_NAMESPACE  = 'Models';
 	const NS_SEPARATOR		= '\\';
 
 	public function __construct($config){
@@ -67,7 +67,7 @@ class DB {
 		
 		$liid = intval($conn->lastInsertId());
 		if($liid !== 0){
-			$keys = $object::_getKeys(\Wave\DB_Column::INDEX_PRIMARY);
+			$keys = $object::_getKeys(DB\Column::INDEX_PRIMARY);
 			if(count($keys) === 1){
 				$object->{$keys[0]} = $liid;
 				$object->_setLoaded();			
@@ -79,7 +79,7 @@ class DB {
 	
 	public static function update($object){
 		
-		$keys = $object::_getKeys(\Wave\DB_Column::INDEX_PRIMARY);
+		$keys = $object::_getKeys(DB\Column::INDEX_PRIMARY);
 		$table = $object::_getTableName();
 		$schema = $object::_getSchemaName();
 		
@@ -118,7 +118,7 @@ class DB {
 
 	public static function delete(&$object){
 	
-		$keys = $object::_getKeys(\Wave\DB_Column::INDEX_PRIMARY);
+		$keys = $object::_getKeys(DB\Column::INDEX_PRIMARY);
 		$table = $object::_getTableName();
 		$schema = $object::_getSchemaName();
 		
@@ -253,7 +253,7 @@ class DB {
 		}
 	}
 
-	public static function set($namespace, \Wave\DB\Connection $connection){
+	public static function set($namespace, DB\Connection $connection){
 		if(isset(self::$instances[$namespace])){
 			self::$instances[$namespace]->connection = $connection;
 			return self::$instances[$namespace];
@@ -262,11 +262,15 @@ class DB {
 	}
 
 	public static function getDefaultNamespace(){
-		if(!Config::get('db')) return null;
-
-		foreach(Config::get('db')->databases as $ns => $database){
-			return $ns;
+		try {
+			foreach(Config::get('db')->databases as $ns => $database){
+				return $ns;
+			}
 		}
+		catch(Exception $e) {
+			return null;
+		}
+		
 	}
 	
 	public static function getNumDatabases(){
@@ -293,7 +297,7 @@ class DB {
 		return $class_name;
 	
 	}
-	
+
 	public static function columnToRelationName($key, $target_table = ''){
 	
 		$column_name = $key['table_name'] == $key['referenced_table_name'] ? $key['column_name'] : $key['table_name'];
@@ -313,24 +317,26 @@ class DB {
 	
 	
 	public static function getDriverClass($driver){
-		return '\\Wave\DB\\Driver\\'.$driver;
+		return '\\Wave\\DB\\Driver\\'.$driver;
 	}
 	
 	public static function getClassNameForTable($table, $database = null, $raw_table = false){
-	
+		
 		if($raw_table)
 			$table = self::tableNameToClass($table);
-		
-		if(strpos($table, self::NS_SEPARATOR) !== false)
+
+		if(strpos($table, self::GLOBAL_NAMESPACE . self::NS_SEPARATOR) !== false){
 			return $table;
+		}
 		
 		if(is_null($database))
 			$database = self::get();
 		
-		$class_name = $database->getNameSpace().self::NS_SEPARATOR.$table;
+		$class_name = '\\' . self::GLOBAL_NAMESPACE . '\\' . $database->getNameSpace() . '\\';
+		$class_name .= substr($table, max(-1, strrpos($table, '\\')) + 1);
 		
 		if(!class_exists($class_name))
-			throw new \Wave\DB_Exception("Class does not exist: $table");
+			throw new \Wave\DB\Exception("Could not derive class name for table: $table ($class_name)");
 		
 		return $class_name;
 	

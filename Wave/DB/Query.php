@@ -1,7 +1,8 @@
 <?php
 
 namespace Wave\DB;
-use Wave;
+use \Wave\DB,
+	\Wave;
 
 class Query{
 
@@ -42,11 +43,12 @@ class Query{
 	
 	
 	public function from($table, $fields = null){
+
+		$this->from = DB::getClassNameForTable($table, $this->database);
 		
 		if(is_null($fields))
-			$fields = Wave\DB::getFieldsForTable($table, $this->database);
-			
-		$this->from = Wave\DB::getClassNameForTable($table, $this->database);
+			$fields = DB::getFieldsForTable($this->from, $this->database);
+	
 		$this->fields = $fields;
 		
 		return $this;
@@ -56,7 +58,7 @@ class Query{
 	
 		$this->with[] = array(
 			'table' => $table,
-			'class' => Wave\DB::getClassNameForTable(Wave_Inflector::singularize($table), $this->database, true)
+			'class' => Wave\DB::getClassNameForTable(Wave\Inflector::singularize($table), $this->database, true)
 		);
 		return $this;
 	}
@@ -81,6 +83,7 @@ class Query{
 	public function join($table, $on, $type, $lookup_class){
 		
 		$this->join[] = array('table' 	=> $table,
+							  'class'	=> Wave\DB::getClassNameForTable($table),
 							  'on'		=> ($lookup_class ? $this->checkClassNames($on) : $on),
 							  'type'	=> $type);
 	
@@ -102,7 +105,7 @@ class Query{
 		
 		$this->where[] = array('conditions' => $array,
 							   'mode' => $mode);
-				
+		
 		return $this;	
 	}	
 		
@@ -168,7 +171,7 @@ class Query{
 			if(is_int($field)){
 				$select_fields[] = $data;
 			} else {
-				$select_fields[] = $from.'.'.$field.' AS '.$from.self::TABLE_ALIAS_SPLIT.$field;			
+				$select_fields[] = self::classPropertyToAliasedSelect($from, $field);			
 			}	
 		}
 			
@@ -187,10 +190,10 @@ class Query{
 						$join_class = '';
 						
 						foreach($foreign_class::_getFields() as $field => $data)
-							$select_fields[] = $with['class'].'.'.$field.' AS '.$with['class'].self::TABLE_ALIAS_SPLIT.$field;
+							$select_fields[] = self::classPropertyToAliasedSelect($with['class'], $field);
 										
-						$with_joins .= self::JOIN_LEFT.' '.$relation['foreign_schema'].'.'.$relation['foreign_table'].' AS '.$with['class'].' ';
-						$with_joins .= 'ON '.$with['class'].'.'.$relation['foreign_column'].' = '.$from.'.'.$relation['column_name']."\n";	
+						$with_joins .= self::JOIN_LEFT.' '.$relation['foreign_schema'].'.'.$relation['foreign_table'].' AS '.self::classNameToAliasedTableName($with['class']).' ';
+						$with_joins .= 'ON '.self::classPropertyToAliasedColumn($with['class'], $relation['foreign_column']).' = '.self::classPropertyToAliasedColumn($from, $relation['column_name'])."\n";	
 						break;
 						
 					case Model::RELATION_MANY_TO_MANY:
@@ -221,16 +224,17 @@ class Query{
 		
 		$manual_joins = '';
 		foreach($this->join as $join){
-			$table = Wave\DB::getClassNameForTable($join['table'], $this->database);
-			$manual_joins .= $join['type'].' '.$table::_getTableName().' AS '.$table.' ON '.$join['on']."\n";
+			$table_class = Wave\DB::getClassNameForTable($join['table'], $this->database);
+			$table_alias = self::classNameToAliasedTableName($table_class);
+			$manual_joins .= $join['type'].' '.$table_class::_getTableName().' AS '.$table_alias.' ON '.$join['on']."\n";
 			
-			foreach($table::_getFields() as $field => $data)
-				$select_fields[] = $table.'.'.$field.' AS '.$table.self::TABLE_ALIAS_SPLIT.$field;
+			foreach($table_class::_getFields() as $field => $data)
+				$select_fields[] = self::classPropertyToAliasedSelect($table_class, $field);
 
 		}
 		
 		$query = 'SELECT ' . ($this->paginate ? 'SQL_CALC_FOUND_ROWS ' : '');
-		$query .= implode(',',$select_fields).' FROM `'.$from::_getTableName().'` AS '.$from."\n";
+		$query .= implode(',',$select_fields).' FROM `'.$from::_getTableName().'` AS '.self::classNameToAliasedTableName($from)."\n";
 		$query .= $with_joins;
 		$query .= $manual_joins;
 		
@@ -277,7 +281,7 @@ class Query{
 		}
 		
 		$this->_built = true;
-				
+
 		return $query;
 	
 	}
@@ -332,7 +336,7 @@ class Query{
 			if(!isset($this->_last_row))
 				$this->_last_row = $this->_statement->fetch(Connection::FETCH_ASSOC);
 			if($this->_last_row === false) return null;			
-			$row = new $primary_object($this->_last_row, $primary_object.self::TABLE_ALIAS_SPLIT);
+			$row = new $primary_object($this->_last_row, self::classNameToAliasedTableName($primary_object).self::TABLE_ALIAS_SPLIT);
 
 			$loaded_relation_cache = array();
 
@@ -342,7 +346,7 @@ class Query{
 					
 					if(!isset($loaded_relation_cache['foreign_table'])) $loaded_relation_cache['foreign_table'] = array();
 
-					$joined_object = new $with['foreign_class']($this->_last_row, $with['class'].self::TABLE_ALIAS_SPLIT);
+					$joined_object = new $with['foreign_class']($this->_last_row, self::classNameToAliasedTableName($with['class']).self::TABLE_ALIAS_SPLIT);
 					
 					// if the joined bit is empty, put an empty value in the parent
 					if($joined_object->pkNull()) {						
@@ -365,7 +369,7 @@ class Query{
 							case Model::RELATION_MANY_TO_MANY:
 								//Object that holds the m2m join
 								$classname = Wave\DB::getClassNameForTable($with['join_class'], $this->database);
-								$join_object = new $classname($this->_last_row, $with['join_class'].self::TABLE_ALIAS_SPLIT);
+								$join_object = new $classname($this->_last_row, self::classNameToAliasedTableName($with['join_class']).self::TABLE_ALIAS_SPLIT);
 								$joined_object->_addRelationObject($with['relation']['target_class'], $join_object);
 								$row->{'add'.$with['relation']['target_class']}($joined_object, false, $join_object);
 								break;		
@@ -377,7 +381,8 @@ class Query{
 				}
 				
 				foreach($this->join as $join){
-					$join_object = new $join['table']($this->_last_row, Wave\DB::getClassNameForTable($join['table']).self::TABLE_ALIAS_SPLIT);
+					$table_class = Wave\DB::getClassNameForTable($join['table'], $this->database);
+					$join_object = new $join['class']($this->_last_row, self::classNameToAliasedTableName($join['class']).self::TABLE_ALIAS_SPLIT);
 					if(!$join_object->pkNull()){
 
 						$row->_addRelationObject($join['table'], $join_object);					
@@ -394,12 +399,12 @@ class Query{
 					break;
 					
 				foreach($primary_keys as $pk){					
-					
-					$index = $primary_object.self::TABLE_ALIAS_SPLIT.$pk;
+					$index = self::classNameToAliasedTableName($primary_object) . self::TABLE_ALIAS_SPLIT . $pk;
 					if($this->_last_row[$index] !== $new_row[$index])
 						break 2; //kill for(;;) loop
 				}
 				$this->_last_row = $new_row;
+
 			};
 			
 			$this->_last_row = $new_row;
@@ -416,7 +421,7 @@ class Query{
 	public function fetchRowCount(){
 		
 		if($this->paginate === false)
-			throw new Wave_Exception('Wave\DB::fetchRowCount can only be used when paginating');
+			throw new \Wave\Exception('Wave\DB::fetchRowCount can only be used when paginating');
 		
 		$sql = 'SELECT FOUND_ROWS() AS row_count;';
 	
@@ -429,6 +434,29 @@ class Query{
 		
 		return $rslt['row_count'];
 	}
+
+	private static function classNameToAliasedTableName($class){
+		$parts = explode('\\', str_replace(DB::GLOBAL_NAMESPACE, '', $class));
+		if(empty($parts[0])) unset($parts[0]);
+
+		return implode('_', $parts);
+	}
+
+	private static function aliasedTableNameToClassName($table){
+		$parts = explode('_', $table);
+		return DB::GLOBAL_NAMESPACE . DB::NS_SEPARATOR . implode(DB::NS_SEPARATOR, $parts);
+	}
+
+	private static function classPropertyToAliasedColumn($class, $property){
+		$alias = self::classNameToAliasedTableName($class);
+		return "{$alias}.{$property}";
+	}
+
+	private static function classPropertyToAliasedSelect($class, $property){
+		$alias = self::classNameToAliasedTableName($class);
+		$split = self::TABLE_ALIAS_SPLIT;
+		return "{$alias}.{$property} AS {$alias}{$split}{$property}";
+	}
 	
 	
 	private function checkClassNames($sql){
@@ -437,17 +465,19 @@ class Query{
 		
 		//Remove last index
 		array_pop($sql_exploded);
-		
+
 		foreach($sql_exploded as $part){
 			$index_of_class = strrpos($part, ' ');
 			$class_name = trim(substr($part, $index_of_class === false ? 0 : $index_of_class+1), '`');
 
 			//If class wasn't correct, try to append default ns
-			if(strpos($class_name, Wave\DB::NS_SEPARATOR) === false || !class_exists($class_name))
-				$sql = str_replace(' '.$class_name, ' '.Wave\DB::getClassNameForTable($class_name, $this->database), ' '.$sql);
+			if(strpos($class_name, Wave\DB::NS_SEPARATOR) === false || !class_exists($class_name)){
+				$alias = self::classNameToAliasedTableName(Wave\DB::getClassNameForTable($class_name, $this->database));
+				$sql = str_replace(' '.$class_name, ' '.$alias, ' '.$sql);
+			}
 				
 		}
-		
+
 		return $sql;
 	
 	}

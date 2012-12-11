@@ -14,7 +14,7 @@
 *
 */
 
-namespace <<namespace>>;
+namespace Models\<<namespace>>;
 use \Wave\DB;
 
 class <<class_name>> extends <<base_class_name>> {

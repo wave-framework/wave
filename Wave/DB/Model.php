@@ -131,7 +131,7 @@ abstract class Model {
 			case Column::TYPE_TIMESTAMP:
 				if($data == 'CURRENT_TIMESTAMP')
 					$data = 'now';
-				return new DateTime($data);
+				return new \DateTime($data);
 		
 			default:
 				return $data;

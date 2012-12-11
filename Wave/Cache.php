@@ -23,7 +23,8 @@ class Cache {
 	
 	public static function store($key, $data){
 		$path = self::$_cachepath . $key;
-		if(!is_dir(self::$_cachepath))
+		$dir = dirname($path);
+		if(!is_dir($dir))
 			@mkdir($dir, 0770, true);
 		file_put_contents($path, serialize($data));
 	}
