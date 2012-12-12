@@ -2,6 +2,11 @@
 
 namespace Wave;
 
+use \Wave\Registry,
+	\Wave\IAuthable,
+	\Wave\Config,
+	\Wave\Storage\Cookie;
+
 class Auth {
 
 	const SUCCESS = 'success';
@@ -35,7 +40,7 @@ class Auth {
 		$class = self::$_handler;
 		$auth_object = $class::loadByIdentifier($primary);
 							
-		if($auth_object instanceof \Wave\IAuthable){
+		if($auth_object instanceof IAuthable){
 
 			$_is_valid = true;
 			// check the secondary credentials
@@ -68,15 +73,15 @@ class Auth {
 	}
 	
 	public static function registerIdentity($identity){
-		return Wave_Registry::store('__wave_identity', $identity);
+		return Registry::store('__wave_identity', $identity);
 	}
 	
 	public static function deregisterIdentity(){
-		return Wave_Registry::destroy('__wave_identity');
+		return Registry::destroy('__wave_identity');
 	}
 		
 	public static function persistIdentity($identity, $type = null, $expires = null){
-		$config = Wave_Config::get('deploy')->auth;
+		$config = Config::get('deploy')->auth;
 		if($type === null)
 			$type = $config->persist_type;
 		if($expires === null)
@@ -84,7 +89,7 @@ class Auth {
 			
 		if($type == 'cookie'){
 				
-			Wave_Storage_Cookie::store(
+			Cookie::store(
 				$config->cookie->name,
 				$identity,
 				strtotime($expires),
@@ -105,7 +110,7 @@ class Auth {
 				
 		if($type == 'cookie'){
 				
-			Storage\Cookie::store(
+			Cookie::store(
 				$config->cookie->name,
 				'',
 				time()-86400,

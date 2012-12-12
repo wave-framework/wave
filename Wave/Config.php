@@ -4,16 +4,24 @@ namespace Wave;
 
 class Config {
 
+	private static $base_directory = null;
+
 	private static $_writable = false;
 	private static $_readable = true;
 		
 	private $_data = false;
     
-    public function __construct($config){    		
-    		
+	public static function init($base_path){
+		if(!is_readable($base_path)){
+			throw new \Wave\Exception('Base config directory '.$base_path.' is not readable');
+		}
+
+		self::$base_directory = $base_path;
+	}
+
+    public function __construct($config){
     	$config_data = include ($config);
-    	$this->_data =  $this->loadFromArray($config_data);
-    
+    	$this->_data = $this->loadFromArray($config_data);
     }
 
     public static function loadFromArray($array) {
@@ -37,14 +45,13 @@ class Config {
     }
     
     public static function get($file){
-		
 		static $configs;
 		if (!isset($configs[$file])){
 			//no special config - try to load file.
-			$file_path = APP_ROOT . "config/$file.php";
+			$file_path = self::$base_directory . "/$file.php";
 		
-			if(!file_exists($file_path))
-				return null;
+			if(!is_readable($file_path))
+				throw new \Wave\Exception("Could not load configuration file $file. Looked in $file_path");
 				
 			$configs[$file] = new self($file_path);
 		}

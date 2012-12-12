@@ -88,9 +88,9 @@ class Router {
 					
 				$auth_obj = Auth::getIdentity();
 				$auth_class = Auth::getHandlerClass();
-				
-				if(!in_array('IAuthable', class_implements($auth_class)))
-					throw new Exception('A valid IAuthable class is required to use RequiresLevel annotations', 500);
+
+				if(!in_array('Wave\IAuthable', class_implements($auth_class)))
+					throw new Exception('A valid Wave\IAuthable class is required to use RequiresLevel annotations', 500);
 				
 				if(!$auth_class::noAuthAction(array(
 					'destination' => $action,

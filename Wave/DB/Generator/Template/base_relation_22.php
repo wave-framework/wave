@@ -6,8 +6,8 @@
 		
 		if(!isset($this->_data[$key])){
 			
-			$query = Wave\DB::get('<<namespace>>')->from('<<namespace>>_<<Wave\DB::tableNameToClass(target_table)>>')
-											->innerJoin('<<Wave\DB::tableNameToClass(referenced_table_name)>>', '<<namespace>>_<<Wave\DB::tableNameToClass(referenced_table_name)>>.<<target_table>>_id = <<namespace>>_<<Wave\DB::tableNameToClass(target_table)>>.<<target_table>>_id', false) //@mod by Patrick, was '<<referenced_table_name>>.<<target_table>>_id = <<target_table>>.<<target_table>>_id'
+			$query = \Wave\DB::get('<<namespace>>')->from('<<namespace>>\\<<Wave\DB::tableNameToClass(target_table)>>')
+											->innerJoin('<<Wave\DB::tableNameToClass(referenced_table_name)>>', '<<namespace>>\\<<Wave\DB::tableNameToClass(referenced_table_name)>>.<<target_table>>_id = <<namespace>>\\<<Wave\DB::tableNameToClass(target_table)>>.<<target_table>>_id', false)
 											->where('<<Wave\DB::tableNameToClass(referenced_table_name)>>.<<referenced_column_name>>', '=', $this->_data['<<column_name>>']);
 			foreach($args as $func => $props)
 				$query->$func($props);
@@ -46,7 +46,7 @@
 				
 			$sql = 'DELETE FROM `<<referenced_table_name>>` WHERE `<<target_table>>_id` = ? AND `<<referenced_column_name>>` = ? LIMIT 1;';
 
-			$conn = Wave\DB::get('<<namespace>>')->getConnection();		
+			$conn = \Wave\DB::get('<<namespace>>')->getConnection();		
 			$conn->prepare($sql)->execute(array($object-><<target_table>>_id, $this-><<referenced_column_name>>));
 			
 			$object->_removeRelationObject(null, $object);	

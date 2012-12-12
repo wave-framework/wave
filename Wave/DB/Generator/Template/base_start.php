@@ -15,6 +15,8 @@
 *
 */
 
+namespace Models\<<namespace>>\Base;
+use \Wave\DB;
 
 abstract class <<class_name>> extends <<base_model>> {
 

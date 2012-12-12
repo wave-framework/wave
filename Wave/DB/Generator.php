@@ -97,9 +97,9 @@ class Generator {
 		$filename = self::getModelPath($database).'Base'.DIRECTORY_SEPARATOR.Wave\DB::tableNameToClass($table['table_name']).'.php';
 		
 		//@todo make dynamic
-		$table['base_model'] = '\Wave\DB_Model';
+		$table['base_model'] = '\Wave\DB\Model';
 		$table['database_namespace'] = $database->getNamespace();
-		$table['class_name'] = $database->getNamespace().'\\Base\\'.Wave\DB::tableNameToClass($table['table_name']);
+		$table['class_name'] = Wave\DB::tableNameToClass($table['table_name']);
 		
 		$t = new Generator\Template('base_start');
 		$t->setData($database, $table);
@@ -136,8 +136,8 @@ class Generator {
 	
 		$filename = self::getModelPath($database).Wave\DB::tableNameToClass($table['table_name']).'.php';
 		
-		$table['base_class_name'] = $database->getNamespace().'\\Base\\'.Wave\DB::tableNameToClass($table['table_name']);
-		$table['class_name'] = $database->getNamespace().'\\'.Wave\DB::tableNameToClass($table['table_name']);
+		$table['base_class_name'] = 'Base\\'.Wave\DB::tableNameToClass($table['table_name']);
+		$table['class_name'] = Wave\DB::tableNameToClass($table['table_name']);
 		
 		if(file_exists($filename))
 			return false;

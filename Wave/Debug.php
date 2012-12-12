@@ -55,10 +55,8 @@ class Debug {
 	 */
 	public function getUsedFiles(){
 		$out = array();
-		for($i=0; $i < count($this->used_files); $i++){
-			$name = $this->used_files[$i]['filename'];
-			$caller = $this->used_files[$i]['caller'];
-			$out[] = array('number' => $i+1, 'filename' => $name, 'caller' => $caller);
+		foreach(get_included_files() as $i => $file){
+			$out[] = array('number' => $i+1, 'filename' => str_replace(SYS_ROOT, '', $file));
 		}
 		return $out;
 	}
@@ -78,7 +76,7 @@ class Debug {
 
 
 	public function getNumberOfFiles(){
-		return count($this->used_files);
+		return count(get_included_files());
 	}
 
 
@@ -128,7 +126,7 @@ class Debug {
 	        
 	        details['_wave_debugdb'] = "<?php foreach($this->getQueries() as $query): ?><div class=\"itemrow\" style=\"color:<?php echo $query['colour']; ?>;\">[:<?php echo $query['number']; ?>]&nbsp;&nbsp;<?php echo $query['sql']; ?><span class=\"right\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<?php echo $query['time']; ?>,&nbsp;<?php echo $query['rows']; ?>)</span></div><?php endforeach; ?>";
 	        
-	        details['_wave_debugfiles'] = '<?php foreach($this->getUsedFiles() as $file): ?><div class="itemrow">[<?php echo $file['number']; ?>]&nbsp;&nbsp;\'<?php echo $file['filename']; ?>\'&nbsp;&nbsp;<i>(<?php echo $file['caller']; ?>)</i></div><?php endforeach; ?>';
+	        details['_wave_debugfiles'] = '<?php foreach($this->getUsedFiles() as $file): ?><div class="itemrow">[<?php echo $file['number']; ?>]&nbsp;&nbsp;\'<?php echo $file['filename']; ?>\'</div><?php endforeach; ?>';
 	        
 	        bind();
 	        

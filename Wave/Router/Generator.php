@@ -1,14 +1,15 @@
 <?php
 
 namespace Wave\Router;
-use Wave;
+use \Wave\Router, 
+	\Wave;
 
 class Generator {
 	
 	public static function generate(){
-		$reflector = new Wave\Reflector(Wave\Config::get('wave')->path->controllers);				
+		$reflector = new Wave\Reflector(Wave\Config::get('wave')->path->controllers);
 		$reflected_options = $reflector->execute();
-			
+
 		$all_actions = self::buildRoutes($reflected_options);
 
 		foreach($all_actions as $domain => $actions){					
@@ -19,7 +20,7 @@ class Generator {
 				}
 			}
 			
-			Wave\Cache::store(Wave\Router::getCacheName($domain), $route_node);
+			Wave\Cache::store(Router::getCacheName($domain), $route_node);
 		}
 	}
 	

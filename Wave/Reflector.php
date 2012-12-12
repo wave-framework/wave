@@ -21,7 +21,7 @@ class Reflector {
 		
 		$this->_classes = array();
 		if($type == self::SCAN_FILE && is_file($handle)){
-			$class = self::fileIsClass($handle);
+			$class = self::findClass($handle);
 			if($class !== false)
 				$this->_classes[] = $class;
 		}
@@ -36,7 +36,7 @@ class Reflector {
 				$iterator = new \IteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST);
 			}
 			foreach ($iterator as $file) {
-			    $class = self::fileIsClass($file);
+			    $class = self::findClass($file);
 			    if($class !== false)
 					$this->_classes[] = $class;
 			}
@@ -45,20 +45,19 @@ class Reflector {
 	}
 	
 	public function execute($include_inherited_members = false){
-		
 		if(!isset($this->_classes[0]))
 			throw new \Wave\Exception('No files to reflect on');
 		
 		$classes = array();
-				
-		foreach($this->_classes as $class){
-			$reflector = new \ReflectionClass($class['classname']);
 			
-			$class_annotations = Annotation::parse($reflector->getDocComment(), $class['classname']);
+		foreach($this->_classes as $class){
+			$reflector = new \ReflectionClass($class);
+			
+			$class_annotations = Annotation::parse($reflector->getDocComment(), $class);
 			$parent_class = $reflector->getParentClass();
 			
 			$c = array(
-				'name' 			=> $class['classname'],
+				'name' 			=> $class,
 				'subclasses'	=> $parent_class instanceof \ReflectionClass ? $parent_class->getName() : '',
 				'implements'	=> $reflector->getInterfaceNames(),
 				'annotations'	=> $class_annotations
@@ -68,10 +67,10 @@ class Reflector {
 			foreach($reflector->getMethods() as $method){
 				$declaring_class = $method->getDeclaringClass()->getName();
 				// don't put inherited methods on here plz
-				if($declaring_class != $class['classname'] && !$include_inherited_members)
+				if($declaring_class != $class && !$include_inherited_members)
 					continue; 
 					
-				$annotations = Annotation::parse($method->getDocComment(), $class['classname']);
+				$annotations = Annotation::parse($method->getDocComment(), $class);
 				$method_annotations = array();
 				foreach($annotations as $annotation){
 					$method_annotations[] = $annotation;
@@ -92,10 +91,10 @@ class Reflector {
 			foreach($reflector->getProperties() as $property){
 				$declaring_class = $property->getDeclaringClass()->getName();
 				// don't put inherited methods on here plz
-				if($declaring_class != $class['classname'] && !$include_inherited_members)
+				if($declaring_class != $class && !$include_inherited_members)
 					continue; 
 				
-				$annotations = Annotation::parse($property->getDocComment(), $class['classname']);
+				$annotations = Annotation::parse($property->getDocComment(), $class);
 				$property_annotations = array();
 				foreach($annotations as $annotation){
 					$property_annotations[] = $annotation;
@@ -112,42 +111,54 @@ class Reflector {
 				);
 			}
 			
-			$classes[$class['classname']] = array('class' => $c, 'methods' => $methods, 'properties' => $properties);
+			$classes[$class] = array('class' => $c, 'methods' => $methods, 'properties' => $properties);
 			
 		}
 		return $classes;
 				
 	}
 	
-	private static function fileIsClass($file){
-		if(!is_file($file)) return false;
-		
-		// get the first little bit of a file
-		$handle = fopen($file, "r");
-		$contents = fread($handle, 256);
-		fclose($handle);
-			
-		preg_match('/class[ ]+(?<classname>[A-Za-z0-9_]+)([ ]+extends[ ]+(?<extends>[A-Za-z0-9_]+))?([ ]+implements[ ]+(?<implements>[A-Za-z0-9_, ]+))?[ ]+{/', $contents, $matches);
-		
-		unset($contents);
-		
-		if(isset($matches['classname'])){
-			$class =  array(
-				'classname' => $matches['classname'],
-				'path' => $file
-			);
-			
-			if(isset($matches['extends']))
-				$class['extends'] = $matches['extends'];
-			if(isset($matches['implements'])){
-				$class['implements'] = explode(',', str_replace(' ', '', $matches['implements']));
-			}
-				
-			return $class;
-		}
-		else
-			return false;
-	}
+    /**
+     * Returns the full class name for the first class in the file.
+     *
+     * @param string $file A PHP file path
+     *
+     * @return string|false Full class name if found, false otherwise
+     */
+    protected function findClass($file) {
+        $class = false;
+        $namespace = false;
+        $tokens = token_get_all(file_get_contents($file));
+        for ($i = 0, $count = count($tokens); $i < $count; $i++) {
+            $token = $tokens[$i];
+
+            if (!is_array($token)) {
+                continue;
+            }
+
+            if (true === $class && T_STRING === $token[0]) {
+                return $namespace.'\\'.$token[1];
+            }
+
+            if (true === $namespace && T_STRING === $token[0]) {
+                $namespace = '';
+                do {
+                    $namespace .= $token[1];
+                    $token = $tokens[++$i];
+                } while ($i < $count && is_array($token) && in_array($token[0], array(T_NS_SEPARATOR, T_STRING)));
+            }
+
+            if (T_CLASS === $token[0]) {
+                $class = true;
+            }
+
+            if (T_NAMESPACE === $token[0]) {
+                $namespace = true;
+            }
+        }
+
+        return false;
+    }
 	
 }
 
