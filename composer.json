@@ -1,5 +1,5 @@
 {
-    "name": "wave/wave",
+    "name": "wave-framework/wave",
     "type": "library",
     "description": "Wave is a lightweight PHP5.3 MVC framework",
     "keywords": ["framework", "mvc", "orm", "lightweight", "controllers", "models", "views"],
