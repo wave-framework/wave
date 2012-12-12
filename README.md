@@ -1,4 +1,4 @@
 wave
 ====
 
-The core Wave framework
+Wave is a lightweight MVC framework written in PHP.
