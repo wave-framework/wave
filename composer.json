@@ -3,13 +3,17 @@
     "type": "library",
     "description": "Wave is a lightweight PHP5.3 MVC framework",
     "keywords": ["framework", "mvc", "orm", "lightweight", "controllers", "models", "views"],
-    "homepage": "http://github.com/phindmarsh/wave",
+    "homepage": "http://github.com/wave-framework/wave",
 
     "authors": [
         {
             "name": "Patrick Hindmarsh",
             "email": "patrick@hindmar.sh",
             "homepage": "https://github.com/phindmarsh"
+        },
+        {
+            "name": "Michael Calcinai",
+            "email": "michael@calcin.ai"
         }
     ],
 
