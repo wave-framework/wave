@@ -19,7 +19,10 @@ class Router {
 	public static function init($host = null){
 		Hook::triggerAction('router.before_init', array(&$host));
 		if($host === null){
-			$host = $_SERVER['HTTP_HOST'];
+			if(isset($_SERVER['HTTP_HOST']))
+				$host = $_SERVER['HTTP_HOST'];
+			else 
+				$host = Config::get('deploy')->profiles->default->baseurl;
 		}
 		$instance = new self($host);
 		Hook::triggerAction('router.after_init', array(&$instance));

@@ -25,6 +25,8 @@ class Exception extends \Exception {
 	}
 	
 	public static function handle(\Exception $e){
+		$log_message = sprintf('%-4s %s', "({$e->getCode()})", $e->getMessage());
+		Log::write('exception', $log_message, Log::ERROR);
 		Controller::invoke(self::$_controller, array('exception' => $e));
 	}
 	
@@ -70,7 +72,12 @@ class Exception extends \Exception {
 	}
 	
 	public static function getResponseMethod(){
-		return (self::$_response_method == null) ? \Wave\Config::get('wave')->controller->default_response : self::$_response_method;
+		if(self::$_response_method == null){
+			if(PHP_SAPI === 'cli') return Response::CLI;
+			else return \Wave\Config::get('wave')->controller->default_response;
+		} 
+		else
+			return self::$_response_method;
 	}
 }
 

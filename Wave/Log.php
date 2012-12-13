@@ -14,7 +14,8 @@ namespace Wave;
 use \Wave\Config,
 	\Monolog\Logger,
 	\Monolog\Handler\AbstractHandler,
-	\Monolog\Handler\StreamHandler;
+	\Monolog\Handler\StreamHandler,
+	\Monolog\Processor\IntrospectionProcessor;
 
 class Log extends Logger {
 	
@@ -32,6 +33,13 @@ class Log extends Logger {
 	 *	Internal store for initialised channels 
 	**/
 	private static $channels = array();
+
+	/**
+	 *	Initialise the Log with a default channel for framework logs
+	**/
+	public static function init(){
+
+	}
 
 	/**
 	 *	Set the default level for logging messages to the 
@@ -75,8 +83,9 @@ class Log extends Logger {
 			if(!is_writable($log_dir)){
 				@mkdir($log_dir, 0770, true);
 			}
-
-			self::$channels[$channel]->pushHandler(new StreamHandler($log_path, self::getDefaultLevel()));
+			$handler = new StreamHandler($log_path, self::getDefaultLevel());
+			$handler->pushProcessor(new IntrospectionProcessor());
+			self::$channels[$channel]->pushHandler($handler);
 		}
 		else{
 			self::$channels[$channel]->pushHandler($handler);
@@ -99,6 +108,15 @@ class Log extends Logger {
 		return self::$channels[$name];
 	}
 
+	/**
+	 *	Set a Logger instance for a channel
+	 *
+	 *	@param $name String The channel name to set to
+	 *	@param $channel \Monolog\Logger The new Logger instance
+	**/
+	public static function setChannel($name, Logger $instance){
+		return self::$channels[$name] = $instance;
+	}
 
 	/**
 	 *	A shorthand for writing a message to a given channel

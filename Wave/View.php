@@ -37,8 +37,7 @@ class View {
 
 		// global variables
 		$this->twig->addGlobal('_assets', Config::get('deploy')->assets);
-		//$this->twig->addGlobal('_protocol', Router::$protocol);
-		$this->twig->addGlobal('_host', Config::get('deploy')->baseurl);
+		$this->twig->addGlobal('_host', Config::get('deploy')->profiles->default->baseurl);
 		$this->twig->addGlobal('_mode', Core::$_MODE);
 		
 		if(Config::get('deploy')->mode == Core::MODE_DEVELOPMENT || isset($_REQUEST['_wave_show_debugger']))
