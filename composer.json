@@ -25,7 +25,8 @@
     },
 
     "autoload": {
-        "psr-0": {"Wave": ""}
+        "psr-0": {"Wave": ""},
+        "files": ["Enums.php"]
     }
 
 }
