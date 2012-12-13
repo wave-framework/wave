@@ -1,0 +1,31 @@
+#!/usr/bin/php
+<?php
+
+include dirname(__FILE__) . '/../cli-tools.php';
+
+echo "Regenerating Views... ";
+\Wave\View::generate();
+echo " done\n";
+
+if(VERBOSE){
+	$dir_iterator = new RecursiveDirectoryIterator(\Wave\Config::get('wave')->path->views);
+	$iterator = new RecursiveIteratorIterator($dir_iterator);
+	$c = 0;
+
+	echo "\nResult: \n";
+
+	echo "  Compiled views from : ".\Wave\Config::get('wave')->path->views. "\n\n";
+	printf("    %s\n", "File");
+	$l = strlen(\Wave\Config::get('wave')->path->views);
+	echo "    ".str_repeat('-', 120)."\n";
+	foreach ($iterator as $template){
+		$i = pathinfo($template);
+		if($i['extension'] != 'phtml') continue; 
+		$c++;
+		printf("    %s\n", substr($template, $l));
+	}
+	echo "\n"; 
+	echo "    Total: ".$c . " templates\n";
+	echo "\n\n";
+}
+

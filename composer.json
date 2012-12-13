@@ -17,6 +17,8 @@
         }
     ],
 
+    "bin": [ "bin/generate" ],
+
     "require": {
         "php": ">=5.3.2",
         "twig/twig": "1.*",
@@ -25,7 +27,7 @@
     },
 
     "autoload": {
-        "psr-0": {"Wave": ""},
+        "psr-0": {"Wave": "src"},
         "files": ["Wave/Enums.php"]
     }
 
