@@ -17,7 +17,7 @@
         }
     ],
 
-    "bin": [ "bin/generate" ],
+    "bin": [ "bin/*" ],
 
     "require": {
         "php": ">=5.3.2",
