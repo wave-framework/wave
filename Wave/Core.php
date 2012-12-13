@@ -19,9 +19,6 @@ class Core {
 		// include the file with the enum classes manually
 		include_once dirname(__FILE__) . '/Enums.php';
 		
-		Autoload::register();
-		\Wave\Exception::register();
-		
 		self::checkDependencies();
 		Cache::init();
 	}

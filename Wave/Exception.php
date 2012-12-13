@@ -3,10 +3,15 @@
 namespace Wave;
 
 class Exception extends \Exception {
-		
+	
+	private static $_controller = null;
 	public static $_response_method = null;
 	
-	public static function register(){
+	public static function register($controller){
+		if(!class_exists($controller) || !is_subclass_of($controller, '\\Wave\\Controller')){
+			throw new \Exception("Controller $controller must be an instance of \\Wave\\Controller");
+		}
+		self::$_controller = $controller;
 		set_exception_handler(array('\Wave\Exception', 'handle'));
 		//set_error_handler(array('\Wave\Exception', 'handleError'));
 	}
@@ -20,7 +25,7 @@ class Exception extends \Exception {
 	}
 	
 	public static function handle(\Exception $e){
-		Controller::invoke("\\Controllers\\Exception", array('exception' => $e));
+		Controller::invoke(self::$_controller, array('exception' => $e));
 	}
 	
 	public static function handleError($level, $message, $file, $line, $context) {
