@@ -13,9 +13,10 @@
 namespace Wave;
 use \Wave\Config,
 	\Monolog\Logger,
-	\Monolog\Handlers\AbstractHandler;
+	\Monolog\Handler\AbstractHandler,
+	\Monolog\Handler\StreamHandler;
 
-class Log {
+class Log extends Logger {
 	
 	private static $default_level = null;
 	private static $all_levels = array(
@@ -111,7 +112,7 @@ class Log {
 	public static function write($channel, $message, $level = Logger::INFO){
 		$channel = self::getChannel($channel);
 
-		return $channel->addRecord($message, $level);
+		return $channel->addRecord($level, $message);
 	}
 
 
