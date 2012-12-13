@@ -17,7 +17,13 @@
         }
     ],
 
-    "bin": [ "bin/*" ],
+    "bin": [ 
+        "bin/generate/models",
+        "bin/generate/views",
+        "bin/generate/routes",
+        "bin/install",
+        "bin/cli-tools.php" 
+    ],
 
     "require": {
         "php": ">=5.3.2",
