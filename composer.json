@@ -17,7 +17,7 @@
         }
     ],
 
-    "bin": [ "bin/" ],
+    "bin": [ "bin/wave" ],
 
     "require": {
         "php": ">=5.3.2",
@@ -27,8 +27,11 @@
     },
 
     "autoload": {
-        "psr-0": {"Wave": "src"},
-        "files": ["Wave/Enums.php"]
+        "psr-0": {
+            "PostInstall": "bin/composer",
+            "Wave": "src"
+        },
+        "files": ["src/Wave/Enums.php"]
     }
 
 }

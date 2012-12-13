@@ -2,29 +2,42 @@
 
 define ('VERBOSE', in_array('-v', $argv));
 
-include_once dirname(__FILE__) . '/../bootstrap.php';
+if(!file_exists('./bootstrap.php')){
+    error("Could not load application './bootstrap.php', aborting...", false);
+    error("This script must be run from the application root directory");
+}
 
-if(!function_exists('write')){
-	function write($msg){ write_stdout($msg); }
+require_once './bootstrap.php';
+
+if(!function_exists('writeout')){
+	function writeout($msg){ write_stdout($msg); }
 }
 
 function write_stdout($msg){
 	echo date('Y-m-d h:i:s') . ' ' . $msg . "\n";
 }
 
-function read($prompt = null, $delim = ':'){
+function readin($prompt = null, $delim = ':'){
 	if($prompt !== null){
-		echo "{$prompt}{$delim} ";
+		echo "{$prompt}{$delim}\n";
 	}
 	if(function_exists('readline')) return readline();
-	else return read_stdin();
+	else {
+		$fr = fopen("php://stdin","r");
+		$input = fgets($fr,128);
+		$input = rtrim($input);
+		fclose ($fr);
+		return $input;
+	}
 }
 
-function read_stdin() {
-    $fr = fopen("php://stdin","r");
-    $input = fgets($fr,128);
-    $input = rtrim($input);
-    fclose ($fr);
-    return $input;
+function info($message){
+	echo "\033[1;37m$message\033[0m\n";
 }
-
+function warn($message){
+	echo "\033[1;34m$message\033[0m\n";
+}
+function error($message, $terminiate = true){
+	echo "\033[0;31m$message\033[0m\n";
+	if($terminiate) exit(1);
+}
