@@ -34,8 +34,11 @@ class Router {
 		if($url === null){
 			if(isset($_SERVER['PATH_INFO']))
 				$this->request_uri = substr($_SERVER['PATH_INFO'], strpos($_SERVER['PATH_INFO'], '.php/'));
-			else
-				$this->request_uri = $_SERVER['REQUEST_URI'];
+			else {
+				$components = parse_url($_SERVER['REQUEST_URI']);
+				$this->request_uri = $components['path'];
+			}
+	
 		}
 		else 
 			$this->request_uri = $url;
