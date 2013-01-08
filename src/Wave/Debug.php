@@ -19,12 +19,6 @@ class Debug {
 	
 	public function __construct(){
 		$this->execution_start = microtime(true);
-		if(isset($_REQUEST['_dev|debug_icons'])){
-			$this->showIcons();
-		}
-		else if(isset($_REQUEST['_dev|debug_css'])){
-			$this->showCSS();
-		}
 	}
 
 	public function getMemoryUsage(){
@@ -107,7 +101,7 @@ class Debug {
 	public function render(){
 		?>
 		<!--DEBUG PANEL-->
-		<link rel="stylesheet" href="/?_dev|debug_css" />
+		<style type="text/css"><?php echo self::getCSS(); ?></style>
 		<div id="_wave_debugpanel">
 	        <div id="_wave_debugclosetrigger" class="item" style="margin-top:-1px;border-right:none;"><div id="_wave_debugclose"> x </div></div>
 	        <div class="item"><div class="_wave_debugicon" id="_wave_debugclock"></div><div class="itemlabel"><?php echo $this->getExecutionTime(); ?>ms</div></div>
@@ -173,28 +167,30 @@ class Debug {
 		<?php
 	}
 	
-	public static function showCSS(){
-		header('Content-Type: text/css'); ?>
+	public static function getCSS(){
+		
+		return <<<CSS
+#_wave_debugmemory{background-position: 0px -48px;}
+#_wave_debugfiles{background-position: 0px -32px;}
+#_wave_debugclock{background-position: 0px -16px;}
+#_wave_debugdb{background-position: 0px 0px;}
+div._wave_debugicon{background-image: url(data:image/gif;base64,R0lGODlhEABgAOZ/AJm2xYeHh7KbWdjImbCwsNarEsy5luLi4v3+/cHBweXn6MrU4yJQdYSitbm4yJubm9jj7OPq9cXV2vP2+pOTk6qrq2xtgXh5lNTc69KxR4eIo87Oz3l4eHaWqtzc3LKUNmWCm+rx86ett7eRDpaaqGyUrFJTdOLYx6qURDdhhIl2UtnZ2aOks9nUya3F0rOts0ZyjmRngNbW1snJyaOTl4aKmZeasKmquaSnt5SQnXN1kOrt8tHR0d3k8by7usTFyO3y++nu+KKjpfn5+kt4l+Hm8VmIoPn9/mOKo+vr7JSrvPj7//X5/ufz9K+70dHc47XK073J3L/ExrjO1sbKzmxsbFZ8mbjD1nugtP38+/Pz887a3FWBmkNpikdtkp/EzqvAy7/I152gqb2mUc/O3bmseJCMnMPP4bmwmdXU2GRcg/n++oB+k/77+t7e3ra2u5CRpo2euWVpkG5wkHZrhu339xU/bF9efomvvr7S3tPT18rNzczMzKCOU////97e3iH5BAEAAH8ALAAAAAAQAGAAAAf/gH8bMjwzPz4+bz4/Gzw8G39/PCszMgdJOztJBzJ8PB6RMxsHBx4epKQKB4ORCQEVK6WEGzM+BA8+rRwBPH5+WnwPHLsUBK0BFDK+Q3wUVRwUDwmhBBRCP45vFAHIFQetFBVvFQ/lD0IVt9N/CbsyCFlaPBUB0MXHycszztC4kRsViq1QoOCHMGQEZgja8KACOXPl0AlROMjdkAkK+NBDFuCHID67evkZsu8ZhXs8DgT0oSBJkh8UiD3gEenUigQE0lUQIuTNqG+R/kgBAwBGihRWXDyhEjSSlA4wiBjpUIJICiQAmDoFkaJEFAhfvjxpcBQApA0dGCgJ4ecIHgBt/wEwgLGFx5YuXJr4aoIFri8lDDoUAeAFjB8EfprgcRECypMQVl0QIQLBTxY/dbCAKIHkDAKyJVIYqZwFwRElWKEMWaNEdAoulX0hgAChtJ8JoEt0mXIYAeLDbfxEsAogjOg6h2UjRiAXiQS0DBow8UUdgYujU3jwkWDFTocnEUI0gSCXAQAFZ6FYYSCaKgz2eBTQjLRnC+GjR5FAkd9UUIg8eGDRgAtTbABJUyEUoWAPGCxwBnr9/bHDBL4sAQQEUTx4YFATyjZBBAuAmMSGElLoCxNBLIBBFE4o0FSHFQLRwxlOxKFVJDC2JeMZUQAgxYsm+sFEBA0u4IRHHJo4JP8EGDR5JJB+LBFEBEUwCcEVSOJI4QRTRtADBD1gCeQRQAAxZRE99BBGliVaaCaVaa754hAITDDBm0VEEAWbmXSJZpMYiMmhDyIUamihQpBoigwrNOroCh64GOGklFZKqRt6zOAGpR7okcAbNzjgAAtpRLiCBTY4QIYDb4gKRwKbBnXAHWrYMA4LOODAAhwkrBDrAWOoEMMcJJCggQZwwKEBGweeUAAKHNAxRw0XXKCDDtbewYIbA4zQRwYfsDHHsHeUewcbbPDhRgIGFPABDTnIYYIJd+hgAxUv5HJABiOgIEAGNAyrgQ03kPFCH5G4IYABGRRQBrZwEIyDGQbIOkBAASOgoYEOZtSQww9uxBpJCyN88MK4Ymwgcn8ttPAHpJbGLPPMNNds880456zzzjz37PPPQAct9NBEF2300TgHAgA7); width: 16px; height: 16px; float: left; cursor: pointer;}
 
-		#_wave_debugmemory{background-position: 0px -48px;}
-		#_wave_debugfiles{background-position: 0px -32px;}
-		#_wave_debugclock{background-position: 0px -16px;}
-		#_wave_debugdb{background-position: 0px 0px;}
-		div._wave_debugicon{background-image: url(data:image/gif;base64,R0lGODlhEABgAOZ/AJm2xYeHh7KbWdjImbCwsNarEsy5luLi4v3+/cHBweXn6MrU4yJQdYSitbm4yJubm9jj7OPq9cXV2vP2+pOTk6qrq2xtgXh5lNTc69KxR4eIo87Oz3l4eHaWqtzc3LKUNmWCm+rx86ett7eRDpaaqGyUrFJTdOLYx6qURDdhhIl2UtnZ2aOks9nUya3F0rOts0ZyjmRngNbW1snJyaOTl4aKmZeasKmquaSnt5SQnXN1kOrt8tHR0d3k8by7usTFyO3y++nu+KKjpfn5+kt4l+Hm8VmIoPn9/mOKo+vr7JSrvPj7//X5/ufz9K+70dHc47XK073J3L/ExrjO1sbKzmxsbFZ8mbjD1nugtP38+/Pz887a3FWBmkNpikdtkp/EzqvAy7/I152gqb2mUc/O3bmseJCMnMPP4bmwmdXU2GRcg/n++oB+k/77+t7e3ra2u5CRpo2euWVpkG5wkHZrhu339xU/bF9efomvvr7S3tPT18rNzczMzKCOU////97e3iH5BAEAAH8ALAAAAAAQAGAAAAf/gH8bMjwzPz4+bz4/Gzw8G39/PCszMgdJOztJBzJ8PB6RMxsHBx4epKQKB4ORCQEVK6WEGzM+BA8+rRwBPH5+WnwPHLsUBK0BFDK+Q3wUVRwUDwmhBBRCP45vFAHIFQetFBVvFQ/lD0IVt9N/CbsyCFlaPBUB0MXHycszztC4kRsViq1QoOCHMGQEZgja8KACOXPl0AlROMjdkAkK+NBDFuCHID67evkZsu8ZhXs8DgT0oSBJkh8UiD3gEenUigQE0lUQIuTNqG+R/kgBAwBGihRWXDyhEjSSlA4wiBjpUIJICiQAmDoFkaJEFAhfvjxpcBQApA0dGCgJ4ecIHgBt/wEwgLGFx5YuXJr4aoIFri8lDDoUAeAFjB8EfprgcRECypMQVl0QIQLBTxY/dbCAKIHkDAKyJVIYqZwFwRElWKEMWaNEdAoulX0hgAChtJ8JoEt0mXIYAeLDbfxEsAogjOg6h2UjRiAXiQS0DBow8UUdgYujU3jwkWDFTocnEUI0gSCXAQAFZ6FYYSCaKgz2eBTQjLRnC+GjR5FAkd9UUIg8eGDRgAtTbABJUyEUoWAPGCxwBnr9/bHDBL4sAQQEUTx4YFATyjZBBAuAmMSGElLoCxNBLIBBFE4o0FSHFQLRwxlOxKFVJDC2JeMZUQAgxYsm+sFEBA0u4IRHHJo4JP8EGDR5JJB+LBFEBEUwCcEVSOJI4QRTRtADBD1gCeQRQAAxZRE99BBGliVaaCaVaa754hAITDDBm0VEEAWbmXSJZpMYiMmhDyIUamihQpBoigwrNOroCh64GOGklFZKqRt6zOAGpR7okcAbNzjgAAtpRLiCBTY4QIYDb4gKRwKbBnXAHWrYMA4LOODAAhwkrBDrAWOoEMMcJJCggQZwwKEBGweeUAAKHNAxRw0XXKCDDtbewYIbA4zQRwYfsDHHsHeUewcbbPDhRgIGFPABDTnIYYIJd+hgAxUv5HJABiOgIEAGNAyrgQ03kPFCH5G4IYABGRRQBrZwEIyDGQbIOkBAASOgoYEOZtSQww9uxBpJCyN88MK4Ymwgcn8ttPAHpJbGLPPMNNds880456zzzjz37PPPQAct9NBEF2300TgHAgA7); width: 16px; height: 16px; float: left; cursor: pointer;}
-		
-		div#_wave_debugpanel{font-family: "Lucida Sans" Arial; font-size: 12px; opacity:.5; alpha:50; position:absolute; z-index:99999; right:1px; top:1px; background-color:#DDDDDD; padding:3px; border:1px solid #888888; -moz-border-radius: 5px; -webkit-border-radius: 5px;line-height: normal; text-align:left;}
-		div#_wave_debugpanel:hover{opacity:.9; alpha:90;}
-		
-		div#_wave_debugpanel .item{float:right; padding:0 5px 0 5px; border-right: solid #888888 1px;}
-		div#_wave_debugpanel .item .itemlabel{margin:1px 0 0 3px; float:left;}
-		
-		div#_wave_debugitemdetails{float:left; clear:both; margin-top: 5px; font-size:11px; width:100%; overflow: hidden; background-color: #EEEEEE; border-top:#888888 solid 1px; padding-bottom:3px;}
-		div#_wave_debugitemdetails .itemrow{font-family:monospace; float:left; clear:both; padding:3px 5px 0 5px;}
-		div#_wave_debugitemdetails .right { display:block; }
-		
-		div#_wave_debugclose{background-color:#DDDDDD; padding:2px;}
-		div#_wave_debugclose:hover{cursor: pointer; background-color: #CCCCCC;}
-		<?php die();
+div#_wave_debugpanel{font-family: "Lucida Sans" Arial; font-size: 12px; opacity:.5; alpha:50; position:absolute; z-index:99999; right:1px; top:1px; background-color:#DDDDDD; padding:3px; border:1px solid #888888; -moz-border-radius: 5px; -webkit-border-radius: 5px;line-height: normal; text-align:left;}
+div#_wave_debugpanel:hover{opacity:.9; alpha:90;}
+
+div#_wave_debugpanel .item{float:right; padding:0 5px 0 5px; border-right: solid #888888 1px;}
+div#_wave_debugpanel .item .itemlabel{margin:1px 0 0 3px; float:left;}
+
+div#_wave_debugitemdetails{float:left; clear:both; margin-top: 5px; font-size:11px; width:100%; overflow: hidden; background-color: #EEEEEE; border-top:#888888 solid 1px; padding-bottom:3px;}
+div#_wave_debugitemdetails .itemrow{font-family:monospace; float:left; clear:both; padding:3px 5px 0 5px;}
+div#_wave_debugitemdetails .right { display:block; }
+
+div#_wave_debugclose{background-color:#DDDDDD; padding:2px;}
+div#_wave_debugclose:hover{cursor: pointer; background-color: #CCCCCC;}
+
+CSS;
+
 	}
 	
 }
