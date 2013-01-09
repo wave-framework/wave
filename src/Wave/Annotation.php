@@ -6,8 +6,8 @@ abstract class Annotation {
 	
 	const FOR_CLASS = 'class';
 	
-	const CLASS_CONTROLLER = '\Wave\Controller';
-	const CLASS_MODEL = '\Wave\Model';
+	const CLASS_CONTROLLER = '\\Wave\\Controller';
+	const CLASS_MODEL = '\\Wave\\Model';
 	
 	public static function parse($block, $originating_class){
 		preg_match_all('%(?:\s|\*)*~(\S+)[^\n\r\S]*(?:(.*?)(?:\*/)|(.*))%', $block, $result, PREG_PATTERN_ORDER);
@@ -41,7 +41,7 @@ abstract class Annotation {
 				throw new \Wave\Exception('There is an unparseable annotation value: "~' . $annotation . ': ' . $values[$key] . '"',0);
 			}
 			
-			$annotationClass = 'Wave\Annotation\\' . $annotation;
+			$annotationClass = 'Wave\\Annotation\\' . $annotation;
 					
 			if(class_exists($annotationClass, true)) {
 				$annotation = new $annotationClass;
