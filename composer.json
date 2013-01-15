@@ -17,13 +17,14 @@
         }
     ],
 
-    "bin": [ "bin/wave" ],
+    "bin": [ "bin/wave", "phakefile" ],
 
     "require": {
         "php": ">=5.3.2",
         "twig/twig": "1.*",
         "swiftmailer/swiftmailer": "4.2.*",
-        "monolog/monolog": "1.*"
+        "monolog/monolog": "1.*",
+        "jaz303/phake": "dev-master"
     },
 
     "autoload": {
