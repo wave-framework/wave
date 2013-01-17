@@ -2,6 +2,9 @@
 
 namespace Wave;
 
+use \Wave\Utils\JSON,
+    \Wave\Utils\XML;
+
 class Controller { 
 	
 	

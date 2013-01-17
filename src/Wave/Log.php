@@ -11,11 +11,13 @@
 **/
 
 namespace Wave;
+
 use \Wave\Config,
+	\Wave\Log\ExceptionIntrospectionProcessor,
 	\Monolog\Logger,
 	\Monolog\Handler\AbstractHandler,
-	\Monolog\Handler\StreamHandler,
-	\Monolog\Processor\IntrospectionProcessor;
+	\Monolog\Handler\StreamHandler;
+	
 
 class Log extends Logger {
 	
@@ -83,8 +85,8 @@ class Log extends Logger {
 			if(!is_writable($log_dir)){
 				@mkdir($log_dir, 0770, true);
 			}
-			$handler = new StreamHandler($log_path, self::getDefaultLevel());
-			$handler->pushProcessor(new IntrospectionProcessor());
+			$handler = new StreamHandler($log_path, self::DEBUG);
+			$handler->pushProcessor(new ExceptionIntrospectionProcessor());
 			self::$channels[$channel]->pushHandler($handler);
 		}
 		else{
@@ -132,7 +134,6 @@ class Log extends Logger {
 
 		return $channel->addRecord($level, $message);
 	}
-
 
 }
 

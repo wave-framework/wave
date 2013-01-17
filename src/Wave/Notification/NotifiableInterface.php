@@ -1,8 +1,8 @@
 <?php
 
-namespace Wave;
+namespace Wave\Notification;
 
-interface INotifiable {
+interface NotifiableInterface {
 	
 	const TYPE_EMAIL = 'email';
 	const TYPE_SMS = 'sms';

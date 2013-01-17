@@ -14,6 +14,7 @@ class Exception extends \Exception {
 		self::$_controller = $controller;
 		set_exception_handler(array('\Wave\Exception', 'handle'));
 		//set_error_handler(array('\Wave\Exception', 'handleError'));
+
 	}
 	
 	public function __construct($message, $code = null){
@@ -26,7 +27,9 @@ class Exception extends \Exception {
 	
 	public static function handle(\Exception $e){
 		$log_message = sprintf('%-4s %s', "({$e->getCode()})", $e->getMessage());
-		Log::write('exception', $log_message, Log::ERROR);
+		// get the channel manually so the introspection works properly.
+		Log::getChannel('exception')->addRecord(Log::ERROR, $log_message);
+		//Log::write('exception', $log_message, Log::ERROR);
 		Controller::invoke(self::$_controller, array('exception' => $e));
 	}
 	

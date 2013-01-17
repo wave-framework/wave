@@ -1,8 +1,8 @@
 <?php
-/**
- *	Load third party email handler. Must be loaded out here so the extends call works correctly
-**/
-include_once Wave_Config::get('deploy')->email->loader;
+
+namespace Wave\Notification;
+
+use \Wave\Config;
 
 /**
  *	Extends the Swift Message class for sending emails within the application.
@@ -11,7 +11,7 @@ include_once Wave_Config::get('deploy')->email->loader;
  *	@extends Swift_Message - See http://swiftmailer.org/docs/messages for function documentation
  *	@implements INotification - This class can be used as a dispatch method for the Notifier library
 **/
-class Wave_Notification_Email extends Swift_Message {
+class Email extends \Swift_Message {
 
 	private static $_isbuilt = false;
 
@@ -25,22 +25,22 @@ class Wave_Notification_Email extends Swift_Message {
 	public static function create(){		
 		
 		if(!self::$_isbuilt){
-			self::$config = Wave_Config::get('deploy')->email;
+			self::$config = Config::get('deploy')->email;
 
 			if(self::$config->transport === 'SMTP'){
-				self::$transport = Swift_SmtpTransport::newInstance(self::$config->server, self::$config->port);
+				self::$transport = \Swift_SmtpTransport::newInstance(self::$config->server, self::$config->port);
 				if(self::$config->auth)
 					self::$transport->setUsername(self::$config->username)
 									->setPassword(self::$config->password);
 			}
 			else if(self::$config->transport = 'PHPMAIL')
-				self::$transport = Swift_MailTransport::newInstance();
+				self::$transport = \Swift_MailTransport::newInstance();
 			else if(self::$config->transport = 'SENDMAIL')
-				self::$transport = Swift_SendmailTransport::newInstance('/usr/sbin/postfix -bs');
+				self::$transport = \Swift_SendmailTransport::newInstance('/usr/sbin/postfix -bs');
 			else
-				new ApplicationException('No transport type defined in configuration.');
+				new \Wave\Exception('No transport type defined in configuration.');
 
-			self::$mailer = Swift_Mailer::newInstance(self::$transport);
+			self::$mailer = \Swift_Mailer::newInstance(self::$transport);
 			
 			self::$_isbuilt = true;
 		}
@@ -69,9 +69,9 @@ class Wave_Notification_Email extends Swift_Message {
 		if(is_array($addresses)){
 			foreach($addresses as $key => $value){
 				// parsing an object
-				if($value instanceof Wave_INotifiable){
-					$e = $value->getNotificationAddress(Wave_INotifiable::TYPE_EMAIL);
-					$n = $value->getNotificationName(Wave_INotifiable::TYPE_EMAIL);
+				if($value instanceof NotifiableInterface){
+					$e = $value->getNotificationAddress(NotifiableInterface::TYPE_EMAIL);
+					$n = $value->getNotificationName(NotifiableInterface::TYPE_EMAIL);
 						
 					$new_addresses[$e] = $n;
 				}
@@ -83,9 +83,9 @@ class Wave_Notification_Email extends Swift_Message {
 					$new_addresses[$value] = '';
 			}
 			$addresses = $new_addresses;
-		} else if($addresses instanceof Wave_INotifiable){
-			$e = $addresses->getNotificationAddress(Wave_INotifiable::TYPE_EMAIL);
-			$n = $addresses->getNotificationName(Wave_INotifiable::TYPE_EMAIL);
+		} else if($addresses instanceof NotifiableInterface){
+			$e = $addresses->getNotificationAddress(NotifiableInterface::TYPE_EMAIL);
+			$n = $addresses->getNotificationName(NotifiableInterface::TYPE_EMAIL);
 			
 			
 			return parent::setTo($e, $n);
