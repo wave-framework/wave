@@ -5,7 +5,7 @@ namespace Wave\Validator\Datatypes;
 class ArrayDatatype extends AbstractDatatype {
 
 
-	public function validate(){
+	public function __invoke(){
 		return is_array($this->input);
 
 	}

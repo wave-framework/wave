@@ -17,6 +17,6 @@ abstract class AbstractDatatype {
      * @param mixed $input
      * @return bool
      */
-    abstract public function validate();
+    abstract public function __invoke();
 
 }

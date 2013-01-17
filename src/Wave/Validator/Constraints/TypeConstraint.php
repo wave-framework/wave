@@ -20,18 +20,26 @@ class TypeConstraint extends AbstractConstraint {
     public function __construct($property, $arguments, Validator &$validator){
         parent::__construct($property, $arguments, $validator);
 
-        $handler_class = sprintf(self::DATATYPE_CLASS_MASK, ucfirst($arguments));
-        if(!class_exists($handler_class))
-           throw new \Wave\Validator\Exception("Datatype handler class for '$arguments' is not valid");
+        if(is_callable($arguments)){
+            $this->handler = $arguments;
+        }
+        else if(is_string($arguments)) {
+            $handler_class = sprintf(self::DATATYPE_CLASS_MASK, ucfirst($arguments));
+            if(!class_exists($handler_class))
+                throw new \Wave\Validator\Exception("'type' handler '$arguments' is not valid for '$property'");
 
-        $this->handler = new $handler_class($this->data);
+            $this->handler = new $handler_class($this->data);
+        }
+        else {
+            throw new \Wave\Validator\Exception("Invalid 'type' specified for $property");
+        }
     }
 
     /**
      * @return bool
      */
     public function evaluate(){
-        return $this->handler->validate();
+        return call_user_func($this->handler, $this->data, $this->validator);
     }
 
     /**
@@ -49,7 +57,7 @@ class TypeConstraint extends AbstractConstraint {
         return array_merge(
             parent::getViolationPayload(),
             array(
-                'type' => $this->arguments
+                'type' => is_callable($this->arguments) ? 'custom' : $this->arguments
             )
         );
     }

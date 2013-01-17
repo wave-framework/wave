@@ -62,9 +62,10 @@ class Validator implements ArrayAccess {
                     $this->_cleaned[$field] = null;
                     break;
                 }
-                if($instance instanceof CleanerInterface)
-                    $this->_cleaned[$field] = $instance->getCleanedData();
 
+                if($instance instanceof CleanerInterface){
+                    $this->_cleaned[$field] = $instance->getCleanedData();
+                }
             }
         }
 
@@ -103,11 +104,7 @@ class Validator implements ArrayAccess {
             }
         }
 
-        print_r($input);
-
         $instance = new self($input, self::$_schema_cache[$schema]);
-
-        print_r($instance);
 
         if($instance->execute())
             return $instance->getCleanedData();

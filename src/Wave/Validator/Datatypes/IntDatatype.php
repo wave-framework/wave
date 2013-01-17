@@ -6,7 +6,7 @@ use Wave\Validator\CleanerInterface;
 
 class IntDatatype extends AbstractDatatype implements CleanerInterface  {
 
-	public function validate(){
+	public function __invoke(){
         return (is_int($this->input) || strval(intval($this->input)) === $this->input);
 	}
 	

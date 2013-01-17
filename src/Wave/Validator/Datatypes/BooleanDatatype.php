@@ -11,7 +11,7 @@ class BooleanDatatype extends AbstractDatatype implements CleanerInterface {
 
     private $converted;
 
-	public function validate(){
+	public function __invoke(){
 		if(in_array($this->input, $this->bool_true, true))
 			$this->converted = true;
 		else if(in_array($this->input, $this->bool_false, true))
@@ -23,7 +23,7 @@ class BooleanDatatype extends AbstractDatatype implements CleanerInterface {
 	}
 	
 	public function getCleanedData(){
-		return $this->converted;
+        return $this->converted;
 	}
 
 }

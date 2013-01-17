@@ -6,7 +6,7 @@ use Wave\Validator\CleanerInterface;
 
 class FloatDatatype extends AbstractDatatype implements CleanerInterface  {
 
-	public function validate(){
+	public function __invoke(){
 
         if(!is_scalar($this->input)) return false;
 
