@@ -1,142 +1,143 @@
 <?php
 
-class Wave_Validator {
+namespace Wave;
 
-	private $_search_paths = array();
-	private $_schema;
-	public $_data;
-	public $_sanitized = array();
-	
-	private $_invalid_keys = array();
-	
-	private $_status;
-	
-	private $datatypeClassPrefix = 'Wave_Validator_Datatype_';
-	private $datatypeClassDefault = 'Default';
-		
-	const RESULT_MISSING_KEYS = -10;
-	const RESULT_INVALID = -11;
-	const RESULT_DUPLICATES   = -12;
-	const RESULT_VALID = 10;
-	
-	const INPUT_VALID = 99;
-	const ERROR_MISSING = 'missing';
-	const ERROR_DUPLICATE = 'duplicate';
-	const ERROR_INVALID = 'invalid';
-	const ERROR_TOO_SHORT = 'too_short';
-	const ERROR_TOO_LONG = 'too_long';
-	const ERROR_NOT_IN_ARRAY = 'not_member';
-	const ERROR_NOT_EQUAL = 'not_equal';
-	const ERROR_NOT_UNIQUE = 'not_unique';
-	const ERROR_NOT_EXISTS = 'not_exists';
-	
-	const ERROR_NO_FILE = -20;
-	
-	const TYPE_INHERIT = 1;
-	const TYPE_STRING  = 2;
-	const TYPE_INTEGER = 3;
-	const TYPE_ARRAY   = 4;
-	
-	private static $_schema_cache = array();
+use Wave\Config,
+    Wave\Validator\CleanerInterface,
+    \ArrayAccess;
 
-	public function __construct($data, $schema_path){
-		//check schema exisits
-		 if(!isset(self::$_schema_cache[$schema_path])){
-			if(file_exists($schema_path)){
-				self::$_schema_cache[$schema_path] = include $schema_path; // cache the included file to reduce memory usage
-			}
-			else {
-				$this->_status = self::ERROR_NO_FILE;
-				throw new Wave_Exception("Schema file '".$schema_path."' does not exist");
-			}
-		}
-		$this->_data = $data;
-		$this->_schema =& self::$_schema_cache[$schema_path];
-	}
-	
-	public function validate(){
-		
-		foreach($this->_schema['fields'] as $field_name => $properties){
-			
-			if(!isset($properties['type']) || (!is_string($properties['type']) && !is_callable($properties['type'])))
-                    throw new Wave_Exception('The type must be set for property '.$field_name);
-			
-			// if its a custom validator, do it first
-			if(is_callable($properties['type']) && $properties['type'] instanceof Closure){
-				$properties['type']($this);
-			}
-			else {
+class Validator implements ArrayAccess {
 
-	            if(!isset($properties['required']) || !is_bool($properties['required']))
-	                    throw new Wave_Exception('Required must be set for non-custom types on property '.$field_name);
-	
-				// Assume all properties required, or check if required is true
-				if(!isset($properties['required']) || $properties['required'] === true){
-					// key must exist in data array
-					if(!$this->checkExistance($field_name)){
-						$this->addError($field_name, $properties, self::ERROR_MISSING);
-						continue;
-					}
-				}
-				// if its not in the data array, or it is empty and it is not required, dont bother validating it.
-				else if($properties['required'] === false && (!isset($this->_data[$field_name]) || empty($this->_data[$field_name]))){
-					$this->_sanitized[$field_name] = null;
-					continue;
-				}
-					
-				// try load the validating class
-	            if(class_exists($this->datatypeClassPrefix . ucfirst($properties['type']), true))
-	                $validatorClass = $this->datatypeClassPrefix . ucfirst($properties['type']);
-	            else 
-	                $validatorClass = $this->datatypeClassPrefix . $this->datatypeClassDefault;
-	
-	            $validator = new $validatorClass($properties, $this->_data[$field_name]);
-	            $result = $validator->validate();
-	            $this->_sanitized[$field_name] = $validator->sanitize();
-	            if($result !== Wave_Validator::INPUT_VALID)
-	                $this->addError($field_name, $properties, $result);
-			}
-		}
+    const CONSTRAINT_CLASS_MASK = "\\Wave\\Validator\\Constraints\\%sConstraint";
 
-		return (empty($this->_invalid_keys)) ? self::RESULT_VALID : self::RESULT_INVALID;
-		
-	}
-	
-	public function getSanitizedData(){
-		return $this->_sanitized;
-	}
-	
-	public function checkExistance($key){
-		return isset($this->_data[$key]) && $this->_data[$key] !== "";
-	}
-	
-	public function addError($field, $properties, $reason){
-		$this->_invalid_keys[$field] = array('reason' => $reason, 'properties' => $properties);
-	}
+    private static $_schema_cache = array();
+    private $_schema;
 
-	public function getErrors(){
-		return $this->_invalid_keys;
-	}
-	
-	public function getSchema(){
-		return $this->_schema;
-	}
-	
-	public function addSearchPath($path){
-		if (file_exists($path)){
-			if (substr($path, -1, 1) != DS)
-				$path .= DS;
-			$this->_search_paths[] = $path;
-		} else {
-			throw new Wave_Exception("Directory does \"$path\" not exist");
-		}
-		
-	}
-	
-	public function getField($fieldname){
-		return $this->_schema['fields'][$fieldname];
-	}
+    private $_data;
+    private $_cleaned = array();
+    private $_violations = array();
 
+    public static $last_errors = array();
+
+    /**
+     * @param array $input The data to validate against
+     * @param array $schema The schema to validate against
+     */
+    public function __construct(array $input, array $schema){
+        $this->_data = $input;
+        $this->_schema = $schema;
+    }
+
+    public function execute(){
+
+        foreach($this->_schema['fields'] as $field => $definition){
+            $this->_cleaned[$field] = null;
+
+            // manual check, if the field isn't in the data array throw an error
+            // if it is a required field, otherwise just skip and continue validating the rest
+            if(!isset($this->_data[$field]) || empty($this->_data[$field])){
+                if(!isset($definition['required']) || $definition['required']){
+                    $this->addViolation($field, array(
+                        'field_name' => $field,
+                        'reason' => 'missing',
+                        'message' => 'This field is required'
+                    ));
+                }
+                $this->_cleaned[$field] = null;
+                continue;
+            }
+
+            $this->_cleaned[$field] = $this->_data[$field];
+
+            foreach($definition as $constraint => $arguments){
+                if($constraint === 'required') continue;
+                $handler = self::translateConstraintKeyToClass($constraint);
+                if(!class_exists($handler))
+                    throw new \Wave\Validator\Exception("Handler for '$constraint' does not exist");
+
+                /** @var $instance \Wave\Validator\Constraints\AbstractConstraint */
+                $instance = new $handler($field, $arguments, $this);
+                if(!$instance->evaluate()){
+                    $this->addViolation($field, $instance->getViolationPayload());
+                    $this->_cleaned[$field] = null;
+                    break;
+                }
+                if($instance instanceof CleanerInterface)
+                    $this->_cleaned[$field] = $instance->getCleanedData();
+
+            }
+        }
+
+        self::$last_errors = $this->_violations;
+
+        return empty($this->_violations);
+    }
+
+    /**
+     * @param string $field the name of the field with the violation
+     * @param array $payload information about the violation
+     */
+    public function addViolation($field, array $payload){
+        $this->_violations[$field] = $payload;
+    }
+
+    /**
+     * @param array $input
+     * @param string $schema A schema file to load from the configured schema path
+     *
+     * @throws Validator\Exception
+     */
+    public static function validate(array $input, $schema){
+        self::$last_errors = array();
+
+        if(!array_key_exists($schema, self::$_schema_cache)) {
+            $schema_name = strtr($schema, '_', DIRECTORY_SEPARATOR);
+            $schema_file = sprintf(Config::get('wave')->schemas->file_format, $schema_name);
+            $schema_path = Config::get('wave')->path->schemas . $schema_file;
+
+            if(is_file($schema_path) && is_readable($schema_path)){
+                self::$_schema_cache[$schema] = include $schema_path;
+            }
+            else {
+                throw new Validator\Exception("Could not load schema [$schema] from file ($schema_path)");
+            }
+        }
+
+        print_r($input);
+
+        $instance = new self($input, self::$_schema_cache[$schema]);
+
+        print_r($instance);
+
+        if($instance->execute())
+            return $instance->getCleanedData();
+        else
+            return false;
+
+    }
+
+    public function getCleanedData(){
+        return $this->_cleaned;
+    }
+
+    private static function translateConstraintKeyToClass($key){
+        return sprintf(self::CONSTRAINT_CLASS_MASK, str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
+    }
+
+
+    public function offsetExists($offset) {
+        return array_key_exists($offset, $this->_cleaned);
+    }
+
+    public function offsetGet($offset) {
+        return $this->_cleaned[$offset];
+    }
+
+    public function offsetSet($offset, $value) {
+        throw new \Wave\Exception("Setting validator input data is not supported");
+    }
+
+    public function offsetUnset($offset) {
+        throw new \Wave\Exception("Unsetting validator input data is not supported");
+    }
 }
-
-?>
