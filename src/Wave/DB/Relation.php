@@ -65,12 +65,16 @@ class Relation {
 				if($num_ref_column === 2){
 					$type = self::MANY_TO_MANY;
 					//go back and find the other relation
-					//need to iterte to find the one that's not this.
+					//need to iterate to find the one that's not this.
 					foreach($this->referenced_column->getTable()->getRelations() as $relation)
 						if($relation->getReferencedColumn() != $this->local_column)
 							$this->target_relation = $relation;
-							
-					} else {
+
+                    //if target relation isn't found, there must be a special case, so just roll back to one-to-many
+                    if($this->target_relation === null)
+                        $type = self::ONE_TO_MANY;
+
+				} else {
 					//if not 2 PKS it is not reliable enough to assume what's going on.
 					$type = self::RELATION_UNKNOWN;
 				}
