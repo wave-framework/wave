@@ -346,8 +346,10 @@ class Query {
 			if (isset($this->offset))
 				$query .= ' OFFSET '.$this->offset;
 		}
-		
-		$this->_built = true;
+
+        $this->_params = array_map(array($this->database->getConnection()->getDriverClass(), 'valueToSQL'), $this->_params);
+
+        $this->_built = true;
 
 		return $query;
 	
