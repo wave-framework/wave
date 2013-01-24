@@ -146,9 +146,15 @@ class DB {
 		return $this->escape_character . $string . $this->escape_character;
 	}	
 	
-	public function convertValueForSQL($value){
+	public function valueToSQL($value){
 		$driver_class = $this->connection->getDriverClass();
-		return $driver_class::convertValueForSQL($value);
+		return $driver_class::valueToSQL($value);
+
+	}
+	
+	public function valueFromSQL($value, $field_data = null){
+		$driver_class = $this->connection->getDriverClass();
+		return $driver_class::valueFromSQL($value, $field_data);
 
 	}
 	
@@ -167,7 +173,7 @@ class DB {
 	}
 	
 	//alias function for Wave\DB\Qurey::from
-	public function from($from, &$alias, $fields = null){
+	public function from($from, &$alias = null, $fields = null){
 		$query = new \Wave\DB\Query($this);
 		return $query->from($from, $alias, $fields);
 	}
@@ -195,10 +201,10 @@ class DB {
 		$fields = $params = $placeholders = array();
 		foreach($object->_getData() as $object_field => $object_value){
 			$fields[] = $database->escape($object_field);
-			$params[] = $database->convertValueForSQL($object_value);
+			$params[] = $database->valueToSQL($object_value);
 			$placeholders[] = '?';
 		}
-		
+				
 		$sql = sprintf('INSERT INTO %s.%s (%s) VALUES (%s);', $database->escape($object::_getDatabaseName()), 
 															  $database->escape($object::_getTableName()), 
 															  implode(',', $fields), 
@@ -226,13 +232,14 @@ class DB {
 		//dirty data
 		foreach($object->_getDirty() as $object_field => $object_value){
 			$updates[] = sprintf('%s = ?', $database->escape($object_field));
-			$params[] = $database->convertValueForSQL($object_value);
+			$params[] = $database->valueToSQL($object_value);
 		}
 		
 		//row identifier
 		foreach($object->_getIdentifyingData() as $identifying_field => $identifying_value){
-			$criteria[] = sprintf('%s = ?', $database->escape($identifying_field));
-			$params[] = $database->convertValueForSQL($identifying_value);
+			$value = $database->convertValueForSQL($identifying_value);
+			$criteria[] = DB\Query::parseWhereCondition(sprintf('%s = ?', $database->escape($identifying_field)), $value);
+			$params = array_merge($params, $value);
 		}
 				
 		$sql = sprintf('UPDATE %s.%s SET %s WHERE %s LIMIT 1;', $database->escape($object::_getDatabaseName()), 
@@ -253,8 +260,9 @@ class DB {
 		//row identifier
 		$criteria = $params = array();
 		foreach($object->_getIdentifyingData() as $identifying_field => $identifying_value){
-			$criteria[] = sprintf('%s = ?', $database->escape($identifying_field));
-			$params[] = $database->convertValueForSQL($identifying_value);
+			$value = $database->valueToSQL($identifying_value);
+			$criteria[] = DB\Query::parseWhereCondition(sprintf('%s = ?', $database->escape($identifying_field)), $value);
+			$params = array_merge($params, $value);
 		}
 		
 		$sql = sprintf('DELETE FROM %s.%s WHERE %s LIMIT 1;', $database->escape($object::_getDatabaseName()), 

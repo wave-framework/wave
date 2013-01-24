@@ -36,9 +36,7 @@ class Query {
 	private $_params = array();
 	
 	private $relation_tables = array();
-	
-	private static $query_count = 0;
-	
+		
 	public function __construct($database){
 		$this->database = $database;
 		$this->alias_counter = 'a';
@@ -212,13 +210,13 @@ class Query {
 				
 		if($create){
 			$this->where[] = array('type'		=> $type,
-								   'condition'	=> $this->parseWhereCondition($condition, $params), 
+								   'condition'	=> self::parseWhereCondition($condition, $params), 
 								   'params'		=> array());
 		} else {
 			if($current_index-- === 0)
 				throw new Wave\Exception('Wave\DB\Query::and and ::or may only be used following a where.');
 			
-			$this->where[$current_index]['condition'] .= sprintf(' %s %s', $type, $this->parseWhereCondition($condition, $params));
+			$this->where[$current_index]['condition'] .= sprintf(' %s %s', $type, self::parseWhereCondition($condition, $params));
 		}
 		
 		if($params !== null)
@@ -226,7 +224,7 @@ class Query {
 		
 	}
 	
-	public function parseWhereCondition($condition, &$params){
+	public static function parseWhereCondition($condition, &$params){
 		
 		if(stripos($condition, ' AND ') !== false || stripos($condition, ' OR ') !== false)
 			trigger_error('You should be using ->or() or ->and() to add multiple criteria to a where clause.');
@@ -362,18 +360,7 @@ class Query {
 		//echo $sql;
 		$statement = $this->database->getConnection()->prepare($sql);	
 		
-		$start = microtime(true);
 		$statement->execute( $this->_params );
-		$time = microtime(true) - $start;           
-	
-		if(in_array(Wave\Core::$_MODE, array(Wave\Core::MODE_DEVELOPMENT)))
-			Wave\Debug::getInstance()->addQuery($time, $statement);
-		
-		if($debug)
-			echo $sql;
-			//$statement->debugDumpParams();
-
-		self::$query_count++;
 		
 		$this->_statement = $statement;
 		$this->_executed = true; 
@@ -461,7 +448,7 @@ class Query {
 				
 		$class = $this->unaliasClass($class_alias);
 		$columns = $this->class_aliases[$class_alias]['columns'];
-		
+
 		$build_array = array();
 		foreach($columns as $column_name => $column_alias)
 			$build_array[$column_name] = $this->_last_row[$column_alias];

@@ -240,20 +240,6 @@ class MySQL extends DB\Driver implements DB\IDriver {
 			case 'YES':
 				return true;
 		}
-	}
-		
-	public static function convertValueForSQL($value){
-	
-		switch(true){
-			case is_null($value):
-				return null;
-
-			case $value instanceof \DateTime:
-				return $value->format('Y-m-d H:i:s');
-
-			default:
-				return $value;
-		}
 	}	
 	
 

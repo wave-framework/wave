@@ -17,16 +17,9 @@ class Model {
 	protected $_joined_objects = array();
 
 	public function __construct($data = null){
-		
-		
-		if($data !== null){
-			foreach(self::_getFields(true) as $field => $field_data){
-				$this->_data[$field] = isset($data[$field]) ? $data[$field] : $field_data['default'];
-			}
-		} else {
-			foreach(self::_getFields(true) as $field => $field_data){
-				$this->_data[$field] = $field_data['default'];
-			}
+
+		foreach(self::_getFields() as $field){
+			$this->_data[$field] = isset($data[$field]) ? $data[$field] : self::getFieldDefault($field);
 		}
 
 	}
@@ -41,6 +34,22 @@ class Model {
 		return new static($data);
 	
 	}
+	
+	public static function getFieldDefault($field_name){
+		$field = self::_getField($field_name);
+		return \Wave\DB::get(self::_getDatabaseNamespace())->valueFromSQL($field['default'], $field);
+	}
+	
+	public static function loadByID(){
+		
+		$stmt = Wave\DB::get(self::_getDatabaseNamespace())->from(get_called_class());
+		
+		foreach(self::_getIdentifyingColumns() as $index => $column)
+			$stmt->where("$column = ?", func_get_arg($index));
+			
+		return $stmt->fetchRow();	
+	}
+	
 	public function save($save_relations = true){
 		return Wave\DB::save($this, $save_relations);
 	}
@@ -52,7 +61,7 @@ class Model {
 	public function addJoinedObject(&$object, $alias){
 		$this->_joined_objects[$alias] = $object;
 	}
-	
+		
 	//assumption for tables with an ID, would be overloaded if the table's ID column was just 'id'
 	public function _getid(){
 		return $this->_data[self::_getTableName().'_id'];
