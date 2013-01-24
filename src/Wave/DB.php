@@ -192,8 +192,6 @@ class DB {
 	
 
 	public static function insert(&$object){
-		
-		$object_data = $object->_getData();
 
 		$database = self::get($object::_getDatabaseNamespace());
 		$connection = $database->getConnection();
