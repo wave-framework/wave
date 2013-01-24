@@ -1,247 +1,193 @@
 <?php
 
+/**
+ *	Base model, common functionality
+ *
+ *	@author Michael michael@calcin.ai
+**/
+
 namespace Wave\DB;
 use Wave;
 
-abstract class Model {
+class Model {
 
-	const RELATION_ONE_TO_ONE	= 11;
-	const RELATION_ONE_TO_MANY	= 12;
-	const RELATION_MANY_TO_ONE	= 21;
-	const RELATION_MANY_TO_MANY	= 22;
-	
-	
-	protected $_data = array();
-	protected $_relation_data = array();
-	protected $_dirty = array();
-	protected $_loaded = false;
-	protected $_pk_null = true;
-	
-	public function __construct($data = null, $assoc_prefix = ''){
-	
-		$fields = self::_getFields();
+	protected $_data	= array();
+	protected $_dirty	= array();
+	protected $_loaded	= false;
+	protected $_joined_objects = array();
+
+	public function __construct($data = null){
 		
-		if(!is_null($data)){			
-			$this->_loaded = true;
-			//construct object form data
-			foreach($fields as $field => $value){
-				//if load fails, flag
-				/*
-				if(!isset($data[$assoc_prefix.$field])){
-					$this->_loaded = false;
-					continue;
-				}
-				*/
-				
-				//if(isset($data[$assoc_prefix.$field]) && $data[$assoc_prefix.$field] != '')
-
-				
-				$this->_pk_null = $data[$assoc_prefix.$field] === null ? $this->_pk_null : false;
-				$this->_data[$field] = self::_castField($data[$assoc_prefix.$field], $value);
+		
+		if($data !== null){
+			foreach(self::_getFields(true) as $field => $field_data){
+				$this->_data[$field] = isset($data[$field]) ? $data[$field] : $field_data['default'];
 			}
 		} else {
-			foreach($fields as $field => $value){
-				$this->_data[$field] = self::_castField($value['default'], $value);
+			foreach(self::_getFields(true) as $field => $field_data){
+				$this->_data[$field] = $field_data['default'];
 			}
 		}
-		
-		//flag the object as clean
-		$this->_dirty = array();	
-			
+
 	}
 	
-	public function save($save_relations = true){
+	public static function createFromArray($data){
+		
+		foreach(self::_getIdentifyingColumns() as $required_column){
+			if(!isset($data[$required_column]) || empty($data[$required_column]))
+				return null;
+		}
+				
+		return new static($data);
 	
+	}
+	public function save($save_relations = true){
 		return Wave\DB::save($this, $save_relations);
 	}
 	
 	public function delete(){
-	
 		return Wave\DB::delete($this);
 	}
 	
+	public function addJoinedObject(&$object, $alias){
+		$this->_joined_objects[$alias] = $object;
+	}
 	
+	//assumption for tables with an ID, would be overloaded if the table's ID column was just 'id'
 	public function _getid(){
 		return $this->_data[self::_getTableName().'_id'];
 	}
 	
-	public function _getRelationData(){
-		return $this->_relation_data;
+	public function _getData(){
+		return $this->_data;
 	}
 	
-	public function _addRelationObject($type, $object){
-	
-		return $this->_relation_data[] = $object;
-	
-	}
-	
-	public function _removeRelationObject($type, $object){
-		
-		$key = array_search($object, $this->_relation_data);
-		
-		if($key !== false)
-			unset($this->_relation_data[$key]);
+	public function _getDirty(){
+		return array_intersect_key($this->_data, $this->_dirty);
 	}
 
+	public static function _getTableName(){
+		return static::$_table_name;
+	}
 	
+	public static function _getDatabaseName(){
+		return static::$_schema_name;
+	}
+	
+	public static function _getDatabaseNamespace(){
+		return static::$_database;
+	}
+	
+	public static function _getFields($field_data = false){
+		return $field_data ? static::$_fields : array_keys(static::$_fields);
+	}
+	
+	public static function _getField($field_name){
+		return static::$_fields[$field_name];
+	}
+	
+	public static function _getRelations(){
+		return static::$_relations;
+	}
+	
+	public static function _getRelation($relation_name){
+		
+		if(!self::isRelation($relation_name))
+			throw new Wave\Exception(sprintf('Invalid relation: [%s]', $relation_name));
+			
+		return static::$_relations[$relation_name];
+	}
+	
+	public static function isRelation($relation_name){
+		
+		return isset(static::$_relations[$relation_name]);
+	}
+	
+	//returns whether this was loaded from db
+	public function _setLoaded($loaded = true){
+		//at this point it won't be dirty.
+		$this->_dirty = array();
+		return $this->_loaded = $loaded;
+	}
+	
+	//returns whether this was loaded from db
 	public function _isLoaded(){
 		return $this->_loaded;
 	}
-	
-	public function _setLoaded($value = true){
-		return $this->_loaded = $value;
-	}
 
+	//Returns dirty status for if fields have been modified
 	public function _isDirty(){
 		return count($this->_dirty) !== 0;
 	}
 	
-	public function pkNull(){
-		return $this->_pk_null;
+	public static function _getPrimaryKey(){
+		foreach(static::$_constraints as $constraint)
+			if($constraint['type'] === Constraint::TYPE_PRIMARY)
+				return $constraint['fields'];
+
+		return null;
+	}
+
+	public function _getIdentifyingData(){
+		$columns = self::_getIdentifyingColumns();
+		return array_intersect_key($this->_data, array_flip($columns));
 	}
 	
-	public function _getDataArray(){
-		return $this->_data;
-	}	
-	
-	public function _getDirtyArray(){
-		return $this->_dirty;
-	}
-	
-	private static function _castField($data, $field){
-	
-		if($data === null || $data == 'NULL' || $data == '')
-			return null;
-		
-		switch($field['data_type']){
-		
-			case Column::TYPE_BOOL:
-				return (bool) $data;
-		
-			case Column::TYPE_INT:
-				return (int) $data;
-			
-			case Column::TYPE_FLOAT:
-				return (float) $data;
-				
-			case Column::TYPE_STRING:
-				return (string) $data;
-				
-			case Column::TYPE_DATE:
-			case Column::TYPE_TIMESTAMP:
-				if($data == 'CURRENT_TIMESTAMP')
-					$data = 'now';
-				return new \DateTime($data);
-		
-			default:
-				return $data;
+	public static function _getIdentifyingColumns(){
+		//first PK
+		foreach(static::$_constraints as $constraint){
+			if($constraint['type'] === Constraint::TYPE_PRIMARY)
+				return $constraint['fields'];
+			elseif($constraint['type'] === Constraint::TYPE_UNIQUE)
+				$unique = $constraint['fields'];
 		}
-	}
-	
-	public static function _getTableName(){
+		//then unique if no return for primary
+		if(isset($unique))
+			return $unique;
 		
-		$called_class = get_called_class();
-		return $called_class::$_table_name;
-	}
-	
-	public static function _getSchemaName(){
-		
-		$called_class = get_called_class();
-		return $called_class::$_schema_name;
-	}
-	
-	public static function _getFields(){
-		
-		$called_class = get_called_class();
-		return $called_class::$_fields;
-	}
-	
-	public static function _getKeys($key_type){
-		
-		static $cache;
-		
-		if(!isset($cache[$key_type])){
-			$called_class = get_called_class();
-			$fields = $called_class::$_fields;
-			
-			$keys = array();
-			foreach($fields as $field_name => $field){
-				if($field['key'] === $key_type)
-					$keys[] = $field_name;
-			}
-			$cache[$key_type] = $keys;
-		}
-				
-		return $cache[$key_type];
-			
-	}
-	
-	public static function _getRelations(){
-		
-		$called_class = get_called_class();
-		return $called_class::$_relations;
-	}
-	
-	public static function _getRelationByName($name){
-		
-		$called_class = get_called_class();
-		if(isset($called_class::$_relations[$name]))
-			return $called_class::$_relations[$name];
-		else
-			return false;
+		//then all (if no keys are set for some reason) @todo - throw apropriate error
+		return self::_getFields();
 	}
 	
 	//After a lot of consideration, benefits > small performance hit.
 	public function __set($property, $data){
-			
-		if(method_exists($this, $this->getGetter($property)) && $this->$property === $data)
-			return;
-			
-		$this->_dirty[$property] = true;
 		
-		if(method_exists($this, $this->getSetter($property)))
-			return $this->{'_set'.$property}($data);
-		else
-			$this->$property = $data;
+		$setter = self::getSetter($property);
+		if(method_exists($this, $setter)){
+			if($this->$property === $data)
+				return;
+			
+			$this->_dirty[$property] = true;
+			return $this->$setter($data);
+		} 
+			
+		return $this->$property = $data;
 	
 	}
 	
 	public function __get($property){
-		$method = $this->getGetter($property);
-		if(!method_exists($this, $method)){
+		$getter = self::getGetter($property);
+		if(!method_exists($this, $getter)){
 			$stack = debug_backtrace(false);
 			$stack = array_shift($stack);
 			trigger_error('Notice: Undefined property '. get_called_class() . '::' . $property . ' in ' . $stack['file'] . ' on line ' . $stack['line'] . " (via by Wave\DB_Model::__get())\n");
-		}
-		else {
-			return $this->$method();
+		}else {
+			return $this->$getter();
 		}
 				
 	}
 	
 	public function __isset($property){
-		return method_exists($this, '_get'.$property);	
+		return method_exists($this, self::getGetter($property));	
 	}	
 	
-	public function _toArray(){
-		$props = array();
-		
-		$fields = array_keys($this->_data);
-		foreach($fields as $field){
-			$props[$field] = $this->{'_get'.$field}();
-		}
-		
-		return $props;
-	}
-	
-	private function getSetter($property){
+	private static function getSetter($property){
 		return '_set' . $property;
 	}
 	
-	private function getGetter($property){
+	private static function getGetter($property){
 		return '_get' . $property;
 	}
 	
+	
 }
-
-?>

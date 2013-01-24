@@ -11,9 +11,9 @@ class Statement extends \PDOStatement {
 	
 		$this->setFetchMode(\PDO::FETCH_ASSOC);
 		$this->connection = $connection;
+		
 	}
 	
-
 }
 
 ?>

@@ -1,197 +1,43 @@
 <?php
 
+/**
+ *	Main class for interacting with Databases
+ *	
+ *	Supports methods for getting databases, inserting, updating and generating the models.
+ *
+ *	@author Michael michael@calcin.ai
+**/
+
 namespace Wave;
 
 class DB {
 
 	private static $num_databases	= 0;
 	private static $instances		= array();
-	private static $default;
+	private static $default_namespace;
+	
+	private $escape_character;
 	
 	private $connection;
+	private $namespace;
 	private $config;
+	private $tables;
 	
-	const GLOBAL_NAMESPACE  = 'Models';
-	const NS_SEPARATOR		= '\\';
-
-	public function __construct($config){
+	private function __construct($namespace, $config){
 	
 		$this->connection = new DB\Connection($config);
+		$this->namespace = $namespace;
 		$this->config = $config;
+		
+		$driver = $this->connection->getDriverClass();
+		$this->escape_character = $driver::getEscapeCharacter();
 
 		if(in_array(Core::$_MODE, array(Core::MODE_DEVELOPMENT, Core::MODE_TEST)))
 			$this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 	}
 	
 	
-	public function from($table, $fields = null){
-		return DB\Query::create($this)->from($table, $fields);
-	}
-	
-	public static function save($object){
-		
-		if($object->_isLoaded()){
-			if($object->_isDirty()){
-				return self::update($object);
-			}
-		} else {
-			return self::insert($object);		
-		}
-		
-	}
-	
-	
-	
-	public static function insert($object){
-	
-		$table = $object::_getTableName();
-		$data = array();
-		$object_data = $object->_getDataArray();
-		foreach(array_keys($object->_getFields()) as $field){
-			if(isset($object_data[$field]))
-				$data[$field] = $object_data[$field];
-		}
-
-		$schema = $object::_getSchemaName();
-		$conn = self::get($schema)->getConnection();
-		
-		$params = array();
-		$values = array_map(array($conn->getDriverClass(), 'convertValueForSQL'), array_values($data));
-							
-		$fields = implode('`,`', array_keys($data));
-		$placeholders = implode(',', array_fill(0, count($values), '?'));
-		
-		$sql = sprintf('INSERT INTO `%s` (`%s`) VALUES (%s)', $table, $fields, $placeholders);
-		
-		$conn->prepare($sql)->execute($values);
-		
-		$liid = intval($conn->lastInsertId());
-		if($liid !== 0){
-			$keys = $object::_getKeys(DB\Column::INDEX_PRIMARY);
-			if(count($keys) === 1){
-				$object->{$keys[0]} = $liid;
-				$object->_setLoaded();			
-			}
-		}
-			
-		return $object->_isLoaded();
-	}
-	
-	public static function update($object){
-		
-		$keys = $object::_getKeys(DB\Column::INDEX_PRIMARY);
-		$table = $object::_getTableName();
-		$schema = $object::_getSchemaName();
-		
-		if(count($keys) === 0)
-			throw new \Wave\Exception("No primary key defined for $schema.");
-		
-		$dirty = $object->_getDirtyArray();
-		$data = $object->_getDataArray();
-		$fields = $object->_getFields();
-		
-		$conn = self::get($schema)->getConnection();
-		
-		$updates = array();
-		$params = array();
-		$driver_class = $conn->getDriverClass();
-		foreach($dirty as $key => $value){
-			if(!isset($fields[$key])) continue;
-			
-			$updates[] = "`$key` = ?";
-			$params[] = $driver_class::convertValueForSQL($data[$key]);
-		}
-		
-		$where = array();
-		foreach($keys as $key){
-			$where[] = "`$key` = ?";
-			$params[] = $object->$key;
-		}
-		
-		if(!isset($updates[0])) return false;
-		
-		$sql = sprintf('UPDATE `%s` SET %s WHERE %s LIMIT 1;', $table, implode(',', $updates), implode(' AND ', $where));
-		$conn->prepare($sql)->execute($params);
-			
-		return true;
-	}
-
-	public static function delete(&$object){
-	
-		$keys = $object::_getKeys(DB\Column::INDEX_PRIMARY);
-		$table = $object::_getTableName();
-		$schema = $object::_getSchemaName();
-		
-		if(count($keys) === 0)
-			throw new \Wave\Exception("No primary key defined for $schema.");
-		
-		$conn = self::get($schema)->getConnection();
-		
-		$params = array();
-		$where = array();
-		foreach($keys as $key){
-			$where[] = "`$key` = ?";
-			$params[] = $object->$key;
-		}
-		
-		$sql = sprintf('DELETE FROM `%s` WHERE %s LIMIT 1;', $table, implode(' AND ', $where));
-		
-		$conn->prepare($sql)->execute($params);
-		
-		$object->_setLoaded(false);			
-		
-		return true;
-	}
-	
-	
-	
-	
-	public function rawQuery($sql){
-		$db = $this->getConnection();
-		$db->exec($sql);
-	}
-	
-	
-	
-	/**
-	* Function to return the results of a basic query
-	*/
-	public function basicQuery($sql, $params = array()){
-		$statement = $this->basicStatement($sql, $params);
-		return $statement->fetchAll();
-	}
-	
-	public function basicStatement($sql, $params = array()){
-		if(!is_array($params))
-			$params = array($params);
-		
-		$statement = $this->connection->prepare($sql);
-		$start = microtime(true);
-		$statement->execute( $params );
-		$time = microtime(true) - $start;           
-		
-		\Wave\Debug::getInstance()->addQuery($time, $statement);
-		
-		return $statement;
-	}
-	
-	public function getConnection(){
-		return $this->connection;
-	}
-	
-	public function getName(){
-		return $this->config->database;
-	}
-	
-	public function getNamespace(){
-		return $this->config->namespace;
-	}
-	
-	public function isDefault(){
-		return isset($database->default) && $database->default == true;
-	}	
-
-	public static function init($database){
+	private static function init($namespace, $database){
 	
 		$installed_drivers = DB\Connection::getAvailableDrivers();
 
@@ -201,83 +47,51 @@ class DB {
 		if(!in_array($driver_class::getDriverName(), $installed_drivers))
 			throw new DB\Exception(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
 		
-		self::$instances[$database->namespace] = new self($database);
-		
-		/*
-		* Define default database if it is either first or flagged as default.
-		* First db is always flagged as default to avoid the case where there is no default, 
-		* (it'll be overwritten by any db with the default flag).
-		*/
-		
-		if(self::$num_databases == 0 || isset($database->default) && $database->default == true)
-			self::$default = $database->namespace;
-		
 		self::$num_databases++;
-		
-
-		return self::$instances[$database->namespace];
+		return new self($namespace, $database);
 
 	}
 	
-	public static function get($namespace = null, $mode = null){
-
-		$databases = \Wave\Config::get('db')->databases;
-
+	/**
+	*	Returns an instance of a database
+	*	If no arguments are suppplied, the default namespace and mode are selected.
+	*
+	**/
+	public static function get($namespace = null){
+				
 		if($namespace === null){
-			if(isset(self::$default))
-				$namespace = self::$default;
-			else {
-				$namespace = self::getDefaultNamespace();
+		
+			if(!isset(self::$default_namespace))
+				self::$default_namespace = self::getDefaultNamespace();
+				
+			$namespace = self::$default_namespace;
+		}
+
+		if(!isset(self::$instances[$namespace])){
+		
+			$databases = \Wave\Config::get('db')->databases;
+
+			if(!isset($databases[$namespace])){
+				throw new \Wave\Exception("There is no database configuration for {$namespace}");
 			}
-		}
-
-		if(!isset($databases[$namespace])){
-			throw new \Wave\Exception("There is no database configuration for {$namespace}");
-		}
-
-		if($mode === null) 
-			$mode = isset($databases[$namespace][\Wave\Core::$_MODE]) 
-					? \Wave\Core::$_MODE 
-					: \Wave\Core::MODE_PRODUCTION;
-
-		if(!isset($databases[$namespace][$mode])){
-			throw new \Wave\Exception('There must be at least a PRODUCTION database defined');
-		}
-		else {
-			$databases[$namespace][$mode]->namespace = $namespace;
-			$databases[$namespace][$mode]->mode = $mode;
-
-			return isset(self::$instances[$namespace]) 
-				? self::$instances[$namespace] 
-				: self::init($databases[$namespace][$mode]);	
-		}
-	}
-
-	public static function set($namespace, DB\Connection $connection){
-		if(isset(self::$instances[$namespace])){
-			self::$instances[$namespace]->connection = $connection;
-			return self::$instances[$namespace];
-		}
-		return null;
-	}
-
-	public static function getDefaultNamespace(){
-		try {
-			foreach(Config::get('db')->databases as $ns => $database){
-				return $ns;
+			
+			if(isset($databases[$namespace][\Wave\Core::$_MODE])) 
+				$mode = \Wave\Core::$_MODE;
+			else
+				$mode = \Wave\Core::MODE_PRODUCTION;
+		
+			if(!isset($databases[$namespace][$mode])){
+				throw new \Wave\Exception('There must be at least a PRODUCTION database defined');
 			}
-		}
-		catch(Exception $e) {
-			return null;
+			
+			self::$instances[$namespace] = self::init($namespace, $databases[$namespace][$mode], $namespace);
 		}
 		
+		return self::$instances[$namespace];
+	
 	}
 	
-	public static function getNumDatabases(){
-		return self::$num_databases;
-	}
-	
-	public static function getAllDatabases(){
+	public static function getAll(){
 
 		$databases = \Wave\Config::get('db')->databases;
 		foreach($databases as $namespace => $modes)
@@ -286,70 +100,173 @@ class DB {
 		return self::$instances;
 	}
 	
-	public static function tableNameToClass($table_name){
-	
-		$class_name = '';
-		$parts = explode('_', $table_name);
+	//reverse lookup by DB name, should only be used during model generation for relations (slow).
+	public static function getByDatabaseName($name){
 		
-		foreach($parts as $part)
-			$class_name .= ucfirst($part);
-			
-		return $class_name;
-	
-	}
-
-	public static function columnToRelationName($key, $target_table = ''){
-	
-		$column_name = $key['table_name'] == $key['referenced_table_name'] ? $key['column_name'] : $key['table_name'];
-		$column_name = $target_table === '' ? $column_name : $target_table;
+		$databases = \Wave\Config::get('db')->databases;
+		foreach($databases as $namespace => $modes)
+			foreach($modes as $mode)
+				if($mode['database'] === $name)
+					return self::get($namespace);
 		
-		
-		$relation_name = '';
-		$parts = explode('_', $column_name);
-		
-		foreach($parts as $part)
-			$relation_name .= $part == 'id' ? '' : ucfirst($part);
-			
-		return $relation_name;
-	
+		return null;
 	}
 	
+	public function getTables($cache = true){
 	
+		if(!isset($this->tables) || !$cache){
+			$driver_class = $this->getConnection()->getDriverClass();
+			$this->tables = $driver_class::getTables($this);
+		}
+		
+		return $this->tables;
+	}
+	
+	public function getColumn($table, $column){
+		
+		$tables = $this->getTables();
+		$table = $tables[$table];
+		$columns = $table->getColumns();
+		
+		return $columns[$column];
+	}
+	
+	public static function getDefaultNamespace(){
+		
+		foreach(\Wave\Config::get('db')->databases as $ns => $database)
+			return $ns;
+		
+	}
 	
 	public static function getDriverClass($driver){
 		return '\\Wave\\DB\\Driver\\'.$driver;
 	}
 	
-	public static function getClassNameForTable($table, $database = null, $raw_table = false){
-		
-		if($raw_table)
-			$table = self::tableNameToClass($table);
+	public function escape($string){
+		return $this->escape_character . $string . $this->escape_character;
+	}	
+	
+	public function convertValueForSQL($value){
+		$driver_class = $this->connection->getDriverClass();
+		return $driver_class::convertValueForSQL($value);
 
-		if(strpos($table, self::GLOBAL_NAMESPACE . self::NS_SEPARATOR) !== false){
-			return $table;
+	}
+	
+	public function getConnection(){
+		return $this->connection;
+	}
+	
+	public function getNamespace($full_namespace = true){
+		
+		$ns_prefix = $full_namespace ? Config::get('wave')->model->base_namespace.'\\' : '';
+		return $ns_prefix.$this->namespace;
+	}
+	
+	public function getName(){
+		return $this->config->database;
+	}
+	
+	//alias function for Wave\DB\Qurey::from
+	public function from($from, &$alias, $fields = null){
+		$query = new \Wave\DB\Query($this);
+		return $query->from($from, $alias, $fields);
+	}
+	
+	public static function save(&$object){
+		
+		if($object->_isLoaded()){
+			if($object->_isDirty()){
+				return self::update($object);
+			}
+		} else {
+			return self::insert($object);
+		} 
+		
+	}
+	
+
+	public static function insert(&$object){
+		
+		$object_data = $object->_getData();
+
+		$database = self::get($object::_getDatabaseNamespace());
+		$connection = $database->getConnection();
+		
+		$fields = $params = $placeholders = array();
+		foreach($object->_getData() as $object_field => $object_value){
+			$fields[] = $database->escape($object_field);
+			$params[] = $database->convertValueForSQL($object_value);
+			$placeholders[] = '?';
 		}
 		
-		if(is_null($database))
-			$database = self::get();
+		$sql = sprintf('INSERT INTO %s.%s (%s) VALUES (%s);', $database->escape($object::_getDatabaseName()), 
+															  $database->escape($object::_getTableName()), 
+															  implode(',', $fields), 
+															  implode(',', $placeholders));
 		
-		$class_name = '\\' . self::GLOBAL_NAMESPACE . '\\' . $database->getNameSpace() . '\\';
-		$class_name .= substr($table, max(-1, strrpos($table, '\\')) + 1);
+		$connection->prepare($sql)->execute($params);
 		
-		if(!class_exists($class_name))
-			throw new \Wave\DB\Exception("Could not derive class name for table: $table ($class_name)");
-		
-		return $class_name;
-	
+		$liid = intval($connection->lastInsertId());
+		if($liid !== 0){
+			$primary_key = $object::_getPrimaryKey();
+			if($primary_key !== null && count($primary_key) === 1){
+				$object->{current($primary_key)} = $liid;
+			}
+		}
+			
+		return $object->_setLoaded();
 	}
 	
-	public static function getFieldsForTable($table){
+	public static function update(&$object){
+				
+		$database = self::get($object::_getDatabaseNamespace());
+		$connection = $database->getConnection();
 		
-		$class_name = self::getClassNameForTable($table);
+		$updates = $criteria = $params = array();
+		//dirty data
+		foreach($object->_getDirty() as $object_field => $object_value){
+			$updates[] = sprintf('%s = ?', $database->escape($object_field));
+			$params[] = $database->convertValueForSQL($object_value);
+		}
 		
-		$fields = $class_name::_getFields();
+		//row identifier
+		foreach($object->_getIdentifyingData() as $identifying_field => $identifying_value){
+			$criteria[] = sprintf('%s = ?', $database->escape($identifying_field));
+			$params[] = $database->convertValueForSQL($identifying_value);
+		}
+				
+		$sql = sprintf('UPDATE %s.%s SET %s WHERE %s LIMIT 1;', $database->escape($object::_getDatabaseName()), 
+																$database->escape($object::_getTableName()), 
+																implode(',', $updates), 
+																implode(' AND ', $criteria));
+		$connection->prepare($sql)->execute($params);
+			
+		return true;
+	}
+
+	public static function delete(&$object){
 		
-		return $fields;
+		$database = self::get($object::_getDatabaseNamespace());
+		$connection = $database->getConnection();
+
 		
+		//row identifier
+		$criteria = $params = array();
+		foreach($object->_getIdentifyingData() as $identifying_field => $identifying_value){
+			$criteria[] = sprintf('%s = ?', $database->escape($identifying_field));
+			$params[] = $database->convertValueForSQL($identifying_value);
+		}
+		
+		$sql = sprintf('DELETE FROM %s.%s WHERE %s LIMIT 1;', $database->escape($object::_getDatabaseName()), 
+															  $database->escape($object::_getTableName()), 
+															  implode(' AND ', $criteria));		
+		$connection->prepare($sql)->execute($params);
+		
+		$object->_setLoaded(false);
+				
+		return true;
 	}
 	
+
+
 }

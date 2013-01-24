@@ -1,9 +1,20 @@
 <?php
 
+/**
+ *	MySQL Driver
+ *
+ *	@author Michael michael@calcin.ai
+**/
+
 namespace Wave\DB\Driver;
-use Wave\DB;
+use Wave,
+	Wave\DB;
 
 class MySQL extends DB\Driver implements DB\IDriver {
+	
+	//Selecting from the information schema tables is slow as they are built on select so need to cache the whole set and manipulate in php.
+	static $_column_cache;
+	static $_relation_cache;
 
 	public static function constructDSN($config){
 	
@@ -14,41 +25,169 @@ class MySQL extends DB\Driver implements DB\IDriver {
 		return 'mysql';
 	}
 	
+	public static function getEscapeCharacter(){
+		return '`';
+	}
+	
 	public static function getTables($database){
 		
-		$tables = $database->basicQuery('SELECT `TABLE_SCHEMA` AS table_schema, `TABLE_NAME` AS table_name, `ENGINE` AS table_engine, '.
-										'`TABLE_COLLATION` AS table_collation, `TABLE_COMMENT` AS table_comment '.
-										'FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = ?;', $database->getName());		
+		$table_sql = 'SELECT TABLE_NAME, ENGINE, TABLE_COLLATION, TABLE_COMMENT '.
+					 'FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = ?;';
+					 
+											
+		$table_stmt = $database->getConnection()->prepare($table_sql);	
+		$table_stmt->execute(array($database->getName()));
 		
+		$tables = array();
+		while($table_row = $table_stmt->fetch()){
+						
+			$table = new DB\Table($database,
+								  $table_row['TABLE_NAME'],
+								  $table_row['ENGINE'],
+								  $table_row['TABLE_COLLATION'],
+								  $table_row['TABLE_COMMENT']);
+			
+			$tables[$table_row['TABLE_NAME']] = $table;
+			
+		}		
 		return $tables;	
 	
 	}
 	
-	public static function getColumns($database, $table = null){
+	
+	public static function getColumns(DB\Table $table){
+
+		//using namespace for the table identifier as there might be same name DBs on different servers
+		$namespace = $table->getDatabase()->getNamespace();
+
+		if(!isset(self::$_column_cache[$namespace])){
 		
-		$columns = $database->basicQuery('SELECT `TABLE_SCHEMA` AS table_schema, `TABLE_NAME` AS table_name, `COLUMN_NAME` AS column_name, '.
-										 '`COLUMN_DEFAULT` AS column_default,`IS_NULLABLE` AS nullable, `DATA_TYPE` AS data_type, '.
-										 '`COLUMN_TYPE` AS column_type, `COLUMN_KEY` AS column_key, `EXTRA` AS column_extra, '.
-										 '`COLUMN_COMMENT` AS column_comment '.
-										 'FROM `information_schema`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? '.
-										 'ORDER BY `TABLE_NAME`, `ORDINAL_POSITION` ASC;', $database->getName());
+			self::$_column_cache[$namespace] = array();
+
+			$column_sql = 'SELECT TABLE_NAME, COLUMN_NAME, COLUMN_DEFAULT, IS_NULLABLE, DATA_TYPE, COLUMN_TYPE, EXTRA, COLUMN_COMMENT '.
+						  'FROM `information_schema`.`COLUMNS` WHERE `TABLE_SCHEMA` = ?;';
+							  
+			$column_stmt = $table->getDatabase()->getConnection()->prepare($column_sql);
+			$column_stmt->execute(array($table->getDatabase()->getName()));
+
+			while($column_row = $column_stmt->fetch())
+				self::$_column_cache[$namespace][$column_row['TABLE_NAME']][] = $column_row;
+			
+		}
+				
+		$columns = array();
+		//may not be any columns
+		if(isset(self::$_column_cache[$namespace][$table->getName()])){
+			foreach(self::$_column_cache[$namespace][$table->getName()] as $cached_row){
+			
+				$column = new DB\Column($table,
+										$cached_row['COLUMN_NAME'],
+										self::translateSQLNullable($cached_row['IS_NULLABLE']),
+										self::translateSQLDataType($cached_row['DATA_TYPE']),
+										$cached_row['COLUMN_DEFAULT'],
+										$cached_row['COLUMN_TYPE'],
+										$cached_row['EXTRA'],
+										$cached_row['COLUMN_COMMENT']);
+				
+				$columns[$cached_row['COLUMN_NAME']] = $column;
+			}
+		}
 		
 		return $columns;	
 	
 	}
 	
-	public static function getColumnKeys($database, $table = null, $column = null){
+	public static function getRelations(DB\Table $table){
 		
-		$keys = $database->basicQuery('SELECT `TABLE_SCHEMA` AS table_schema, `TABLE_NAME` AS table_name, `COLUMN_NAME` AS column_name, '.
-									  '`REFERENCED_TABLE_SCHEMA` AS referenced_table_schema, `REFERENCED_TABLE_NAME` AS referenced_table_name, '.
-									  '`REFERENCED_COLUMN_NAME` AS referenced_column_name, `CONSTRAINT_NAME` AS constraint_name '.
-									  'FROM `information_schema`.`KEY_COLUMN_USAGE` WHERE `TABLE_SCHEMA` = ?;', $database->getName());		
+		//using namespace for the table identifier as there might be same name DBs on different servers
+		$namespace = $table->getDatabase()->getNamespace();
 
+		$relation_cache = self::_getRelationCache($table);
+
+		$relations = array();
+		//may not be any constraints
+		if($relation_cache !== null){
+			foreach($relation_cache as $cached_row){
+								
+				//--- check both ends of the relation can be built.
+				$local_db = DB::getByDatabaseName($cached_row['TABLE_SCHEMA']);
+				if($local_db === null){
+					Wave\Log::write('mysql_driver', sprintf('Database [%s] is not referenced in the configuration - skipping building relations.', $cached_row['TABLE_SCHEMA']), Wave\Log::WARNING);
+					continue;
+				}
+				$local_column = $local_db->getColumn($cached_row['TABLE_NAME'], $cached_row['COLUMN_NAME']);
+
+				$referenced_db = DB::getByDatabaseName($cached_row['REFERENCED_TABLE_SCHEMA']);
+				if($referenced_db === null){
+					Wave\Log::write('mysql_driver', sprintf('Database [%s] is not referenced in the configuration - skipping building relations.', $cached_row['REFERENCED_TABLE_SCHEMA']), Wave\Log::WARNING);
+					continue;
+				}
+				$referenced_column = $referenced_db->getColumn($cached_row['REFERENCED_TABLE_NAME'], $cached_row['REFERENCED_COLUMN_NAME']);
+				//-----
+				
+				$relation = DB\Relation::create($local_column, $referenced_column, isset($cached_row['REVERSE']));
+				
+				if($relation !== null)
+					$relations[] = $relation;
+				else
+					Wave\Log::write('mysql_driver', sprintf('[%s.%s.%s] has duplicate relations.', $cached_row['TABLE_SCHEMA'], $cached_row['TABLE_NAME'], $cached_row['COLUMN_NAME']), Wave\Log::WARNING);
+				
+			}
+		}
 		
-		return $keys;	
+		return $relations;	
 	
 	}
 	
+	public static function getConstraints(DB\Table $table){
+	
+		$constraints = array();
+
+		if(null === $relation_cache = self::_getRelationCache($table))
+			return $constraints;		
+		
+		foreach($relation_cache as $relation){
+
+			$column = $table->getDatabase()->getColumn($relation['TABLE_NAME'], $relation['COLUMN_NAME']);
+			
+			if(!isset($constraints[$relation['CONSTRAINT_NAME']])){
+				$constraints[$relation['CONSTRAINT_NAME']] = new DB\Constraint($column, self::translateSQLConstraintType($relation['CONSTRAINT_TYPE']), $relation['CONSTRAINT_NAME']);
+			} else {
+				$idx = $constraints[$relation['CONSTRAINT_NAME']];
+				$idx->addColumn($column);
+			} 
+		}
+		return $constraints;
+	}
+	
+	private static function _getRelationCache(DB\Table $table){
+		
+		$namespace = $table->getDatabase()->getNamespace();
+
+		if(!isset(self::$_relation_cache[$namespace])){
+		
+			self::$_relation_cache[$namespace] = array();
+			
+			//join across these memory views is slow but it's much tidier than any other way.	
+			$relations_sql = 'SELECT kcu.TABLE_SCHEMA, kcu.TABLE_NAME, kcu.COLUMN_NAME, kcu.REFERENCED_TABLE_SCHEMA, kcu.REFERENCED_TABLE_NAME, kcu.REFERENCED_COLUMN_NAME, tc.CONSTRAINT_NAME, tc.CONSTRAINT_TYPE '.
+							 'FROM information_schema.TABLE_CONSTRAINTS tc '.
+							 'INNER JOIN information_schema.KEY_COLUMN_USAGE kcu USING(CONSTRAINT_SCHEMA, CONSTRAINT_NAME, TABLE_NAME) '.
+							 'WHERE tc.TABLE_SCHEMA = ? OR kcu.REFERENCED_TABLE_SCHEMA = ?;';
+							  
+			$relations_stmt = $table->getDatabase()->getConnection()->prepare($relations_sql);
+			$relations_stmt->execute(array($table->getDatabase()->getName(), $table->getDatabase()->getName()));
+			
+			while($relations_row = $relations_stmt->fetch()){	
+				self::$_relation_cache[$namespace][$relations_row['TABLE_NAME']][] = $relations_row;
+				//Relations added for both directions, flag the one that's reversed.
+				$relations_row['REVERSE'] = true;
+				self::$_relation_cache[$namespace][$relations_row['REFERENCED_TABLE_NAME']][] = $relations_row;
+			}
+		}
+		
+		return isset(self::$_relation_cache[$namespace][$table->getName()]) ? self::$_relation_cache[$namespace][$table->getName()] : null;
+	
+	}
 	
 	public static function translateSQLDataType($type){
 
@@ -78,15 +217,17 @@ class MySQL extends DB\Driver implements DB\IDriver {
 	}
 
 
-	public static function translateSQLIndexType($type){
-	
+	public static function translateSQLConstraintType($type){
+
 		switch($type){
-			case 'PRI':
-				return DB\Column::INDEX_PRIMARY;
-			
-			case 'MUL':			
+			case 'PRIMARY KEY':
+				return DB\Constraint::TYPE_PRIMARY;
+			case 'UNIQUE':
+				return DB\Constraint::TYPE_UNIQUE;
+			case 'FOREIGN KEY':
+				return DB\Constraint::TYPE_FOREIGN;
 			default:
-				return DB\Column::INDEX_UNKNOWN;
+				return DB\Constraint::TYPE_UNKNOWN;
 		}
 	}
 	
@@ -95,12 +236,12 @@ class MySQL extends DB\Driver implements DB\IDriver {
 	
 		switch($nullable){
 			case 'NO':
-				return 'false';
+				return false;
 			case 'YES':
-				return 'true';
+				return true;
 		}
 	}
-	
+		
 	public static function convertValueForSQL($value){
 	
 		switch(true){
@@ -113,8 +254,7 @@ class MySQL extends DB\Driver implements DB\IDriver {
 			default:
 				return $value;
 		}
-	}
-	
+	}	
 	
 
 }

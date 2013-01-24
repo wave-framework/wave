@@ -86,7 +86,7 @@ class View {
 			@mkdir($cache_dir, 0770, true);
 
 		if(!file_exists($cache_dir))
-			throw new Exception('Could not generate routes, the cache directory does not exist or is not writable');
+			throw new Exception('Could not generate views, the cache directory does not exist or is not writable');
 
 		// delete caches		
 		$dir_iterator = new \RecursiveDirectoryIterator($cache_dir);
