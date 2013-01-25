@@ -359,7 +359,14 @@ class Query {
 	public function execute($debug = false){
 
 		$sql = $this->buildSQL();
-		//echo $sql;
+
+        if(true || $debug){
+            echo "QUERY: $sql\n";
+            echo "PARAMS: \n";
+            print_r($this->_params);
+
+        }
+
 		$statement = $this->database->getConnection()->prepare($sql);	
 		
 		$statement->execute( $this->_params );

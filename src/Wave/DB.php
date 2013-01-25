@@ -189,6 +189,10 @@ class DB {
 		} 
 		
 	}
+
+    public function basicStatement($sql){
+        return $this->connection->prepare($sql);
+    }
 	
 
 	public static function insert(&$object){
@@ -235,7 +239,7 @@ class DB {
 		
 		//row identifier
 		foreach($object->_getIdentifyingData() as $identifying_field => $identifying_value){
-			$value = $database->convertValueForSQL($identifying_value);
+			$value = $database->valueToSQL($identifying_value);
 			$criteria[] = DB\Query::parseWhereCondition(sprintf('%s = ?', $database->escape($identifying_field)), $value);
 			$params = array_merge($params, $value);
 		}
