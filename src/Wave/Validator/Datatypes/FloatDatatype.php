@@ -10,7 +10,7 @@ class FloatDatatype extends AbstractDatatype implements CleanerInterface  {
 
         if(!is_scalar($this->input)) return false;
 
-        return is_float($this->input) || strval(floatval($this->input)) == $this->input;
+        return is_float($this->input) || (is_string($this->input) && strval(floatval($this->input)) == $this->input);
 
 	}
 	

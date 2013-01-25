@@ -359,7 +359,14 @@ class Query {
 	public function execute($debug = false){
 
 		$sql = $this->buildSQL();
-		//echo $sql;
+
+		if($debug){
+		    echo "QUERY: $sql\n";
+            echo "PARAMS: \n";
+            print_r($this->_params);
+
+        }
+
 		$statement = $this->database->getConnection()->prepare($sql);	
 		
 		$statement->execute( $this->_params );
@@ -368,6 +375,17 @@ class Query {
 		$this->_executed = true; 
 	
 	}
+
+    public function fetchAll($parse_objects = true, $debug = false){
+
+        $rows = array();
+        while($row = $this->fetchRow($parse_objects, $debug)){
+            $rows[] = $row;
+        }
+
+        return $rows;
+
+    }
 	
 	
 	public function fetchRow($parse_objects = true, $debug = false){

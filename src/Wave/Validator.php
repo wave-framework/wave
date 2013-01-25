@@ -28,9 +28,9 @@ class Validator implements ArrayAccess {
         $this->_schema = $schema;
     }
 
-    public function execute(){
+    public function execute($merge_violations = false){
 
-        foreach($this->_schema['fields'] as $field => $definition){
+        foreach($this->_schema as $field => $definition){
             $this->_cleaned[$field] = null;
 
             // manual check, if the field isn't in the data array throw an error
@@ -69,7 +69,10 @@ class Validator implements ArrayAccess {
             }
         }
 
-        self::$last_errors = $this->_violations;
+        if($merge_violations)
+            self::$last_errors = array_merge(self::$last_errors, $this->_violations);
+        else
+            self::$last_errors = $this->_violations;
 
         return empty($this->_violations);
     }
@@ -83,12 +86,13 @@ class Validator implements ArrayAccess {
     }
 
     /**
-     * @param array $input
      * @param string $schema A schema file to load from the configured schema path
+     * @param array $input
      *
+     * @return array|bool
      * @throws Validator\Exception
      */
-    public static function validate(array $input, $schema){
+    public static function validate($schema, array $input){
         self::$last_errors = array();
 
         if(!array_key_exists($schema, self::$_schema_cache)) {
@@ -97,7 +101,8 @@ class Validator implements ArrayAccess {
             $schema_path = Config::get('wave')->path->schemas . $schema_file;
 
             if(is_file($schema_path) && is_readable($schema_path)){
-                self::$_schema_cache[$schema] = include $schema_path;
+                $schema_data = include $schema_path;
+                self::$_schema_cache[$schema] = &$schema_data['fields'];
             }
             else {
                 throw new Validator\Exception("Could not load schema [$schema] from file ($schema_path)");

@@ -189,6 +189,14 @@ class DB {
 		} 
 		
 	}
+
+    public static function basicStatement($sql, $namespace = null){
+
+        $database = self::get($namespace);
+        $connection = $database->getConnection();
+
+        return $connection->prepare($sql);
+    }
 	
 
 	public static function insert(&$object){
