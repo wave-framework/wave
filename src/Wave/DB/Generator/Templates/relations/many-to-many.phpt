@@ -1,7 +1,7 @@
 {% if false %}<?php{% endif %}
 //{{ relation.Name }} 
-	public function add{{ relation.Name|singularize }}(&$obj, $create_relation = true){
-		$this->_data['{{ relation.Name }}'][] = &$obj;
+	public function add{{ relation.Name|singularize }}($obj, $create_relation = true){
+		$this->_data['{{ relation.Name }}'][] = $obj; //temp reference removal until cache is completed
 		
 	}
 	
