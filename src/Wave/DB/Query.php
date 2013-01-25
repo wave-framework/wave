@@ -457,6 +457,10 @@ class Query {
 				break;
 			}
 		}
+
+        // clear the row out so it can fetch another object if called again
+        $this->_last_row = false;
+
 		return $object_instances[$this->from_alias];
 	
 	}
