@@ -378,13 +378,13 @@ class Query {
 			$this->execute($debug);
 		
 		for(;;){
-			
+					
 			if($this->_last_row === false)
 				$this->_last_row = $this->_statement->fetch();
 			
 			//if still false, return null (no rows left in set)
 			if($this->_last_row === false)
-				return null;
+				return isset($object_instances[$this->from_alias]) ? $object_instances[$this->from_alias] : null;
 			
 			//if not bothering to parse object
 			if(!$parse_objects)
@@ -404,7 +404,7 @@ class Query {
 					if($this->_last_row[$alias] !== $value)
 						break 2; //break parent loop
 				}				
-								
+				
 				//otherwise build the child rows
 				foreach($this->joins as $join){
 					$object_instances[$join['table_alias']] = $this->buildClassInstance($join['table_alias']);
@@ -431,7 +431,7 @@ class Query {
 						$object_instances[$join['target_alias']]->addJoinedObject($object_instances[$join['table_alias']], $join['table_alias']);
 					
 				}
-								
+							
 				//set the _last_row to false as it has been processed and this will force the next call to get another one.
 				$this->_last_row = false;
 			} else {
@@ -439,7 +439,6 @@ class Query {
 				break;
 			}
 		}
-			
 		return $object_instances[$this->from_alias];
 	
 	}
