@@ -32,8 +32,8 @@ class View {
 		
 		    return false;
 		});
-		$this->twig->addFilter('last', new \Twig_Filter_Function('Utils::array_peek'));
-		$this->twig->addFilter('short', new \Twig_Filter_Function('Utils::shorten', array('pre_escape' => 'html', 'is_safe' => array('html'))));
+		$this->twig->addFilter('last', new \Twig_Filter_Function('\\Wave\\Utils::array_peek'));
+		$this->twig->addFilter('short', new \Twig_Filter_Function('\\Wave\\Utils::shorten', array('pre_escape' => 'html', 'is_safe' => array('html'))));
 
 		// global variables
 		$this->twig->addGlobal('_assets', Config::get('deploy')->assets);
