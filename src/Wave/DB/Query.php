@@ -177,7 +177,8 @@ class Query {
 	
 	//default to and
 	public function where($condition, $params = null){
-		return $this->andWhere($condition, $params);
+		if(func_num_args() > 2) throw new \Wave\Exception("Invalid use of Query::where() function");
+        return $this->andWhere($condition, $params);
 	}
 	
 	//can have the ->and or ->or methods used on the result
