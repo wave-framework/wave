@@ -66,7 +66,7 @@ class Model {
 	}
 		
 	//assumption for tables with an ID, would be overloaded if the table's ID column was just 'id'
-	public function _getid(){
+	public function getid(){
 		return $this->_data[self::_getTableName().'_id'];
 	}
 	
@@ -168,10 +168,10 @@ class Model {
 	//After a lot of consideration, benefits > small performance hit.
 	public function __set($property, $data){
 		
-		$setter = self::getSetter($property);
+		$setter = self::_getSetter($property);
 		if(method_exists($this, $setter)){
 			if($this->$property === $data)
-				return;
+				return $data;
 			
 			$this->_dirty[$property] = true;
 			return $this->$setter($data);
@@ -182,7 +182,7 @@ class Model {
 	}
 	
 	public function __get($property){
-		$getter = self::getGetter($property);
+		$getter = self::_getGetter($property);
 		if(!method_exists($this, $getter)){
 			$stack = debug_backtrace(false);
 			$stack = array_shift($stack);
@@ -194,15 +194,15 @@ class Model {
 	}
 	
 	public function __isset($property){
-		return method_exists($this, self::getGetter($property));	
+		return method_exists($this, self::_getGetter($property));
 	}	
 	
-	private static function getSetter($property){
-		return '_set' . $property;
+	private static function _getSetter($property){
+		return 'set' . $property;
 	}
 	
-	private static function getGetter($property){
-		return '_get' . $property;
+	private static function _getGetter($property){
+		return 'get' . $property;
 	}
 	
 	

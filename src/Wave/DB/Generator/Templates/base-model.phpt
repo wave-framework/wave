@@ -77,11 +77,11 @@ abstract class {{ table.ClassName }} extends Wave\DB\Model {
 	{% for column in table.Columns %}
 	
 	//{{ column.TypeDescription|raw }} {{ column.Extra }} {{ column.Comment }}
-	public function _get{{ column.Name }}(){
+	public function get{{ column.Name }}(){
 		return $this->_data['{{ column.Name }}'];
 	}
 	
-	public function _set{{ column.Name }}($value){
+	public function set{{ column.Name }}($value){
 		$this->_data['{{ column.Name }}'] = $value;
 		return $this;
 	}
