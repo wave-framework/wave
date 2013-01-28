@@ -247,7 +247,7 @@ class Query {
 		if($num_placeholders === 1){
 			if($params === null)
 				$condition = str_replace(array('<>', '!=', '=', '?'), array('IS NOT', 'IS NOT', 'IS', 'NULL'), $condition);
-			else 	
+			else if(!is_array($params))
 				$params = array($params);
 		} 
 
