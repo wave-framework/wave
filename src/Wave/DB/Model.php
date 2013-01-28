@@ -59,7 +59,10 @@ class Model {
 	}
 	
 	public function addJoinedObject(&$object, $alias){
-		$this->_joined_objects[$alias] = $object;
+        if(!isset($this->_joined_objects[$alias]))
+            $this->_joined_objects[$alias] = array();
+
+        $this->_joined_objects[$alias][] = $object;
 	}
 		
 	//assumption for tables with an ID, would be overloaded if the table's ID column was just 'id'
