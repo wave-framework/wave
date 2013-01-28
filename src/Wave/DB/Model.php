@@ -111,6 +111,10 @@ class Model {
 		
 		return isset(static::$_relations[$relation_name]);
 	}
+
+    public function _getJoinedObjects(){
+        return $this->_joined_objects;
+    }
 	
 	//returns whether this was loaded from db
 	public function _setLoaded($loaded = true){
