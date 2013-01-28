@@ -164,6 +164,15 @@ class Model {
 		//then all (if no keys are set for some reason) @todo - throw apropriate error
 		return self::_getFields();
 	}
+
+    public function _toArray(){
+        $data = array();
+        foreach(static::_getFields(false) as $field){
+            $getter = self::_getGetter($field);
+            $data[$field] = $this->$getter();
+        }
+        return $data;
+    }
 	
 	//After a lot of consideration, benefits > small performance hit.
 	public function __set($property, $data){
