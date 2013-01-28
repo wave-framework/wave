@@ -17,7 +17,7 @@
         }
     ],
 
-    "bin": [ "bin/wave", "phakefile" ],
+    "bin": [ "bin/wave" ],
 
     "require": {
         "php": ">=5.3.2",
