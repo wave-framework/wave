@@ -204,7 +204,9 @@ class DB {
 		$connection = $database->getConnection();
 		
 		$fields = $params = $placeholders = array();
-		foreach($object->_getData() as $object_field => $object_value){
+        $object_data = $object->_getData();
+		foreach($object->_getFields(false) as $object_field){
+            $object_value = $object_data[$object_field];
 			$fields[] = $database->escape($object_field);
 			$params[] = $database->valueToSQL($object_value);
 			$placeholders[] = '?';
