@@ -338,9 +338,9 @@ class Query {
 		}
 		
 						
-		if (isset($this->group[0])) $query .= $this->checkClassNames('GROUP BY ' . implode(',', $this->group)."\n");
-		if (isset($this->having))	$query .= $this->checkClassNames('HAVING ' . implode('AND ', $this->having) . "\n");
-		if (isset($this->order[0])) $query .= $this->checkClassNames('ORDER BY ' . $this->order . "\n");
+		if (isset($this->group[0])) $query .= 'GROUP BY ' . implode(',', $this->group)."\n";
+		if (isset($this->having))	$query .= 'HAVING ' . implode('AND ', $this->having) . "\n";
+		if (isset($this->order[0])) $query .= 'ORDER BY ' . $this->order . "\n";
 				
 		if (isset($this->limit)){
 			$query .= 'LIMIT '.$this->limit;
