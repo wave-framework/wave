@@ -403,11 +403,21 @@ class Query {
 			
 			//if still false, return null (no rows left in set)
 			if($this->_last_row === false)
-				return isset($object_instances[$this->from_alias]) ? $object_instances[$this->from_alias] : null;
-			
+				break;
+							
 			//if not bothering to parse object
-			if(!$parse_objects)
-				return $this->_last_row;
+			if(!$parse_objects){
+			
+				$output = array();
+				foreach($this->class_aliases as $alias => $class_details){
+					$output[$alias] = array();
+					foreach($class_details['columns'] as $column => $column_alias)
+						$output[$alias][$column] = $this->_last_row[$column_alias];
+				}
+				$this->_last_row = false;
+				return $output;
+			}
+				
 			
 			//if there's no instance of the main class, create a new one.
 			if(!isset($object_instances[$this->from_alias]))
@@ -462,7 +472,8 @@ class Query {
         // reset the last row pointer since we've finished with this row now.
         $this->_last_row = false;
 
-		return $object_instances[$this->from_alias];
+		return isset($object_instances[$this->from_alias]) ? $object_instances[$this->from_alias] : null;
+;
 	
 	}
 	
