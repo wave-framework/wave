@@ -4,9 +4,6 @@ namespace Wave\Validator\Constraints;
 
 class EqualsConstraint extends AbstractConstraint {
 
-    private $format = null;
-    private $datetime;
-
     /**
      * Evaluate the current constraint against the schema arguments and input data.
      *

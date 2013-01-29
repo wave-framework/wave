@@ -92,7 +92,7 @@ class Validator implements ArrayAccess {
      * @return array|bool
      * @throws Validator\Exception
      */
-    public static function validate(array $input, $schema){
+    public static function validate($schema, array $input){
         self::$last_errors = array();
 
         if(!array_key_exists($schema, self::$_schema_cache)) {
