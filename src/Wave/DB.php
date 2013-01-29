@@ -190,8 +190,11 @@ class DB {
 		
 	}
 
-    public function basicStatement($sql){
-        return $this->connection->prepare($sql);
+    public function basicStatement($sql, array $params = array()){
+        $statement = $this->connection->prepare($sql);
+        $statement->execute( $params );
+
+        return $statement;
     }
 	
 
