@@ -15,12 +15,18 @@ class Model {
 	protected $_dirty	= array();
 	protected $_loaded	= false;
 	protected $_joined_objects = array();
+    protected $_joined_aliases = array();
 
-	public function __construct($data = null){
+	public function __construct($data = null, $is_loaded = false){
 
 		foreach(self::_getFields() as $field){
-			$this->_data[$field] = isset($data[$field]) ? $data[$field] : self::getFieldDefault($field);
+            $this->_data[$field] = isset($data[$field])
+                                        ? $data[$field]
+                                        : self::getFieldDefault($field);
 		}
+
+        if($is_loaded)
+            $this->_setLoaded();
 
 	}
 	
@@ -58,7 +64,8 @@ class Model {
 		return Wave\DB::delete($this);
 	}
 	
-	public function addJoinedObject(&$object, $alias){
+	public function addJoinedObject(&$object, $alias, $resolved_class){
+        $this->_joined_aliases[$resolved_class][] = $alias;
         if(!isset($this->_joined_objects[$alias]))
             $this->_joined_objects[$alias] = array();
 
@@ -117,6 +124,16 @@ class Model {
 
     public function _getJoinedObjects(){
         return $this->_joined_objects;
+    }
+
+    public function _getJoinedObjectsForClass($class){
+        $objects = array();
+        if(isset($this->_joined_aliases[$class])){
+            foreach($this->_joined_aliases[$class] as $alias){
+                $objects = array_merge($objects, $this->_joined_objects[$alias]);
+            }
+        }
+        return $objects;
     }
 	
 	//returns whether this was loaded from db

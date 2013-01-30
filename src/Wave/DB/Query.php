@@ -459,7 +459,7 @@ class Query {
 								break;
 						}
 					} else
-						$object_instances[$join['target_alias']]->addJoinedObject($object_instances[$join['table_alias']], $join['table_alias']);
+						$object_instances[$join['target_alias']]->addJoinedObject($object_instances[$join['table_alias']], $join['table_alias'], $this->unaliasClass($join['table_alias']));
 					
 				}
 							
