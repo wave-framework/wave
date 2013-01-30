@@ -17,7 +17,7 @@ abstract class Driver {
 		}
 	}
 	
-	public static function valueFromSQL($value, $field_data){
+	public static function valueFromSQL($value, array $field_data){
 	
 		if($value === null)
 			return null;

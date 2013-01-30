@@ -152,7 +152,7 @@ class DB {
 
 	}
 	
-	public function valueFromSQL($value, $field_data = null){
+	public function valueFromSQL($value, array $field_data){
 		$driver_class = $this->connection->getDriverClass();
 		return $driver_class::valueFromSQL($value, $field_data);
 

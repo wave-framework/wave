@@ -429,8 +429,10 @@ class Query {
 				
 				//if the from instance is different, break and leave it for the next call to fetchRow().
 				foreach($object_instances[$this->from_alias]->_getIdentifyingData() as $property => $value){
+                    $class = $this->class_aliases[$this->from_alias]['class'];
 					$alias = $this->class_aliases[$this->from_alias]['columns'][$property];
-					if($this->_last_row[$alias] !== $value)
+                    $cast_value = $this->database->valueFromSQL($this->_last_row[$alias], $class::_getField($property));
+					if($cast_value !== $value)
 						break 2; //break parent loop
 				}				
 				
@@ -485,9 +487,11 @@ class Query {
 		$columns = $this->class_aliases[$class_alias]['columns'];
 
 		$build_array = array();
-		foreach($columns as $column_name => $column_alias)
-			$build_array[$column_name] = $this->_last_row[$column_alias];
-				
+		foreach($columns as $column_name => $column_alias){
+            $field = $class::_getField($column_name);
+            $cast_value = $this->database->valueFromSQL($this->_last_row[$column_alias], $field);
+			$build_array[$column_name] = $cast_value;
+        }
 		$instance = $class::createFromArray($build_array);
 		
 		if($instance !== null)
