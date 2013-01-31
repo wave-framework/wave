@@ -13,10 +13,12 @@
 namespace Wave;
 
 use \Wave\Config,
+    \Wave\Log\CliHandler,
 	\Wave\Log\ExceptionIntrospectionProcessor,
 	\Monolog\Logger,
 	\Monolog\Handler\AbstractHandler,
-	\Monolog\Handler\StreamHandler;
+	\Monolog\Handler\StreamHandler,
+    \Monolog\Formatter\LineFormatter;
 	
 
 class Log extends Logger {
@@ -90,6 +92,13 @@ class Log extends Logger {
 			$handler = new StreamHandler($log_path, Config::get('wave')->logger->default_level);
 			$handler->pushProcessor(new ExceptionIntrospectionProcessor());
             static::$channels[$channel]->pushHandler($handler);
+
+            if(PHP_SAPI === 'cli'){
+                $cli_handler = new CliHandler();
+                $cli_handler->setFormatter(new LineFormatter(CliHandler::LINE_FORMAT));
+
+                static::$channels[$channel]->pushHandler($cli_handler);
+            }
 		}
 		else{
             static::$channels[$channel]->pushHandler($handler);
