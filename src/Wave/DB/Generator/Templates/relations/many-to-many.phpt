@@ -13,7 +13,7 @@
 									->leftJoin('{{ relation.ReferencedColumn.Table.ClassName }}', $join_alias)
 										->on("$join_alias.{{ relation.TargetRelation.LocalColumn.getName(true) }} = $from_alias.{{ relation.TargetRelation.ReferencedColumn.getName(true) }}")
 									->where("$join_alias.{{ relation.ReferencedColumn.getName(true) }} = ?", $this->_data['{{ relation.LocalColumn.Name }}'])
-									->fetchRow();
+									->fetchAll();
 		}
 		
 		return $this->_data['{{ relation.Name }}'];
