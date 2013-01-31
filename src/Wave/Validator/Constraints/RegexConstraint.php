@@ -10,7 +10,7 @@ class RegexConstraint extends AbstractConstraint {
      * @return mixed
      */
     public function evaluate() {
-        return preg_match($this->arguments, $this->input) > 0;
+        return preg_match($this->arguments, $this->data) > 0;
     }
 
 }

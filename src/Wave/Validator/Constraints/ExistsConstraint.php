@@ -13,23 +13,24 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
 
     const ERROR_NOT_EXISTS = 'not_exists';
 
+    protected $type = 'exists';
     private $instance = null;
 
     public function __construct($property, $arguments, Validator &$validator){
         if(!is_array($arguments) || !isset($arguments['model']) || !isset($arguments['property']))
-            throw new Exception("[exists] constraint requires a model and property to be declared");
+            throw new Exception("[{$this->type}] constraint requires a model and property to be declared");
 
         parent::__construct($property, $arguments, $validator);
+
+        $this->instance = DB::get()->from($this->arguments['model'])
+            ->where($this->arguments['property'] . ' = ?', $this->data)
+            ->fetchRow();
     }
 
     /**
      * @return bool
      */
     public function evaluate(){
-        $this->instance = DB::get()->from($this->arguments['model'])
-                        ->where($this->arguments['property'] . ' = ?', $this->data)
-                        ->fetchRow();
-
         return $this->instance instanceof Model;
     }
 
@@ -52,7 +53,7 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
         return array_merge(
             parent::getViolationPayload(),
             array(
-                'exists' => $this->arguments
+                $this->type => $this->arguments
             )
         );
     }

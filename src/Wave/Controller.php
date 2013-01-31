@@ -88,14 +88,14 @@ class Controller {
         $schema_path = Config::get('wave')->path->schemas . $schema_file;
 		
 		if(!$this->confirmCSRFToken($data)) return false;
-			
-        $v = new Validator($data, $schema_path);
-        $r = $v->validate();
-        $this->_sanitized = $v->getSanitizedData();
-		$this->_input_errors = $v->getErrors();        
-		
-		unset($v);
-		return $r == Validator::RESULT_VALID;
+
+        if($output = Validator::validate($schema, $data)){
+            $this->_sanitized = $output;
+            return true;
+        }
+
+        $this->_input_errors = Validator::$last_errors;
+		return false;
     }
     
     public function confirmCSRFToken($data = null){
