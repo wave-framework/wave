@@ -108,7 +108,7 @@ class MySQL extends DB\Driver implements DB\IDriver {
 		//may not be any constraints
 		if($relation_cache !== null){
 			foreach($relation_cache as $cached_row){
-								
+
 				//--- check both ends of the relation can be built.
 				$local_db = DB::getByDatabaseName($cached_row['TABLE_SCHEMA']);
 				if($local_db === null){
@@ -116,6 +116,10 @@ class MySQL extends DB\Driver implements DB\IDriver {
 					continue;
 				}
 				$local_column = $local_db->getColumn($cached_row['TABLE_NAME'], $cached_row['COLUMN_NAME']);
+
+                //skip if there's no referenced schema.  This is because primary keys will be in the relation cache (no ref schema)
+                if($cached_row['REFERENCED_TABLE_SCHEMA'] === null)
+                    continue;
 
 				$referenced_db = DB::getByDatabaseName($cached_row['REFERENCED_TABLE_SCHEMA']);
 				if($referenced_db === null){
