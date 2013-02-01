@@ -9,6 +9,12 @@ class StringDatatype extends AbstractDatatype {
         return is_string($this->input);
 	}
 
+    /**
+     * @return string a type to use in the violation message
+     */
+    public function getType() {
+        return 'string';
+    }
 }
 
 

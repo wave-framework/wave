@@ -8,6 +8,12 @@ class EmailDatatype extends AbstractDatatype {
 		return preg_match('/^([_a-z0-9-]+)((\+|\.)[_a-z0-9-]+)*@([a-z0-9-]+)(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/i', $this->input) > 0;
 	}
 
+    /**
+     * @return string a type to use in the violation message
+     */
+    public function getType() {
+        return 'email';
+    }
 }
 
 

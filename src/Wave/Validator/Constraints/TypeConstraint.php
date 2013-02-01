@@ -4,6 +4,7 @@
 namespace Wave\Validator\Constraints;
 
 use \Wave\Validator,
+    \Wave\Validator\Datatypes\AbstractDatatype,
     \Wave\Validator\CleanerInterface;
 
 class TypeConstraint extends AbstractConstraint {
@@ -50,6 +51,8 @@ class TypeConstraint extends AbstractConstraint {
     }
 
     protected function getViolationMessage($context = 'This value'){
+        if($this->handler instanceof AbstractDatatype)
+
         return sprintf('%s is not a valid type', $context);
     }
 

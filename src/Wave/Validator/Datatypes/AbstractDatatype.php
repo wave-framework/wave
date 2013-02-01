@@ -19,4 +19,9 @@ abstract class AbstractDatatype {
      */
     abstract public function __invoke();
 
+    /**
+     * @return string a type to use in the violation message
+     */
+    abstract public function getType();
+
 }

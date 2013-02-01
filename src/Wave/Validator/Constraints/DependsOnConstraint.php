@@ -5,8 +5,7 @@ namespace Wave\Validator\Constraints;
 
 use \Wave\DB,
     \Wave\DB\Model,
-    \Wave\Validator,
-    \Wave\Validator\Exception;
+    \Wave\Validator;
 
 class DependsOnConstraint extends AbstractConstraint {
 

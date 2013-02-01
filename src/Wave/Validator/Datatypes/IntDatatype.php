@@ -14,6 +14,12 @@ class IntDatatype extends AbstractDatatype implements CleanerInterface  {
 		return intval($this->input);
 	}
 
+    /**
+     * @return string a type to use in the violation message
+     */
+    public function getType() {
+        return 'integer';
+    }
 }
 
 

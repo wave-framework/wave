@@ -26,6 +26,12 @@ class BooleanDatatype extends AbstractDatatype implements CleanerInterface {
         return $this->converted;
 	}
 
+    /**
+     * @return string a type to use in the violation message
+     */
+    public function getType() {
+        return 'boolean';
+    }
 }
 
 

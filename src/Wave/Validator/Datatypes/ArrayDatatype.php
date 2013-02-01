@@ -11,6 +11,12 @@ class ArrayDatatype extends AbstractDatatype {
 	}
 
 
+    /**
+     * @return string a type to use in the violation message
+     */
+    public function getType() {
+        return 'array';
+    }
 }
 
 
