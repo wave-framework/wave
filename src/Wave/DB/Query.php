@@ -432,8 +432,9 @@ class Query {
                     $class = $this->class_aliases[$this->from_alias]['class'];
 					$alias = $this->class_aliases[$this->from_alias]['columns'][$property];
                     $cast_value = $this->database->valueFromSQL($this->_last_row[$alias], $class::_getField($property));
-					if($cast_value !== $value)
-						break 2; //break parent loop
+
+                    if($cast_value !== $value)
+                        return isset($object_instances[$this->from_alias]) ? $object_instances[$this->from_alias] : null; // break 2;
 				}				
 				
 				//otherwise build the child rows
