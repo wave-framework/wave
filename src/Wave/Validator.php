@@ -13,6 +13,7 @@ class Validator implements ArrayAccess {
     private static $_schema_cache = array();
     private $_schema;
 
+    private $parent_instance = null;
     private $_data;
     private $_cleaned = array();
     private $_violations = array();
@@ -23,9 +24,11 @@ class Validator implements ArrayAccess {
      * @param array $input The data to validate against
      * @param array $schema The schema to validate against
      */
-    public function __construct(array $input, array $schema){
+    public function __construct(array $input, array $schema, $parent_instance = null){
         $this->_data = $input;
         $this->_schema = $schema;
+
+        $this->parent_instance = $parent_instance;
     }
 
     public function execute($merge_violations = false){
@@ -134,6 +137,9 @@ class Validator implements ArrayAccess {
         return sprintf(self::CONSTRAINT_CLASS_MASK, str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
     }
 
+    public function getParentInstance(){
+        return $this->parent_instance;
+    }
 
     public function offsetExists($offset) {
         return array_key_exists($offset, $this->_cleaned);

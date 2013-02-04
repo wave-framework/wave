@@ -51,9 +51,11 @@ class TypeConstraint extends AbstractConstraint {
     }
 
     protected function getViolationMessage($context = 'This value'){
+        $type = 'type';
         if($this->handler instanceof AbstractDatatype)
+            $type = $this->handler->getType();
 
-        return sprintf('%s is not a valid type', $context);
+        return sprintf('%s is not a valid %s', $context, $type);
     }
 
     public function getViolationPayload(){
