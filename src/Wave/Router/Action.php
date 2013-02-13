@@ -13,7 +13,8 @@ class Action {
 	private $target_action;
 	private $requires_level = array();
 	private $response_methods = array();
-	
+
+    private $validation_schema = null;
 	
 	public function __construct(){
 		$this->baseurl = self::getBaseURLFromConf('default');
@@ -93,7 +94,16 @@ class Action {
 		else 
 			return $profiles->$profile->baseurl;
 	}
-	
+
+    public function setValidationSchema($schema) {
+        $this->validation_schema = $schema;
+    }
+
+    public function getValidationSchema() {
+        return $this->validation_schema;
+    }
+
+
 }
 
 

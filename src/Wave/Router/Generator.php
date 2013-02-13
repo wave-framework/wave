@@ -33,7 +33,6 @@ class Generator {
 			// set the route defaults from the Controller annotations (if any)
 			foreach($controller['class']['annotations'] as $annotation){
 				$annotation->apply($base_route);
-				//self::applyAnnotation($annotation, $base_route);
 			}
 			
 			foreach($controller['methods'] as $method){
@@ -42,7 +41,6 @@ class Generator {
 				if($method['visibility'] == Wave\Reflector::VISIBILITY_PUBLIC){
 					foreach($method['annotations'] as $annotation)
 						$annotation->apply($route);
-						//self::applyAnnotation($annotation, $route);
 				}
 				
 				$route->setAction($controller['class']['name'] . '.' . $method['name']);
@@ -53,31 +51,6 @@ class Generator {
 		}
 		return $compiled_routes;	
 	}
-	
-	private static function applyAnnotation($annotation, &$route){
-		
-		$annotation_type = get_class($annotation);
-		switch ($annotation_type){
-			case 'Wave_Annotation_BaseRoute': 
-				$basepath = $annotation->parameters[0];					
-				return $route->setBaseRoute($basepath);
-			
-			case 'Wave_Annotation_Route': 
-				return $route->addRoute($annotation->methods, $annotation->url);
-			
-			case 'Wave_Annotation_RequiresLevel':
-				return $route->setRequiresLevel($annotation->methods, $annotation->inherit);
-				
-			case 'Wave_Annotation_RespondsWith':
-				return $route->setRespondsWith($annotation->methods, $annotation->inherit);
-			
-			case 'Wave_Annotation_BaseURL':
-				return $route->setBaseURL($annotation->parameters[0]);
-				
-			
-		}
-	}
-
 
 }
 

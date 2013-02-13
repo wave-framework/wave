@@ -11,6 +11,7 @@ class Controller {
 	protected $_response_method;
 	
 	protected $_data;
+    protected $_cleaned = array();
 	protected $_action;
 	
 	protected $_is_post = false;
@@ -18,7 +19,7 @@ class Controller {
 	protected $_check_csrf = false;
 	//protected $_response_method;
 	
-	public static final function invoke($action, $data, $router = null){
+	public static final function invoke($action, $data, $router = null, $validator_schema = null){
 		
 		$invoke = explode('.', $action);
 		
@@ -59,7 +60,15 @@ class Controller {
 			
 			if(method_exists($controller, $invoke[1])){
 				$controller->init();
-				return $controller->{$invoke[1]}();
+                $validated = true;
+                if($validator_schema !== null){
+                    $validated = $controller->inputValid($validator_schema);
+                }
+                if($validated)
+				    return $controller->{$invoke[1]}();
+                else {
+                    return $controller->request();
+                }
 			}
 			else 
 				throw new \Wave\Exception('Could not invoke action '.$action.'. Method '.$invoke[0].'::'.$invoke[1].'() does not exist');
@@ -82,15 +91,11 @@ class Controller {
 
         if ($data === null)
             $data = $this->_data;
-		
-        $schema_name = strtr($schema, '_', DS);
-        $schema_file = sprintf(Config::get('wave')->schemas->file_format, $schema_name);
-        $schema_path = Config::get('wave')->path->schemas . $schema_file;
-		
+
 		if(!$this->confirmCSRFToken($data)) return false;
 
         if($output = Validator::validate($schema, $data)){
-            $this->_sanitized = $output;
+            $this->_cleaned = $output;
             return true;
         }
 
@@ -226,7 +231,8 @@ class Controller {
 	protected function requestJSON(){
 		if(!isset($this->_status)) $this->_status = Response::STATUS_INPUT_REQUIRED;
 		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
-		return $this->respondJSON();
+        $payload = array('errors' => isset($this->_input_errors) ? $this->_input_errors : array());
+		return $this->respondJSON($payload);
 	}
 	
 	protected function respondXML(){
