@@ -2,7 +2,7 @@
 
 namespace Wave\Validator\Constraints;
 
-class InstanceofConstraint extends AbstractConstraint {
+class InstanceOfConstraint extends AbstractConstraint {
 
 
     /**
