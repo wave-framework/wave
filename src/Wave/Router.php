@@ -107,7 +107,7 @@ class Router {
 						'The current user does not have the required level to access this page', 403);
 			}
 			Hook::triggerAction('router.before_invoke', array(&$action, &$var_stack, &$this));
-			return Controller::invoke($action->getAction(), $var_stack, $this);
+			return Controller::invoke($action->getAction(), $var_stack, $this, $action->getValidationSchema());
 		}
 		else
 			throw new Exception('The requested URL '.$url.' does not exist', 404);
