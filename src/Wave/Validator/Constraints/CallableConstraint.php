@@ -20,13 +20,19 @@ class CallableConstraint extends AbstractConstraint {
             throw new Exception('The argument passed to [callable] must be callable');
 
         parent::__construct($property, $arguments, $validator);
+        $this->cleaned = $this->data;
     }
 
     /**
      * @return bool
      */
     public function evaluate(){
-        return call_user_func_array($this->arguments, array($this->data, $this->validator, &$this->key, &$this->message));
+        return call_user_func_array($this->arguments, array(
+            &$this->data,
+            &$this->validator,
+            &$this->key,
+            &$this->message,
+        ));
     }
 
     /**
