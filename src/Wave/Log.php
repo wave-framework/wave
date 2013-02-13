@@ -63,7 +63,7 @@ class Log extends Logger {
 	**/
 	public static function getDefaultLevel(){
 		if(static::$default_level === null)
-            static::$default_level = Config::get('wave')->logger->default_level;
+            static::$default_level = Config::get('wave')->logger->file->level;
 
 		return static::$default_level;
 	}
@@ -83,18 +83,18 @@ class Log extends Logger {
         static::$channels[$channel] = new Logger($channel);
 		if($handler === null){
 			$log_path = Config::get('wave')->path->logs;
-			$log_path .= Config::get('wave')->logger->default_file;
+			$log_path .= Config::get('wave')->logger->file->file;
 			$log_dir = realpath(dirname($log_path));
 
 			if(!is_writable($log_dir)){
 				@mkdir($log_dir, 0770, true);
 			}
-			$handler = new StreamHandler($log_path, Config::get('wave')->logger->default_level);
+			$handler = new StreamHandler($log_path, static::getDefaultLevel());
 			$handler->pushProcessor(new ExceptionIntrospectionProcessor());
             static::$channels[$channel]->pushHandler($handler);
 
             if(PHP_SAPI === 'cli'){
-                $cli_handler = new CliHandler();
+                $cli_handler = new CliHandler(Config::get('wave')->logger->cli->level);
                 $cli_handler->setFormatter(new LineFormatter(CliHandler::LINE_FORMAT));
 
                 static::$channels[$channel]->pushHandler($cli_handler);
