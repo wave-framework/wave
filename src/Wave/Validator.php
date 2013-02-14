@@ -34,7 +34,7 @@ class Validator implements ArrayAccess {
     public function execute($merge_violations = false){
 
         foreach($this->_schema as $field => $definition){
-            $this->_cleaned[$field] = null;
+            $this->_cleaned[$field] = isset($definition['default']) ? $definition['default'] : null;
 
             // manual check, if the field isn't in the data array throw an error
             // if it is a required field, otherwise just skip and continue validating the rest
@@ -50,7 +50,6 @@ class Validator implements ArrayAccess {
                         'message' => 'This field is required'
                     ));
                 }
-                $this->_cleaned[$field] = null;
                 continue;
             }
 
