@@ -26,7 +26,7 @@
                                   ->and("$from_alias.{{ relation.TargetRelation.ReferencedColumn.getName(true) }} = ?", $obj->{{ relation.TargetRelation.ReferencedColumn.Name }})
                                 ->fetchRow();
 
-            $relation->delete();
+            Wave\DB::delete($relation);
         }
 
 	}
