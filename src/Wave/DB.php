@@ -10,6 +10,8 @@
 
 namespace Wave;
 
+use Wave\DB\Model;
+
 class DB {
 
 	private static $num_databases	= 0;
@@ -258,7 +260,7 @@ class DB {
 		return true;
 	}
 
-	public static function delete(&$object){
+	public static function delete(Model &$object){
 		
 		$database = self::get($object::_getDatabaseNamespace());
 		$connection = $database->getConnection();

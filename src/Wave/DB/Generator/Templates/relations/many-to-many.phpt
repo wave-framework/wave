@@ -13,9 +13,7 @@
             $rc->{{ relation.TargetRelation.ReferencedColumn.Name }} = $obj->{{ relation.TargetRelation.ReferencedColumn.Name }};
             $rc->{{ relation.ReferencedColumn.Name }} = $this->_data['{{ relation.LocalColumn.Name }}'];
             $rc->save();
-
         }
-		
 	}
 
 	public function remove{{ relation.Name|singularize }}(&$obj, $remove_relation = true){
@@ -26,9 +24,15 @@
                                   ->and("$from_alias.{{ relation.TargetRelation.ReferencedColumn.getName(true) }} = ?", $obj->{{ relation.TargetRelation.ReferencedColumn.Name }})
                                 ->fetchRow();
 
-            Wave\DB::delete($relation);
+            if($relation instanceof \Wave\DB\Model){
+                try{
+                    Wave\DB::delete($relation);
+                    return true;
+                }
+                catch(\PDOException $e){}
+            }
         }
-
+        return false;
 	}
 
 	//{{ relation.Name }} 
