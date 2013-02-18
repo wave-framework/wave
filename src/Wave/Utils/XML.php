@@ -19,12 +19,11 @@ class XML {
 		$xml->startElement($rootNodeName);
 		
 		$data = self::arrayify($data);
-		
 		function write(XMLWriter $xml, $data){
 		    foreach($data as $_key => $value){
 		        // check the key isnt a number, (numeric keys invalid in XML)
-		        if(is_numeric($_key)) $key = 'element';
-		        else if($_key[0] == '_') continue;
+                if(is_numeric($_key)) $key = 'element';
+		        else if(!is_string($_key) || empty($_key) || strncmp($_key, '_', 1) === 0) continue;
 		        else $key = $_key;
 		        
 		        $xml->startElement($key);
