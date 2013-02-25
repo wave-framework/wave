@@ -1,15 +1,16 @@
 <?php
 
-namespace Wave\DB;
+namespace Wave\DB\Driver;
 
-abstract class Driver {
-	
+use Wave\DB\Column,
+    DateTime;
+
+abstract class AbstractDriver {
 	
 	public static function valueToSQL($value){
 	
 		switch(true){
-		
-			case $value instanceof \DateTime:
+			case $value instanceof DateTime:
 				return $value->format('Y-m-d H:i:s');
 
 			default:
@@ -40,7 +41,7 @@ abstract class Driver {
 			case Column::TYPE_TIMESTAMP:
 				if($value == 'CURRENT_TIMESTAMP')
 					$value = 'now';
-				return new \DateTime($value);
+				return new DateTime($value);
 		
 			default:
 				return $value;
@@ -49,12 +50,6 @@ abstract class Driver {
 	
 }
 
-interface IDriver {
 
-	public static function constructDSN($config);
-	public static function getDriverName();
-	public static function getTables($database);
-	
-}
 
 ?>

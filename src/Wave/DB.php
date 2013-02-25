@@ -30,7 +30,8 @@ class DB {
 		$this->connection = new DB\Connection($config);
 		$this->namespace = $namespace;
 		$this->config = $config;
-		
+
+        /** @var DB\Driver\DriverInterface $driver */
 		$driver = $this->connection->getDriverClass();
 		$this->escape_character = $driver::getEscapeCharacter();
 
@@ -43,6 +44,7 @@ class DB {
 	
 		$installed_drivers = DB\Connection::getAvailableDrivers();
 
+        /** @var DB\Driver\DriverInterface $driver_class */
 		$driver_class = self::getDriverClass($database->driver);
 		
 		//Check PDO driver is installed on system

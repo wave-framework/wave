@@ -7,16 +7,18 @@
 **/
 
 namespace Wave\DB\Driver;
-use Wave,
-	Wave\DB;
 
-class MySQL extends DB\Driver implements DB\IDriver {
+use Wave,
+	Wave\DB,
+    Wave\Config\Row;
+
+class MySQL extends AbstractDriver implements DriverInterface {
 	
 	//Selecting from the information schema tables is slow as they are built on select so need to cache the whole set and manipulate in php.
 	static $_column_cache;
 	static $_relation_cache;
 
-	public static function constructDSN($config){
+	public static function constructDSN(Row $config){
 	
 		return "mysql:host={$config->host};dbname={$config->database};port={$config->port}";
 	}
@@ -29,7 +31,7 @@ class MySQL extends DB\Driver implements DB\IDriver {
 		return '`';
 	}
 	
-	public static function getTables($database){
+	public static function getTables(DB $database){
 		
 		$table_sql = 'SELECT TABLE_NAME, ENGINE, TABLE_COLLATION, TABLE_COMMENT '.
 					 'FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = ?;';
