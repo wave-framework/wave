@@ -44,8 +44,11 @@ class Validator implements ArrayAccess {
             // if it is a required field, otherwise just skip and continue validating the rest
             if(!isset($this->_data[$field]) || empty($this->_data[$field])){
                 $is_required = !(isset($definition['required']) && is_bool($definition['required']) && !$definition['required']);
-                if(isset($definition['required']) && is_callable($definition['required'])){
-                    $is_required = call_user_func($definition['required'], $this);
+                if(isset($definition['required'])){
+                    if(is_callable($definition['required']))
+                        $is_required = call_user_func($definition['required'], $this);
+                    elseif(is_string($definition['required']))
+                        $is_required = isset($this->_data[$definition['required']]);
                 }
                 if($is_required){
                     $this->addViolation($field, array(
