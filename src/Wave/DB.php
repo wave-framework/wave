@@ -10,22 +10,42 @@
 
 namespace Wave;
 
-use Wave\DB\Model;
+use Wave\Core,
+    Wave\Config,
+    Wave\DB\Model,
+    Wave\DB\Exception;
 
 class DB {
 
+    /** @var int $num_databases */
 	private static $num_databases	= 0;
-	private static $instances		= array();
+
+	/** @var DB[] $instances */
+    private static $instances		= array();
+
+    /** @var string $default_namespace */
 	private static $default_namespace;
-	
+
+    /** @var string $escape_character */
 	private $escape_character;
-	
+
+    /** @var \Wave\DB\Connection $connection */
 	private $connection;
+
+    /** @var string $namespace */
 	private $namespace;
+
+    /** @var \Wave\Config\Row $config */
 	private $config;
+
+    /** @var \Wave\DB\Table[] $tables */
 	private $tables;
-	
-	private function __construct($namespace, $config){
+
+    /**
+     * @param $namespace
+     * @param $config
+     */
+    private function __construct($namespace, $config){
 	
 		$this->connection = new DB\Connection($config);
 		$this->namespace = $namespace;
@@ -38,9 +58,15 @@ class DB {
 		if(in_array(Core::$_MODE, array(Core::MODE_DEVELOPMENT, Core::MODE_TEST)))
 			$this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 	}
-	
-	
-	private static function init($namespace, $database){
+
+    /**
+     * @param $namespace
+     * @param $database
+     *
+     * @return DB
+     * @throws DB\Exception
+     */
+    private static function init($namespace, $database){
 	
 		$installed_drivers = DB\Connection::getAvailableDrivers();
 
@@ -55,13 +81,17 @@ class DB {
 		return new self($namespace, $database);
 
 	}
-	
-	/**
-	*	Returns an instance of a database
-	*	If no arguments are suppplied, the default namespace and mode are selected.
-	*
-	**/
-	public static function get($namespace = null){
+
+    /**
+     * Returns an instance of a database
+     * If no arguments are supplied, the default namespace and mode are selected.
+     *
+     * @param string|null $namespace  The DB namespace to load from (or the default if not supplied)
+     *
+     * @return DB
+     * @throws Exception
+     */
+    public static function get($namespace = null){
 				
 		if($namespace === null){
 		
@@ -73,19 +103,19 @@ class DB {
 
 		if(!isset(self::$instances[$namespace])){
 		
-			$databases = \Wave\Config::get('db')->databases;
+			$databases = Config::get('db')->databases;
 
 			if(!isset($databases[$namespace])){
-				throw new \Wave\Exception("There is no database configuration for {$namespace}");
+				throw new Exception("There is no database configuration for {$namespace}");
 			}
 			
 			if(isset($databases[$namespace][\Wave\Core::$_MODE])) 
-				$mode = \Wave\Core::$_MODE;
+				$mode = Core::$_MODE;
 			else
-				$mode = \Wave\Core::MODE_PRODUCTION;
+				$mode = Core::MODE_PRODUCTION;
 		
 			if(!isset($databases[$namespace][$mode])){
-				throw new \Wave\Exception('There must be at least a PRODUCTION database defined');
+				throw new Exception('There must be at least a PRODUCTION database defined');
 			}
 			
 			self::$instances[$namespace] = self::init($namespace, $databases[$namespace][$mode], $namespace);
@@ -94,8 +124,11 @@ class DB {
 		return self::$instances[$namespace];
 	
 	}
-	
-	public static function getAll(){
+
+    /**
+     * @return DB[]
+     */
+    public static function getAll(){
 
 		$databases = \Wave\Config::get('db')->databases;
 		foreach($databases as $namespace => $modes)
@@ -103,9 +136,17 @@ class DB {
 		
 		return self::$instances;
 	}
-	
-	//reverse lookup by DB name, should only be used during model generation for relations (slow).
-	public static function getByDatabaseName($name){
+
+    /**
+     * Reverse lookup by DB name
+     *
+     * Note: This function is quite slow, it should only be used during model generation for relations.
+     *
+     * @param $name
+     *
+     * @return null|DB
+     */
+    public static function getByDatabaseName($name){
 		
 		$databases = \Wave\Config::get('db')->databases;
 		foreach($databases as $namespace => $modes)
@@ -115,8 +156,15 @@ class DB {
 		
 		return null;
 	}
-	
-	public function getTables($cache = true){
+
+    /**
+     * Returns the tables list, refreshing it if the $cache parameter is false
+     *
+     * @param bool $cache
+     *
+     * @return DB\Table[]
+     */
+    public function getTables($cache = true){
 	
 		if(!isset($this->tables) || !$cache){
 			$driver_class = $this->getConnection()->getDriverClass();
@@ -125,8 +173,14 @@ class DB {
 		
 		return $this->tables;
 	}
-	
-	public function getColumn($table, $column){
+
+    /**
+     * @param $table
+     * @param $column
+     *
+     * @return DB\Column
+     */
+    public function getColumn($table, $column){
 		
 		$tables = $this->getTables();
 		$table = $tables[$table];
@@ -134,55 +188,111 @@ class DB {
 		
 		return $columns[$column];
 	}
-	
-	public static function getDefaultNamespace(){
+
+    /**
+     * @return string
+     */
+    public static function getDefaultNamespace(){
 		
 		foreach(\Wave\Config::get('db')->databases as $ns => $database)
 			return $ns;
 		
 	}
-	
-	public static function getDriverClass($driver){
+
+    /**
+     * @param $driver
+     *
+     * @return string
+     */
+    public static function getDriverClass($driver){
 		return '\\Wave\\DB\\Driver\\'.$driver;
 	}
-	
-	public function escape($string){
+
+    /**
+     * Escape using the escaping character of the current connection
+     *
+     * @param $string
+     *
+     * @return string
+     */
+    public function escape($string){
 		return $this->escape_character . $string . $this->escape_character;
-	}	
-	
-	public function valueToSQL($value){
+	}
+
+    /**
+     * Convert a value to it's valid SQL equivalent using the current driver class
+     *
+     * @param $value
+     *
+     * @return mixed
+     */
+    public function valueToSQL($value){
 		$driver_class = $this->connection->getDriverClass();
 		return $driver_class::valueToSQL($value);
 
 	}
-	
-	public function valueFromSQL($value, array $field_data){
+
+    /**
+     * Convert a value to it's PHP type using the current driver class
+     *
+     * @param       $value
+     * @param array $field_data
+     *
+     * @return mixed
+     */
+    public function valueFromSQL($value, array $field_data){
 		$driver_class = $this->connection->getDriverClass();
 		return $driver_class::valueFromSQL($value, $field_data);
 
 	}
-	
-	public function getConnection(){
+
+    /**
+     * @return DB\Connection
+     */
+    public function getConnection(){
 		return $this->connection;
 	}
-	
-	public function getNamespace($full_namespace = true){
+
+    /**
+     * @param bool $full_namespace
+     *
+     * @return string
+     */
+    public function getNamespace($full_namespace = true){
 		
 		$ns_prefix = $full_namespace ? Config::get('wave')->model->base_namespace.'\\' : '';
 		return $ns_prefix.$this->namespace;
 	}
-	
-	public function getName(){
+
+    /**
+     * @return mixed
+     */
+    public function getName(){
 		return $this->config->database;
 	}
-	
-	//alias function for Wave\DB\Qurey::from
-	public function from($from, &$alias = null, $fields = null){
+
+    /**
+     * Alias to \Wave\DB\Query::from
+     *
+     * @param      $from
+     * @param null $alias
+     * @param null $fields
+     *
+     * @return DB\Query
+     */
+    public function from($from, &$alias = null, $fields = null){
 		$query = new \Wave\DB\Query($this);
 		return $query->from($from, $alias, $fields);
 	}
-	
-	public static function save(&$object){
+
+    /**
+     * Save an object to the database (either INSERT or UPDATE)
+     * 
+     * @param Model $object
+     *
+     * @return bool
+     */
+    public static function save(Model &$object){
 		
 		if($object->_isLoaded()){
 			if($object->_isDirty()){
@@ -194,15 +304,30 @@ class DB {
 		
 	}
 
+    /**
+     * Execute a basic statement on the current connection and return the PDO statement object
+     *
+     * @param       $sql
+     * @param array $params
+     *
+     * @return \PDOStatement
+     */
     public function basicStatement($sql, array $params = array()){
         $statement = $this->connection->prepare($sql);
         $statement->execute( $params );
 
         return $statement;
     }
-	
 
-	public static function insert(&$object){
+
+    /**
+     * Execute an insert query for an object.
+     *
+     * @param Model $object
+     *
+     * @return bool
+     */
+    public static function insert(Model &$object){
 
 		$database = self::get($object::_getDatabaseNamespace());
 		$connection = $database->getConnection();
@@ -233,8 +358,16 @@ class DB {
 			
 		return $object->_setLoaded();
 	}
-	
-	public static function update(&$object){
+
+
+    /**
+     * Execute an update query for an object
+     *
+     * @param Model $object
+     *
+     * @return bool
+     */
+    public static function update(Model &$object){
 				
 		$database = self::get($object::_getDatabaseNamespace());
 		$connection = $database->getConnection();
@@ -262,7 +395,14 @@ class DB {
 		return true;
 	}
 
-	public static function delete(Model &$object){
+    /**
+     * Execute a delete query for an object
+     *
+     * @param Model $object
+     *
+     * @return bool
+     */
+    public static function delete(Model &$object){
 		
 		$database = self::get($object::_getDatabaseNamespace());
 		$connection = $database->getConnection();
