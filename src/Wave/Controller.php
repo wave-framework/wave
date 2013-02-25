@@ -109,7 +109,7 @@ class Controller {
     		
     	if($this->_check_csrf && isset($this->_identity) && $this->_identity instanceof IAuthable){
 			$field_name = Config::get('deploy')->auth->csrf->form_name;
-			if(!isset($this->_data[$field_name]) || !$this->_identity->confirmCSRFKey($this->_data[$field_name])){
+			if(!isset($this->_data[$field_name]) || !$this->_identity->confirmCSRFKey($data[$field_name])){
 				$this->_input_errors = array($field_name => array('reason' => Validator::ERROR_INVALID));
 				return false;
 			}
