@@ -11,15 +11,23 @@ use Wave;
 
 
 class Table {
-	
+
+    /** @var \Wave\DB $database */
 	private $database;
+    /** @var string $table */
 	private $table;
+    /** @var string $engine */
 	private $engine;
+    /** @var string $collation */
 	private $collation;
+    /** @var string $comment */
 	private $comment;
-	
+
+    /** @var Column[] $columns */
 	private $columns;
+    /** @var Relation[] $relations */
 	private $relations;
+    /** @var Constraint[] $constraints */
 	private $constraints;
 
 	public function __construct(Wave\DB $database, $table, $engine = '', $collation = '', $comment = ''){
@@ -30,8 +38,11 @@ class Table {
 		$this->collation = $collation;
 		$this->comment = $comment;
 	}
-	
-	public function getColumns(){
+
+    /**
+     * @return Column[]
+     */
+    public function getColumns(){
 		
 		if(!isset($this->columns)){
 			$driver_class = $this->database->getConnection()->getDriverClass();
@@ -40,8 +51,11 @@ class Table {
 
 		return $this->columns;		
 	}
-	
-	public function getRelations(){
+
+    /**
+     * @return Relation[]
+     */
+    public function getRelations(){
 		
 		if(!isset($this->relations)){
 			$driver_class = $this->database->getConnection()->getDriverClass();
@@ -50,8 +64,11 @@ class Table {
 
 		return $this->relations;		
 	}
-	
-	public function getConstraints(){
+
+    /**
+     * @return Constraint[]
+     */
+    public function getConstraints(){
 		
 		if(!isset($this->constraints)){
 			$driver_class = $this->database->getConnection()->getDriverClass();
@@ -61,8 +78,11 @@ class Table {
 		return $this->constraints;
 		
 	}
-	
-	public function getPrimaryKey(){
+
+    /**
+     * @return null|Constraint
+     */
+    public function getPrimaryKey(){
 		
 		foreach($this->getConstraints() as $constraint)
 			if($constraint->getType() === Constraint::TYPE_PRIMARY)
@@ -70,28 +90,48 @@ class Table {
 				
 		return null;
 	}
-	
-	public function getDatabase(){
+
+    /**
+     * @return \Wave\DB
+     */
+    public function getDatabase(){
 		return $this->database;
 	}
 
-	public function getName(){
+    /**
+     * @return string
+     */
+    public function getName(){
 		return $this->table;
 	}
 
-	public function getEngine(){
+    /**
+     * @return string
+     */
+    public function getEngine(){
 		return $this->engine;
 	}
 
-	public function getCollation(){
+    /**
+     * @return string
+     */
+    public function getCollation(){
 		return $this->collation;
 	}
-	
-	public function getComment(){
+
+    /**
+     * @return string
+     */
+    public function getComment(){
 		return $this->comment;
 	}
-	
-	public function getClassName($with_namespace = false){
+
+    /**
+     * @param bool $with_namespace
+     *
+     * @return string
+     */
+    public function getClassName($with_namespace = false){
 	
 		$prefix = $with_namespace ? $this->database->getNamespace().'\\' : '';
 		return $prefix . Wave\Inflector::camelize($this->table);

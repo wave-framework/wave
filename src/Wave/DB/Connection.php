@@ -7,16 +7,22 @@
 **/
 
 namespace Wave\DB;
-use Wave;
+use Wave,
+    Wave\DB\Driver\DriverInterface,
+    Wave\Config\Row as ConfigRow;
 
 class Connection extends \PDO {
 
+    /** @var DriverInterface $driver_class */
 	private $driver_class;
 
-	public function __construct($config){
+    /**
+     * @param \Wave\Config\Row $config
+     */
+    public function __construct(ConfigRow $config){
 
+        /** @var DriverInterface $driver_class  */
 		$driver_class = Wave\DB::getDriverClass($config->driver);
-	
 		$this->driver_class = $driver_class;
 				
 		parent::__construct($driver_class::constructDSN($config), $config->username, $config->password);
@@ -33,7 +39,10 @@ class Connection extends \PDO {
 	}
 	**/
 
-	public function getDriverClass(){
+    /**
+     * @return DriverInterface
+     */
+    public function getDriverClass(){
 		return $this->driver_class;
 	}
 

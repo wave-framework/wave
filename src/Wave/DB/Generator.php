@@ -7,13 +7,21 @@
 **/
 
 namespace Wave\DB;
-use Wave;
+
+use Wave,
+    Twig_Environment,
+    Twig_Loader_Filesystem;
 
 class Generator {
 
+    /** @var Twig_Environment $twig */
 	private static $twig;
 
-	public static function generate(){
+    /**
+     * Generate the base models (and any model stubs if they don't exist) based on the schema
+     * from the database
+     */
+    public static function generate(){
 		
 		self::initTwig();
 		$databases = Wave\DB::getAll();
@@ -35,39 +43,57 @@ class Generator {
 			
 		}
 	}
-	
-	private static function renderTemplate($template, $data, $template_ext = '.phpt'){
+
+    /**
+     * @param string $template
+     * @param array  $data
+     * @param string $template_ext
+     *
+     * @return string
+     */
+    private static function renderTemplate($template, $data, $template_ext = '.phpt'){
 		
 		$loaded_template = self::$twig->loadTemplate($template.$template_ext);
 		return $loaded_template->render($data);
 		
 	}
-	
-	private static function initTwig(){
+
+    private static function initTwig(){
 		
-		$loader = new \Twig_Loader_Filesystem(dirname(__FILE__).DS.'Generator'.DS.'Templates');
-		self::$twig = new \Twig_Environment($loader);
+		$loader = new Twig_Loader_Filesystem(__DIR__.DS.'Generator'.DS.'Templates');
+		self::$twig = new Twig_Environment($loader);
 		self::$twig->addFilter('addslashes', new \Twig_Filter_Function('addslashes'));
 		self::$twig->addFilter('implode', new \Twig_Filter_Function('implode'));
 		self::$twig->addFilter('singularize', new \Twig_Filter_Function('\Wave\Inflector::singularize'));
 
-
 	}
-	
-	
-	private static function createModelDirectory($database){
+
+    /**
+     * @param Wave\DB $database
+     */
+    private static function createModelDirectory(Wave\DB $database){
 			
 		$basedir = self::getBaseModelPath($database);
 		
 		if(!file_exists($basedir))
-			mkdir($basedir, 0775, true);	
+			mkdir($basedir, 0775, true);
 	}
-	
-	private static function getBaseModelPath($database){
+
+    /**
+     * @param \Wave\DB $database
+     *
+     * @return string
+     */
+    private static function getBaseModelPath(Wave\DB $database){
 		return self::getModelPath($database).'Base'.DS;
 	}
-	
-	private static function getModelPath($database){
+
+    /**
+     * @param \Wave\DB $database
+     *
+     * @return string
+     */
+    private static function getModelPath(Wave\DB $database){
 	
 		$namespace = $database->getNamespace(false);
 		$model_directory = Wave\Config::get('wave')->path->models;

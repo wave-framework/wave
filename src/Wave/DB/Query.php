@@ -10,13 +10,18 @@ namespace Wave\DB;
 
 use \Wave;
 
+/**
+ * @method and
+ * @method or
+ */
 class Query {
 	
 	private $escape_character;
 	
 	private $class_aliases	= array();
 	private $alias_counter;
-	
+
+    /** @var Wave\DB $database */
 	private $database;
 	private $from_alias;
 	private $fields	= array();
@@ -41,9 +46,20 @@ class Query {
 		$this->database = $database;
 		$this->alias_counter = 'a';
 	}
-	
-	
-	public function from($from, &$alias = null, $fields = null){
+
+    /**
+     * Sets the Model class this query will result in.
+     *
+     * @param string      $from
+     * @param string|null $alias   [optional] Provide a custom alias to use in the query, or null to have one
+     *                             generated. This property is passed by reference so it can be used to get a
+     *                             handle on the generated alias.
+     * @param array|null  $fields  [optional] An array of fields to select rather than the automatically
+     *                             detected fields from the Model class.
+     *
+     * @return Query
+     */
+    public function from($from, &$alias = null, array $fields = null){
 		
 		//if a relative reference, add the ns prefix - will be most of the time
 		$this->resolveNamespace($from);
@@ -67,8 +83,18 @@ class Query {
 	/*
 	*	START JOIN METHODS
 	*/
-	
-	public function with($relation, &$alias = null){
+
+    /**
+     * Return the specified relation objects with the primary object
+     *
+     * @param string      $relation  The class name of the relation to join to the primary object
+     * @param string|null $alias     [optional] Provide a custom alias to use for the joined object, or null to have one
+     *                               generated. This property is passed by reference so it can be used to get a
+     *                               handle on the generated alias.
+     *
+     * @return Query
+     */
+    public function with($relation, &$alias = null){
 		
 		$from_class = $this->unaliasClass($this->from_alias);
 		$relation_data = $from_class::_getRelation($relation);
@@ -101,20 +127,46 @@ class Query {
 		return $this;
 		
 	}
-	
-	public function leftJoin($class, &$alias = null, &$target_alias = null){
+
+    /**
+     * Perform a left join
+     * @see join
+     */
+    public function leftJoin($class, &$alias = null, &$target_alias = null){
 		return $this->join('LEFT JOIN', $class, $alias, $target_alias);
 	}
-	
-	public function innerJoin($class, &$alias = null, &$target_alias = null){
+
+    /**
+     * Perform an inner join
+     * @see join
+     */
+    public function innerJoin($class, &$alias = null, &$target_alias = null){
 		return $this->join('INNER JOIN', $class, $alias, $target_alias);
 	}
-	
+
+    /**
+     * Perform a right join
+     * @see join
+     */
 	public function rightJoin($class, &$alias = null, &$target_alias = null){
 		return $this->join('RIGHT JOIN', $class, $alias, $target_alias);
 	}
-	
-	//designed to be used with the 'on' or 'using' methods
+
+    /**
+     * Join another model onto the current query. This function is designed to have ->on() called directly
+     * afterwards with the condition for the join.
+     *
+     * @param string       $type          The type of join to perform
+     * @param string       $class         The model class to join on
+     * @param string|null  $alias         [optional] Provide a custom alias to use for the joining table or null to
+     *                                    have one generated. This property is passed by reference so it can be used
+     *                                    to get a handle on the generated alias.
+     * @param string|null  $target_alias  [optional] Set the alias of the object this row is to be joined on to. By
+     *                                    default this is the primary object. This property is passed by reference
+     *                                    so it can be used to get a handle on the generated alias.
+     *
+     * @return Query
+     */
 	public function join($type, $class, &$alias = null, &$target_alias = null){
 		
 		//this is where to stick the joined object
@@ -139,15 +191,29 @@ class Query {
 		
 		return $this;
 	}
-		
-	//designed to be used with ->*Join methods
-	public function on($condition){
+
+    /**
+     * Sets the condition for a join. This should be called directly after the use of
+     * a ->*Join() method.
+     *
+     * @param $condition
+     *
+     * @return Query
+     */
+    public function on($condition){
 		
 		$this->addJoinCondition("ON $condition");
 		return $this;
 	}
-	
-	//designed to be used with ->*Join methods
+
+    /**
+     * Defines a using clause for a join. This should be called directly after the use of
+     * a ->*Join() method.
+     *
+     * @param $fields
+     *
+     * @return Query
+     */
 	public function using($fields){
 		
 		if(!is_array($fields))
@@ -156,9 +222,15 @@ class Query {
 		$this->addJoinCondition(printf('USING(%s)', implode(',', $fields)));
 		return $this;
 	}
-	
-	//fucntion for adding condition to the last join and check that there was a join prior to using on/using
-	private function addJoinCondition($condition){
+
+    /**
+     * Checks a join has been defined prior to either ->on or ->using being called
+     *
+     * @param $condition
+     *
+     * @throws \Wave\Exception
+     */
+    private function addJoinCondition($condition){
 		
 		$last_index = count($this->joins) -1;
 		if($last_index === -1)
@@ -174,38 +246,79 @@ class Query {
 	/*
 	*	START WHERE METHODS
 	*/
-	
-	//default to and
-	public function where($condition, $params = null){
+
+    /**
+     * Defines a where sub-clause for this query. This function should only be called once, with subsequent
+     * clauses being defined using ->and, ->or, ->andWhere or ->orWhere.
+     *
+     * @param string $condition The clause condition, should be formatted with a '?' character as placeholders
+     *                          for any parameters.
+     * @param array  $params    The parameters to substitute in to the query in place of '?' characters in the condition
+     *
+     * @return Query
+     * @throws \Wave\Exception when called using the legacy version of the function
+     */
+    public function where($condition, $params = array()){
 		if(func_num_args() > 2) throw new \Wave\Exception("Invalid use of Query::where() function");
         return $this->andWhere($condition, $params);
 	}
-	
-	//can have the ->and or ->or methods used on the result
-	public function orWhere($condition, $params){
+
+    /**
+     * Start a new where subclause using an OR between the last sub-clause
+     *
+     * @see where
+     */
+    public function orWhere($condition, $params = array()){
 		$this->addWhereCondition($condition, $params, 'OR', true);
 		return $this;
 	}
-	
-	//can have the ->and or ->or methods used on the result
-	public function andWhere($condition, $params){
+
+    /**
+     * Start a new where subclause using an AND between the last sub-clause
+     *
+     * @see where
+     */
+	public function andWhere($condition, $params = array()){
 		$this->addWhereCondition($condition, $params, 'AND', true);
 		return $this;
 	}
-	
-	//designed to be used after ->*Where(), with underscore because 'or' is reserved
-	public function _or($condition, $params = null){
+
+    /**
+     * Add a condition to the current subclause using OR between the conditions. This is an alias function
+     * because or is a reserved word and cannot be used to declare a method (but can be used at runtime).
+     * The equivilent function (without the prefixing underscore) is defined via magic methods).
+     *
+     * @see where
+     */
+	public function _or($condition, $params = array()){
 		$this->addWhereCondition($condition, $params, 'OR');
 		return $this;
 	}
-	
-	//designed to be used after ->*Where(), with underscore because 'and' is reserved
-	public function _and($condition, $params = null){
+
+    /**
+     * Add a condition to the current subclause using AND between the conditions. This is an alias function
+     * because or is a reserved word and cannot be used to declare a method (but can be used at runtime).
+     * The equivilent function (without the prefixing underscore) is defined via magic methods).
+     *
+     * @see where
+     */
+	public function _and($condition, $params = array()){
 		$this->addWhereCondition($condition, $params, 'AND');
 		return $this;
 	}
 
-	private function addWhereCondition($condition, $params, $type, $create = false){
+    /**
+     * Adds a where condition to the current query
+     *
+     * @param string  $condition The clause condition, should be formatted with a '?' character as placeholders
+     *                           for any parameters.
+     * @param array   $params    The parameters to substitute into the query
+     * @param string  $type      The type of condition to add (AND or OR)
+     * @param bool    $create    Whether to create a new sub-clause or append this condition to the existing clause
+     *
+     * @throws \Wave\Exception
+     */
+    private function addWhereCondition($condition, $params, $type, $create = false){
 		
 		$current_index = count($this->where);
 				
@@ -224,8 +337,19 @@ class Query {
 			$this->where[$current_index]['params'] = array_merge($this->where[$current_index]['params'], $params);
 		
 	}
-	
-	public static function parseWhereCondition($condition, &$params){
+
+    /**
+     * Converts where conditions into SQL compatible statements. Transforms done are:
+     *  - where a parameter is NULL and '=' is replaced with 'IS NULL'.
+     *  - where a parameter is an array the '?' is replaced with the number of elements in the array
+     *    and the '=' is replaced with IN()
+     *
+     * @param string $condition The condition to parse.
+     * @param array  $params    The parameters array. This is passed by reference.
+     *
+     * @return string the transformed condition
+     */
+    public static function parseWhereCondition($condition, &$params){
 		
 		if(stripos($condition, ' AND ') !== false || stripos($condition, ' OR ') !== false)
 			trigger_error('You should be using ->or() or ->and() to add multiple criteria to a where clause.');
@@ -259,8 +383,14 @@ class Query {
 	/*
 	*	END WHERE METHODS
 	*/
-	
-	public function groupBy($column){
+
+    /**
+     * Add a GROUP BY statement
+     * @param $column
+     *
+     * @return Query
+     */
+    public function groupBy($column){
 	
 		if(!is_array($column))
 			$column = array($column);
@@ -268,35 +398,63 @@ class Query {
 		$this->group = array_merge($this->group, $column);
 		return $this;
 	}
-	
-	public function orderBy($column){
+
+    /**
+     * Add an ORDER BY
+     * @param $column
+     *
+     * @return Query
+     */
+    public function orderBy($column){
 
 		$this->order = $column;
 		return $this;
  	}
-	
-	
-	public function having($having){
+
+    /**
+     * Add a HAVING clause
+     * @param $having
+     *
+     * @return Query
+     */
+    public function having($having){
 	
 		$this->having[] = $having;
 		return $this;
 	}
-	
 
-	public function offset($offset){
+    /**
+     * Set the limit offset (used when paginating)
+     * @param $offset
+     *
+     * @return Query
+     */
+    public function offset($offset){
 	
 		$this->offset = $offset;
 		return $this;
 	}
-	
-	
-	public function limit($limit){
+
+    /**
+     * Set the limit of results to fetch
+     * @param $limit
+     *
+     * @return Query
+     */
+    public function limit($limit){
 	
 		$this->limit = $limit;
 		return $this;
 	}
-	
-	public function paginate($offset, $limit){
+
+    /**
+     * Set the query into paginating mode
+     * @param $offset
+     * @param $limit
+     *
+     * @return Query
+     */
+    public function paginate($offset, $limit){
 		
 		$this->paginate = true;
 		
@@ -305,8 +463,13 @@ class Query {
 		
 		return $this;
 	}
-	
-	public function buildSQL(){
+
+    /**
+     * Build this query object into a valid SQL statement
+     *
+     * @return string
+     */
+    public function buildSQL(){
 				
 		$query = 'SELECT ' . ($this->paginate ? 'SQL_CALC_FOUND_ROWS ' : '');
 		
@@ -319,12 +482,14 @@ class Query {
 		}
 		
 		$query .= implode(',', $fields)."\n";
-		
+
+        /** @var Model $from_class  */
 		$from_class = $this->unaliasClass($this->from_alias);
 		$query .= sprintf("FROM %s.%s AS %s\n", $this->escape($from_class::_getDatabaseName()), $this->escape($from_class::_getTableName()), $this->from_alias);
 		
 		//joins (includes withs)
 		foreach($this->joins as $join){
+            /** @var Model $join_class */
 			$join_class = $join['class'];
 			$query .= sprintf("%s %s.%s AS %s %s\n", $join['type'], $this->escape($join_class::_getDatabaseName()), $this->escape($join_class::_getTableName()), $join['table_alias'], $join['condition']);
 		}
@@ -355,9 +520,12 @@ class Query {
 		return $query;
 	
 	}
-	
-	
-	public function execute($debug = false){
+
+    /**
+     * Execute this query against the current database instance
+     * @param bool $debug
+     */
+    public function execute($debug = false){
 
 		$sql = $this->buildSQL();
 
@@ -373,10 +541,19 @@ class Query {
 		$statement->execute( $this->_params );
 		
 		$this->_statement = $statement;
-		$this->_executed = true; 
+		$this->_executed = true;
 	
 	}
 
+    /**
+     * Fetch the results of this query as an array.
+     *
+     * @param bool $parse_objects If true the array is filled with Model objects, otherwise the result is an array
+     *                            of associative arrays.
+     * @param bool $debug         Used to print the query to STDOUT before being executed
+     *
+     * @return Model[]|array
+     */
     public function fetchAll($parse_objects = true, $debug = false){
 
         $rows = array();
@@ -387,9 +564,18 @@ class Query {
         return $rows;
 
     }
-	
-	
-	public function fetchRow($parse_objects = true, $debug = false){
+
+    /**
+     * Fetch a single result of this query. Builds a Model object if the $parse_objects flag is set. This will
+     * also attach any joined or with objects to their associated targets.
+     *
+     * @param bool $parse_objects If true the array is filled with Model objects, otherwise the result is an array
+     *                            of associative arrays.
+     * @param bool $debug         Used to print the query to STDOUT before being executed
+     *
+     * @return Model|array|null
+     */
+    public function fetchRow($parse_objects = true, $debug = false){
 		
 		$object_instances = array();
 		
@@ -479,11 +665,18 @@ class Query {
 ;
 	
 	}
-	
-	
-	//builds an instance of the class from _last_row and the supplied alias
+
+
+    /**
+     * Builds an instance of the class from _last_row and the supplied alias
+     *
+     * @param string $class_alias
+     *
+     * @return null|Model
+     */
 	private function buildClassInstance($class_alias){
-				
+
+        /** @var Model $class */
 		$class = $this->unaliasClass($class_alias);
 		$columns = $this->class_aliases[$class_alias]['columns'];
 
@@ -521,19 +714,31 @@ class Query {
 		return $rslt['row_count'];
 	}
 
-	
-	//checks if it's a full class with namespace, if not adds the default one.
-	private function resolveNamespace(&$class){
+
+    /**
+     * Checks if the supplied class a full class with namespace, if not adds the default one.
+     * @param $class
+     *
+     * @return string
+     */
+    private function resolveNamespace(&$class){
 		
 		if(strpos($class, '\\') === false)
 			$class = $this->database->getNamespace().'\\'.$class;
 		
 		return $class;
 	}
-	
-	//Adds all the class fields to select fields and aliases them
-	private function addFieldsToSelect($class, &$class_alias = null){
-		
+
+    /**
+     * Adds all the class fields to select fields and aliases them
+     *
+     * @param string $class
+     * @param null $class_alias
+     *
+     * @return null
+     */
+    private function addFieldsToSelect($class, &$class_alias = null){
+		/** @var Model $class */
 		$this->aliasClass($class, $class_alias);
 		foreach($class::_getFields() as $field)
 			$this->aliasColumn($class_alias, $field);
@@ -541,8 +746,15 @@ class Query {
 		//this is so the correct alias can be used in joins etc.
 		return $class_alias;
 	}
-	
-	private function aliasClass($class, &$alias = null){
+
+    /**
+     * Generate an alias for the given class
+     * @param string      $class
+     * @param string|null $alias
+     *
+     * @return string
+     */
+    private function aliasClass($class, &$alias = null){
 		
 		if($alias === null)
 			$alias = $this->getAlias();
@@ -552,13 +764,25 @@ class Query {
 
 		return $alias;	
 	}
-	
-	private function unaliasClass($alias){
+
+    /**
+     * Convert an alias back into the original class name
+     * @param $alias
+     *
+     * @return mixed
+     */
+    private function unaliasClass($alias){
 		return $this->class_aliases[$alias]['class'];
 	}
-	
-	
-	private function aliasColumn($table, $column){
+
+    /**
+     * Generate an alias for the given column
+     * @param string $table
+     * @param string $column
+     *
+     * @return string
+     */
+    private function aliasColumn($table, $column){
 		
 		$alias = $this->getAlias();
 		$column_alias = sprintf('%s.%s', $table, $this->escape($column));
@@ -568,8 +792,14 @@ class Query {
 		
 		return $alias;
 	}
-	
-	private function unaliasColumn($alias){
+
+    /**
+     * Convert a column alias back the original column name
+     * @param $alias
+     *
+     * @return array
+     */
+    private function unaliasColumn($alias){
 		
 		$column_alias = $this->fields[$alias];
 		list($class_alias, $column) = explode('.', $column_alias);
@@ -579,24 +809,51 @@ class Query {
 					 'class_alias' => $class_alias);
 	}
 	
-	//underscores so two letter aliases don't collide with keywords eg. ON, AS, IF, IS, OR, BY
-	//AS and BY are the only realistic problems as the others are so far through alphabet.
-	private function getAlias(){
+
+    /**
+     * Returns the next available alias and increments the alias counter.
+     * Underscores so two letter aliases don't collide with keywords eg. ON, AS, IF, IS, OR, BY.
+     * AS and BY are the only realistic problems as the others are so far through alphabet.
+     *
+     * @return string
+     */
+    private function getAlias(){
 		return '_' . $this->alias_counter++;
-	}	
-	
-	private function escape($text){
+	}
+
+    /**
+     * Escape a value using the PDO escaper for the current connection
+     * @param $text
+     *
+     * @return string
+     */
+    private function escape($text){
 		return $this->database->escape($text);
 	}
-	
-	private function unescape($text){
+
+    /**
+     * Remove escaping characters
+     * @param $text
+     *
+     * @return string
+     */
+    private function unescape($text){
 		return trim($text, $this->escape_character);
 	}
-	
-	
-	//overload is necessary as I can't define methds named 'or' or 'and'
-	//If you don't like it, use '_or' and '_and' directly.
-	public function __call($method, $args){
+
+    /**
+     * Required to make the ->and and ->or methods available since they can't be declared without
+     * the compiler complaining.
+     *
+     * This doesn't preclude the ->_or and ->_and methods being called directly
+     *
+     * @param $method
+     * @param $args
+     *
+     * @return mixed
+     * @throws \Wave\Exception
+     */
+    public function __call($method, $args){
 		
 		if($method != 'or' && $method != 'and')
 			throw new Wave\Exception("[$method] does not exist");

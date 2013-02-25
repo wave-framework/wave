@@ -16,9 +16,12 @@ class Constraint {
 	const TYPE_PRIMARY		= 12;
 	const TYPE_UNIQUE		= 13;
 	const TYPE_FOREIGN		= 14;
-	
+
+    /** @var Column[] $columns */
 	private $columns;
-	private $type;
+	/** @var string $type */
+    private $type;
+    /** @var string $name */
 	private $name;
 									
 	public function __construct(Column $column, $type, $name){
@@ -26,20 +29,32 @@ class Constraint {
 		$this->type = $type;
 		$this->name = $name;
 	}
-	
-	public function addColumn(Column $column){
+
+    /**
+     * @param Column $column
+     */
+    public function addColumn(Column $column){
 		$this->columns[] = $column;
 	}
-	
-	public function getName(){
+
+    /**
+     * @return string
+     */
+    public function getName(){
 		return $this->name;
 	}
-	
-	public function getType(){
+
+    /**
+     * @return string
+     */
+    public function getType(){
 		return $this->type;
 	}
-	
-	public function getColumns(){
+
+    /**
+     * @return Column[]
+     */
+    public function getColumns(){
 		return $this->columns;
 	}
 	

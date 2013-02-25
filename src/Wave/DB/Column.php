@@ -19,17 +19,25 @@ class Column {
 	const TYPE_TIMESTAMP	= 4;
 	const TYPE_FLOAT 		= 5;
 	const TYPE_DATE			= 6;
-	
-	private $table;
+
+    /** @var Table $table */
+    private $table;
+    /** @var string $name */
 	private $name;
+    /** @var bool $nullable */
 	private $nullable;
+    /** @var int $data_type */
 	private $data_type;
+    /** @var mixed $default */
 	private $default;
+    /** @var string $type_desc */
 	private $type_desc;
+    /** @var string $extra */
 	private $extra;
+    /** @var string $comment */
 	private $comment;
 									
-	public function __construct($table, $name, $nullable, $data_type, $default, $type_desc = '', $extra = '', $comment = ''){
+	public function __construct(Table $table, $name, $nullable, $data_type, $default, $type_desc = '', $extra = '', $comment = ''){
 		
 		$this->table = $table;
 		$this->name = $name;
@@ -41,40 +49,91 @@ class Column {
 		$this->comment = $comment;
 	
 	}
-	
-	public function getTable(){
+
+    /**
+     * @return Table
+     */
+    public function getTable(){
 		return $this->table;
 	}
 
-	public function getName($escape = false){
+    /**
+     * @param bool $escape
+     *
+     * @return string
+     */
+    public function getName($escape = false){
 		return $escape ? $this->table->getDatabase()->escape($this->name) : $this->name;
 	}
-	
-	public function isNullable(){
+
+    /**
+     * @return bool
+     */
+    public function isNullable(){
 		return $this->nullable;
 	}
-	
-	public function getDataType(){
+
+    /**
+     * @return int
+     */
+    public function getDataType(){
 		return $this->data_type;
 	}
-	
-	public function getDefault(){
+
+    /**
+     * Return the datatype for this column as a PHP compatible type
+     * @return string
+     */
+    public function getDataTypeAsPHPType(){
+        switch ($this->data_type) {
+            case self::TYPE_INT:
+                return 'int';
+            case self::TYPE_STRING:
+                return 'string';
+            case self::TYPE_BOOL:
+                return 'bool';
+            case self::TYPE_DATE:
+            case self::TYPE_TIMESTAMP:
+                return '\\DateTime';
+            case self::TYPE_FLOAT:
+                return 'float';
+            default:
+                return 'mixed';
+        }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDefault(){
 		return $this->default;
 	}
-	
-	public function getTypeDescription(){
+
+    /**
+     * @return string
+     */
+    public function getTypeDescription(){
 		return $this->type_desc;
 	}
-	
-	public function getExtra(){
+
+    /**
+     * @return string
+     */
+    public function getExtra(){
 		return $this->extra;
 	}
-	
-	public function getComment(){
+
+    /**
+     * @return string
+     */
+    public function getComment(){
 		return $this->comment;
 	}
-	
-	public function isPrimaryKey(){
+
+    /**
+     * @return bool
+     */
+    public function isPrimaryKey(){
 		$pk = $this->table->getPrimaryKey();
 		
 		return $pk === null ? false : in_array($this, $pk->getColumns());
