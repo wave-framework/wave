@@ -12,6 +12,9 @@ class PropertyEqualsConstraint extends AbstractConstraint {
         if(!is_array($arguments) || !isset($arguments['property']) || !isset($arguments['value']))
             throw new Exception("[property_equals] constraint must have a property and value declared");
 
+        if(!isset($arguments['message']))
+            $arguments['message'] = '%s failed a property comparison';
+
         parent::__construct($property, $arguments, $validator);
 
         if(!is_object($this->data))
@@ -29,7 +32,7 @@ class PropertyEqualsConstraint extends AbstractConstraint {
     }
 
     protected function getViolationMessage($context = 'This value'){
-        return sprintf("%s failed a property comparison", $context, $this->arguments);
+        return sprintf($this->arguments['message'], $context);
     }
 
 }
