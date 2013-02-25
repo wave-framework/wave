@@ -57,7 +57,6 @@ abstract class AbstractConstraint implements CleanerInterface {
         return array(
             'field_name' => $this->property,
             'reason'     => $this->getViolationKey(),
-            'input'      => $this->data,
             'message'    => $this->getViolationMessage()
         );
     }
