@@ -11,8 +11,8 @@ namespace Wave\DB;
 use \Wave;
 
 /**
- * @method and
- * @method or
+ * @method \Wave\DB\Query and() and($condition, array $params = array())
+ * @method \Wave\DB\Query or() or($condition, array $params = array())
  */
 class Query {
 	
@@ -850,7 +850,7 @@ class Query {
      * @param $method
      * @param $args
      *
-     * @return mixed
+     * @return Query
      * @throws \Wave\Exception
      */
     public function __call($method, $args){
