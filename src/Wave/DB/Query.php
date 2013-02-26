@@ -724,7 +724,7 @@ class Query {
     private function resolveNamespace(&$class){
 		
 		if(strpos($class, '\\') === false)
-			$class = $this->database->getNamespace().'\\'.$class;
+			$class = '\\'.$this->database->getNamespace().'\\'.$class;
 		
 		return $class;
 	}
