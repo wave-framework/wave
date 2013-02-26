@@ -22,7 +22,9 @@ abstract class AbstractDriver {
 	
 		if($value === null)
 			return null;
-			
+		else if(!is_scalar($value))
+            return $value;
+
 		switch($field_data['data_type']){
 
 			case Column::TYPE_BOOL:

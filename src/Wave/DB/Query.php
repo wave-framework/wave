@@ -682,9 +682,9 @@ class Query {
 
 		$build_array = array();
 		foreach($columns as $column_name => $column_alias){
-            $field = $class::_getField($column_name);
-            $cast_value = $this->database->valueFromSQL($this->_last_row[$column_alias], $field);
-			$build_array[$column_name] = $cast_value;
+            //$field = $class::_getField($column_name);
+            //$cast_value = $this->database->valueFromSQL($this->_last_row[$column_alias], $field);
+			$build_array[$column_name] = $this->_last_row[$column_alias];
         }
 		$instance = $class::createFromArray($build_array);
 		

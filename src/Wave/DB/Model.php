@@ -75,9 +75,11 @@ class Model {
 
 	public function __construct($data = null, $is_loaded = false){
 
+        $connection = \Wave\DB::get(self::_getDatabaseNamespace());
+
 		foreach(self::_getFields() as $field){
             $this->_data[$field] = isset($data[$field])
-                                        ? $data[$field]
+                                        ? $connection->valueFromSQL($data[$field], self::_getField($field))
                                         : self::getFieldDefault($field);
 		}
 
