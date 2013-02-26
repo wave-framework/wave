@@ -13,7 +13,7 @@ namespace Wave;
 use Wave\Core,
     Wave\Config,
     Wave\DB\Model,
-    Wave\DB\Exception;
+    Wave\DB\Exception as DBException;
 
 class DB {
 
@@ -75,7 +75,7 @@ class DB {
 		
 		//Check PDO driver is installed on system
 		if(!in_array($driver_class::getDriverName(), $installed_drivers))
-			throw new DB\Exception(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
+			throw new DBException(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
 		
 		self::$num_databases++;
 		return new self($namespace, $database);
@@ -106,7 +106,7 @@ class DB {
 			$databases = Config::get('db')->databases;
 
 			if(!isset($databases[$namespace])){
-				throw new Exception("There is no database configuration for {$namespace}");
+				throw new DBException("There is no database configuration for {$namespace}");
 			}
 			
 			if(isset($databases[$namespace][\Wave\Core::$_MODE])) 
@@ -115,7 +115,7 @@ class DB {
 				$mode = Core::MODE_PRODUCTION;
 		
 			if(!isset($databases[$namespace][$mode])){
-				throw new Exception('There must be at least a PRODUCTION database defined');
+				throw new DBException('There must be at least a PRODUCTION database defined');
 			}
 			
 			self::$instances[$namespace] = self::init($namespace, $databases[$namespace][$mode], $namespace);
@@ -287,7 +287,7 @@ class DB {
 
     /**
      * Save an object to the database (either INSERT or UPDATE)
-     * 
+     *
      * @param Model $object
      *
      * @return bool
