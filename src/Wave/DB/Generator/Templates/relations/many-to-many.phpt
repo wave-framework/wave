@@ -9,7 +9,7 @@
 
         //it's many to many so get the relation class
         if($create_relation){
-            $rc = new \{{ relation.TargetRelation.ReferencedColumn.Table.getClassName(true) }}();
+            $rc = new \{{ relation.ReferencedColumn.Table.getClassName(true) }}();
             $rc->{{ relation.TargetRelation.ReferencedColumn.Name }} = $obj->{{ relation.TargetRelation.ReferencedColumn.Name }};
             $rc->{{ relation.ReferencedColumn.Name }} = $this->_data['{{ relation.LocalColumn.Name }}'];
             $rc->save();
