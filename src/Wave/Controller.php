@@ -80,7 +80,7 @@ class Controller {
 	}
 	
     /**
-     * Use the Jade Validator to check form input. If errors exist, the offending
+     * Use the Wave Validator to check form input. If errors exist, the offending
      * values are inserted into $this->_input_errors.
      * 
      * @param		$schema		-		The validation schema for the Jade Validator
@@ -92,8 +92,6 @@ class Controller {
         if ($data === null)
             $data = $this->_data;
 
-		if(!$this->confirmCSRFToken($data)) return false;
-
         if($output = Validator::validate($schema, $data)){
             $this->_cleaned = $output;
             return true;
@@ -102,21 +100,7 @@ class Controller {
         $this->_input_errors = Validator::$last_errors;
 		return false;
     }
-    
-    public function confirmCSRFToken($data = null){
-    	if($data == null)
-    		$data = $this->_data;
-    		
-    	if($this->_check_csrf && isset($this->_identity) && $this->_identity instanceof IAuthable){
-			$field_name = Config::get('deploy')->auth->csrf->form_name;
-			if(!isset($this->_data[$field_name]) || !$this->_identity->confirmCSRFKey($data[$field_name])){
-				$this->_input_errors = array($field_name => array('reason' => Validator::ERROR_INVALID));
-				return false;
-			}
-		}
-		return true;
-    }
-	
+
 	public function _setResponseMethod($method){
 		$this->_response_method = $method;
 	}
