@@ -99,8 +99,9 @@ class Model {
     public static function createFromArray(array $data){
 		
 		foreach(self::_getIdentifyingColumns() as $required_column){
-			if(!isset($data[$required_column]) || empty($data[$required_column]))
-				return null;
+			if(!isset($data[$required_column]) || $data[$required_column] == ''){
+                return null;
+            }
 		}
 				
 		return new static($data);
