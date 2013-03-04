@@ -115,28 +115,29 @@ class Router {
 	
 	public function loadRoutesCache($host){
 		$profiles = Config::get('deploy')->profiles;
-		$cache_name = self::getCacheName($host);
-		
-		$host_profile = $host;	
-		$routes = Cache::load($cache_name);
+        if(isset($profiles->$host)){
+            $this->profile = $host;
+            $host = $profiles->$host->baseurl;
+        }
+        else {
+            foreach($profiles as $name => $profile){
+                if($profile->baseurl == $host){
+                    $this->profile = $name;
+                    break;
+                }
+            }
+        }
+
+		$routes = Cache::load(self::getCacheName($host));
 		if($routes == null){
 			$defaultdomain = $profiles->default->baseurl;
-			$host_profile = $defaultdomain;	
 			$routes = Cache::load(self::getCacheName($defaultdomain));
 		}
 		
 		if($routes == null)
 			throw new Exception('Could not load routes for domain: '.$host.' nor default domain: '.$defaultdomain);
-		else {
-			foreach($profiles as $name => $profile){
-				if($profile->baseurl == $host_profile){
-					$this->profile = $name;
-					break;	
-				}
-			}
-			return $routes;	
-		}
-		
+		else
+			return $routes;
 	}
 	
 	public static function getCacheName($host){
