@@ -15,25 +15,14 @@ class Core {
 		if($mode == null)
 			$mode = Config::get('deploy')->mode;
 		self::$_MODE = $mode;
-		
-		self::checkDependencies();
+
+        self::setErrorReporting($mode !== self::MODE_PRODUCTION);
 		Cache::init();
 	}
-	
-	private static function checkDependencies(){
-		
-		$missing = array();
-		
-		$required_extensions = array();
-		
-		foreach($required_extensions as $ext){
-			if(!extension_loaded($ext))
-				$missing[] = $ext;
-		}
-		
-		if(isset($missing[0]))	
-			throw new Exception('Wave Framework requires the following extensions: '.implode(', ', $missing));
-		else return true;
-	}	
+
+    public static function setErrorReporting($display = false){
+        error_reporting($display ? E_ALL | E_STRICT : E_ALL & ~E_DEPRECATED);
+        ini_set('display_errors', $display ? '1' : '0');
+    }
 }
 ?>

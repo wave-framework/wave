@@ -13,8 +13,6 @@ class Exception extends \Exception {
 		}
 		self::$_controller = $controller;
 		set_exception_handler(array('\Wave\Exception', 'handle'));
-		//set_error_handler(array('\Wave\Exception', 'handleError'));
-
 	}
 	
 	public function __construct($message, $code = null){
@@ -29,22 +27,7 @@ class Exception extends \Exception {
 		$log_message = sprintf('%-4s %s', "({$e->getCode()})", $e->getMessage());
 		// get the channel manually so the introspection works properly.
 		Log::getChannel('exception')->addRecord(Log::ERROR, $log_message);
-		//Log::write('exception', $log_message, Log::ERROR);
 		Controller::invoke(self::$_controller, array('exception' => $e));
-	}
-	
-	public static function handleError($level, $message, $file, $line, $context) {
-	    if(error_reporting() & $level){
-		    throw new \Wave\Exception($message, 0, $file, $line);
-	    }
-	    else return;
-	    
-	    //Handle user errors, warnings, and notices here
-	    if($level === E_USER_ERROR || $level === E_USER_WARNING || $level === E_USER_NOTICE) {
-	        echo $message;
-	        return(true); //And prevent the PHP error handler from continuing
-	    }
-	    return(false); //Otherwise, use PHP's error handler
 	}
 	
 	protected function getInternalMessage($type){
