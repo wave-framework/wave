@@ -2,6 +2,8 @@
 
 namespace Wave;
 
+use Wave\Http\Request;
+
 class Router {
 
 	private static $root;
@@ -11,8 +13,11 @@ class Router {
 	public $profile;
 	
 	public $response_method;
-	
-	public function __construct($host){
+
+    /** @var \Wave\Http\Request */
+    public $request;
+
+    public function __construct($host){
 		self::$root = $this->loadRoutesCache($host);
 	}
 	
@@ -29,59 +34,38 @@ class Router {
 		return $instance;
 	}
 	
-	public function route($url = null, $method = null, $data = array()){
-		
-		if($url === null){
-			if(isset($_SERVER['PATH_INFO']))
-				$this->request_uri = substr($_SERVER['PATH_INFO'], strpos($_SERVER['PATH_INFO'], '.php/'));
-			else {
-				$components = parse_url($_SERVER['REQUEST_URI']);
-				$this->request_uri = $components['path'];
-			}
-	
-		}
-		else 
-			$this->request_uri = $url;
-		
-		// trim off any query string parameters etc
-		$qs = strpos($this->request_uri, '?');
-		if($qs !== false){
-			$this->request_uri = substr($this->request_uri, 0, $qs);
-		}
-		
-		// remove the trailing slash and replace with the default response method if required
-		if(substr($this->request_uri, -1, 1) == '/'){
-			$trimmed = substr($this->request_uri, 0, -1);
-			$this->request_uri =  $trimmed . '.' . Config::get('wave')->controller->default_response;
-		}
-		
+	public function route(Request $request = null){
+
+        if(null === $request)
+            $request = Request::createFromGlobals();
+
+        $this->request = $request;
+
+		$this->request_uri = $request->getPath();
+        $this->request_method = $request->getMethod();
+
 		// deduce the response method
 		$path = pathinfo($this->request_uri);
 		if(isset($path['extension']) && in_array($path['extension'], Response::$ALL)){
 			$this->response_method = $path['extension'];
-			// remove the response method from the url, we dont need it here
-			$this->request_uri = substr($this->request_uri, 0, -(strlen($this->response_method)+1));
-		}
-		else $this->response_method = Config::get('wave')->controller->default_response;
+            $this->request_uri = substr($this->request_uri, 0, -(strlen($this->response_method)+1));
+        }
+		else
+            $this->response_method = Config::get('wave')->controller->default_response;
 		
 		if(Exception::$_response_method === null)
 			Exception::$_response_method = $this->response_method;
-		
-		if($method === null)
-			$this->request_method = $_SERVER['REQUEST_METHOD'];
-		else
-			$this->request_method = $method;
-			
-		Hook::triggerAction('router.before_routing', array(&$this, &$data));
-		return $this->findRoute($this->request_method.$this->request_uri, $data);
+
+		Hook::triggerAction('router.before_routing', array(&$this));
+		return $this->findRoute($this->request_method.$this->request_uri);
 	}
 
-	public function findRoute($url, $data = array()){
-		
-		$var_stack = $data;
-		
+	public function findRoute($url){
+
+		$var_stack = array();
 		$node = self::$root->findChild($url, $var_stack);
-		
+
+        /** @var \Wave\Router\Action $action */
 		if($node instanceof Router\Node && $action = $node->getAction()){
 			
 			if(!$action->canRespondWith($this->response_method)){
@@ -107,7 +91,12 @@ class Router {
 						'The current user does not have the required level to access this page', 403);
 			}
 			Hook::triggerAction('router.before_invoke', array(&$action, &$var_stack, &$this));
-			return Controller::invoke($action->getAction(), $var_stack, $this, $action->getValidationSchema());
+			return Controller::invoke($action->getAction(), array(
+                'request' => $this->request,
+                'router' => $this,
+                'data' => $var_stack,
+                'validation_schema' => $action->getValidationSchema()
+            ));
 		}
 		else
 			throw new Exception('The requested URL '.$url.' does not exist', 404);

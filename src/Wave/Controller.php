@@ -2,80 +2,88 @@
 
 namespace Wave;
 
-use \Wave\Utils\JSON,
-    \Wave\Utils\XML;
+use Wave\Utils\JSON,
+    Wave\Utils\XML,
+    Wave\Http\Request;
 
 class Controller { 
-	
+
+    /** @var \Wave\Http\Request */
+    protected $_request;
 	
 	protected $_response_method;
 	
 	protected $_data;
     protected $_cleaned = array();
 	protected $_action;
-	
+	protected $_input_errors;
+
 	protected $_is_post = false;
 	protected $_is_get = false;
-	protected $_check_csrf = false;
-	//protected $_response_method;
-	
-	public static final function invoke($action, $data, $router = null, $validator_schema = null){
-		
-		$invoke = explode('.', $action);
-		
-		if(!isset($invoke[1]))
-			$invoke[1] = Config::get('wave')->controller->default_method;
-		
-		if(class_exists($invoke[0], true)){
-					
-			$controller = new $invoke[0]();		
-			
-			if($router instanceof Router){
-				// build the default data set from the HTTP request based on the request method
-				if($router->request_method == Method::GET){
-					$data = array_merge($_GET, $data);
-					$controller->_is_get = true;
-				}
-				else if($router->request_method == Method::POST){
-					$data = array_merge($_POST, $data);
-					$controller->_is_post = true;
-					$controller->_check_csrf = Config::get('deploy')->auth->csrf->enabled;
-				}
-				else if($router->request_method == Method::CLI){
-					$data = array_merge($_SERVER['argv'], $data);
-				}
-				
-				$controller->_request_uri = $router->request_uri;
-				
-				$controller->_response_method = $router->response_method;			
 
-			}
-				
-			$controller->_data = $data;
-			$controller->_action = $action;
-			unset($data, $router);
-			
+
+	public static final function invoke($action, array $arguments = array()){
+		
+		list($controller_class, $action_method) = explode('.', $action, 2) + array(null, null);
+		if(!isset($action_method))
+            $action_method = Config::get('wave')->controller->default_method;
+
+        $data = array();
+        if(isset($arguments['data']) && is_array($arguments['data']))
+            $data = $arguments['data'];
+
+		if(class_exists($controller_class, true)){
+
+            /** @var \Wave\Controller $controller */
+			$controller = new $controller_class();
+
+            if(isset($arguments['request'])){
+                $controller->_request = $arguments['request'];
+
+                switch($controller->_request->getMethod()){
+                    case Request::METHOD_GET:
+                        $controller->_is_get = true;
+                    case Request::METHOD_HEAD:
+                    case Request::METHOD_DELETE:
+                        $data = array_merge($controller->_request->getQuery(), $data);
+                        break;
+                    case Request::METHOD_POST:
+                        $controller->_is_post = true;
+                    case Request::METHOD_PUT:
+                        $data = array_merge($controller->_request->getParameters(), $data);
+                        break;
+                }
+            }
+
+            $controller->_data = $data;
+            $controller->_action = $action;
+            if(isset($arguments['router']) && $arguments['router'] instanceof Router)
+                $controller->_response_method = $arguments['router']->response_method;
+
 			if($controller->_response_method == null)
 				$controller->_response_method = Config::get('wave')->controller->default_response;
-			
-			if(method_exists($controller, $invoke[1])){
-				$controller->init();
+
+
+
+			if(method_exists($controller, $action_method)){
+                $controller->init();
                 $validated = true;
-                if($validator_schema !== null){
-                    $validated = $controller->inputValid($validator_schema);
+                if(isset($arguments['validation_schema'])){
+                    $validated = $controller->inputValid($arguments['validation_schema']);
                 }
                 if($validated)
-				    return $controller->{$invoke[1]}();
+				    return $controller->{$action_method}();
                 else {
                     return $controller->request();
                 }
+
 			}
 			else 
-				throw new \Wave\Exception('Could not invoke action '.$action.'. Method '.$invoke[0].'::'.$invoke[1].'() does not exist');
+				throw new \Wave\Exception('Could not invoke action '.$action.'. Method '.$controller_class.'::'.$action_method.'() does not exist');
 
 		}
 		else 
-			throw new \Wave\Exception('Could not invoke action '.$action.'. Controller '.$invoke[0].' does not exist');
+			throw new \Wave\Exception('Could not invoke action '.$action.'. Controller '.$controller_class.' does not exist');
 		
 	}
 	
@@ -152,7 +160,6 @@ class Controller {
 		View::registerGlobal('input', isset($this->_sanitized) ? $this->_sanitized : $this->_data);
 		View::registerGlobal('errors', isset($this->_input_errors) ? $this->_input_errors : array());
 		View::registerGlobal('_identity', $this->_identity);
-		View::registerGlobal('_request_uri', isset($this->_request_uri) ? $this->_request_uri : $_SERVER['REQUEST_URI']);
 	}
 	
 	final protected function respond(){

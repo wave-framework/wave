@@ -27,7 +27,7 @@ class Exception extends \Exception {
 		$log_message = sprintf('%-4s %s', "({$e->getCode()})", $e->getMessage());
 		// get the channel manually so the introspection works properly.
 		Log::getChannel('exception')->addRecord(Log::ERROR, $log_message);
-		Controller::invoke(self::$_controller, array('exception' => $e));
+		Controller::invoke(self::$_controller, array('data' => array('exception' => $e)));
 	}
 	
 	protected function getInternalMessage($type){
