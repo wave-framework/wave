@@ -13,7 +13,10 @@
             $rc->{{ relation.TargetRelation.ReferencedColumn.Name }} = $obj->{{ relation.TargetRelation.ReferencedColumn.Name }};
             $rc->{{ relation.ReferencedColumn.Name }} = $this->_data['{{ relation.LocalColumn.Name }}'];
             $rc->save();
+
+            return $rc;
         }
+        return true;
 	}
 
 	public function remove{{ relation.Name|singularize }}(&$obj, $remove_relation = true){
