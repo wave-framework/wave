@@ -1,7 +1,7 @@
 {% if false %}<?php{% endif %}
 
 //{{ relation.Name }} 
-	public function add{{ relation.Name|singularize }}(&$obj, $create_relation = true){
+	public function add{{ relation.Name|singularize }}(&$obj, $create_relation = true, array $join_data = array()){
 	    if(!isset($this->_data['{{ relation.Name }}']))
 	        $this->_data['{{ relation.Name }}'] = array();
 
@@ -12,6 +12,11 @@
             $rc = new \{{ relation.ReferencedColumn.Table.getClassName(true) }}();
             $rc->{{ relation.TargetRelation.ReferencedColumn.Name }} = $obj->{{ relation.TargetRelation.ReferencedColumn.Name }};
             $rc->{{ relation.ReferencedColumn.Name }} = $this->_data['{{ relation.LocalColumn.Name }}'];
+
+            foreach($join_data as $key => $value){
+                $rc->{$key} = $value;
+            }
+
             $rc->save();
 
             return $rc;
