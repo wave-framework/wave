@@ -14,7 +14,7 @@ class Statement extends \PDOStatement {
 		
 	}
 	
-	public function execute($input_parameters = array()){
+	public function execute($input_parameters = null){
 		
 		$start = microtime(true);
 		parent::execute($input_parameters);
