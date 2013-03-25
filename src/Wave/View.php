@@ -108,7 +108,8 @@ class View {
 		$iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::CHILD_FIRST);
 		$l = strlen($source_path);
 		foreach($iterator as $template){
-			if($template->getExtension() != 'phtml') continue;
+			$filename = $template->getFilename();
+            if(pathinfo($filename, PATHINFO_EXTENSION) != 'phtml') continue;
 			$self->twig->loadTemplate(substr($template, $l));
 		}
 		
