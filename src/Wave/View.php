@@ -2,6 +2,9 @@
 
 namespace Wave;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+
 class View {
 	
 	private $twig;
@@ -80,7 +83,7 @@ class View {
 	}
 	
 	public static function generate(){
-		
+
 		$cache_dir = Config::get('wave')->view->cache;
 		if(!file_exists($cache_dir))
 			@mkdir($cache_dir, 0770, true);
@@ -89,25 +92,25 @@ class View {
 			throw new Exception('Could not generate views, the cache directory does not exist or is not writable');
 
 		// delete caches		
-		$dir_iterator = new \RecursiveDirectoryIterator($cache_dir);
-		$iterator = new \RecursiveIteratorIterator($dir_iterator);
-		foreach($iterator as $cache_file){
-			@unlink ($cache_file);
+		$dir_iterator = new RecursiveDirectoryIterator($cache_dir);
+		$iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach($iterator as $file){
+            if ($file->getFilename() === '.' || $file->getFilename() === '..') {
+                continue;
+            }
+            $func = $file->isDir() ? 'rmdir' : 'unlink';
+            $func($file->getRealPath());
 		}
 		$self = self::getInstance();
-		
-		$dir_iterator = new \RecursiveDirectoryIterator($cache_dir);
-		$iterator = new \RecursiveIteratorIterator($dir_iterator);
-		$l = strlen($cache_dir);
+
+        $source_path = Config::get('wave')->path->views;
+		$dir_iterator = new RecursiveDirectoryIterator($source_path);
+		$iterator = new RecursiveIteratorIterator($dir_iterator, RecursiveIteratorIterator::CHILD_FIRST);
+		$l = strlen($source_path);
 		foreach($iterator as $template){
-			$i = pathinfo($template);
-			if($i['extension'] != 'phtml') continue; 
-			
+			if($template->getExtension() != 'phtml') continue;
 			$self->twig->loadTemplate(substr($template, $l));
 		}
-		
-		
-		
 		
 	}
 
