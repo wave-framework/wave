@@ -186,8 +186,8 @@ class Controller {
 			throw new Exception('Template not set for '.$this->_response_method.' in action '.$this->_action);
 		
 		header('Content-type: text/html; charset=utf-8');
-		echo View::getInstance()->render($this->_template, $this->_buildDataSet());
-		exit(0);
+        echo View::getInstance()->render($this->_template, $this->_buildDataSet());
+        exit(0);
 	}
 	
 	protected function requestHTML(){
@@ -200,7 +200,7 @@ class Controller {
 		$this->_template .= '-dialog';
 		
 		$html = View::getInstance()->render($this->_template, $this->_buildDataSet());
-		return $this->respondJSON($html);
+		return $this->respondJSON(array('html' => $html));
 	}
 	
 	protected function requestDialog(){
