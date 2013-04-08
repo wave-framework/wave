@@ -83,7 +83,7 @@ class Request {
     }
 
     protected static function parseRequestBody($content_type = self::TYPE_FORM_ENCODED){
-
+        list($content_type) = explode(';', $content_type);
         switch($content_type){
             case static::TYPE_JSON:
                 $data = json_decode(file_get_contents('php://input'), true);
