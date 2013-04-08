@@ -22,7 +22,7 @@ class Debug {
 	}
 
 	public function getMemoryUsage(){
-		return round(memory_get_usage()/1000, 0);
+		return round(memory_get_peak_usage()/1000, 0);
 	}
 
 	/**
