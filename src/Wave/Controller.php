@@ -184,7 +184,8 @@ class Controller {
 	protected function respondHTML(){
 		if(!isset($this->_template))
 			throw new Exception('Template not set for '.$this->_response_method.' in action '.$this->_action);
-		
+
+        header('X-Wave-Response: html');
 		header('Content-type: text/html; charset=utf-8');
         echo View::getInstance()->render($this->_template, $this->_buildDataSet());
         exit(0);
@@ -212,6 +213,7 @@ class Controller {
 	protected function respondJSON($payload = null){
 		if(!isset($this->_status)) $this->_status = Response::STATUS_OK;
 		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
+        header('X-Wave-Response: json');
 		header('Cache-Control: no-cache, must-revalidate');
         header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
         header('Content-type: application/json');
@@ -229,6 +231,7 @@ class Controller {
 	protected function respondXML(){
 		if(!isset($this->_status)) $this->_status = Response::STATUS_OK;
 		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
+        header('X-Wave-Response: xml');
 		header('Cache-Control: no-cache, must-revalidate');
         header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 		header("content-type: text/xml; charset=utf-8");
