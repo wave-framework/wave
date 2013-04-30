@@ -213,10 +213,23 @@ class Controller {
 	protected function respondJSON($payload = null){
 		if(!isset($this->_status)) $this->_status = Response::STATUS_OK;
 		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
+
+        // @todo This should be extracted into a response object of some sort.
+        // added in so json can be returned as text/plain if something needs it (js uploader in this case)
+        $content_type = 'application/json';
+        if(isset($_SERVER['HTTP_ACCEPT'])){
+            $accepts = explode(',', $_SERVER['HTTP_ACCEPT']);
+            foreach($accepts as $accept){
+                if(in_array($accept, array('application/json', 'text/plain'))){
+                    $content_type = $accept;
+                }
+            }
+        }
+
         header('X-Wave-Response: json');
 		header('Cache-Control: no-cache, must-revalidate');
         header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-        header('Content-type: application/json');
+        header('Content-type: ' . $content_type);
         echo JSON::encode($this->_buildPayload($this->_status, $this->_message, $payload));
         exit(0);
 	}
