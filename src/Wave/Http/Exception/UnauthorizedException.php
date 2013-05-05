@@ -4,9 +4,9 @@ namespace Wave\Http\Exception;
 
 use Wave\Http\Response;
 
-class NotFoundException extends HttpException {
+class UnauthorizedException extends HttpException {
 
     protected function getStatusCode(){
-        return Response::STATUS_NOT_FOUND;
+        return Response::STATUS_UNAUTHORISED;
     }
 }

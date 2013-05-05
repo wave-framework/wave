@@ -2,7 +2,9 @@
 
 namespace Wave;
 
+use Wave\Http\Exception\NotFoundException;
 use Wave\Http\Request;
+use Wave\Http\Response;
 
 class Router {
 
@@ -14,8 +16,11 @@ class Router {
 	
 	public $response_method;
 
-    /** @var \Wave\Http\Request */
-    public $request;
+    /** @var \Wave\Http\Request $request */
+    protected $request;
+
+    /** @var \Wave\Http\Response $response */
+    protected $response;
 
     public function __construct($host){
 		self::$root = $this->loadRoutesCache($host);
@@ -33,73 +38,50 @@ class Router {
 		Hook::triggerAction('router.after_init', array(&$instance));
 		return $instance;
 	}
-	
-	public function route(Request $request = null){
+
+    /**
+     * @param Request  $request
+     * @param Response $response
+     *
+     * @throws \LogicException
+     * @throws Http\Exception\NotFoundException
+     * @return Response
+     */
+    public function route(Request $request = null, Response $response = null){
 
         if(null === $request)
             $request = Request::createFromGlobals();
 
-        $this->request = $request;
+        if(null === $response)
+            $response = Response::createFromRequest($request);
 
-		$this->request_uri = $request->getPath();
+        $this->request = $request;
+        $this->response = $response;
+
+        $this->request_uri = $request->getPath();
+        if(strrpos($this->request_uri, $response->getFormat()) !== false){
+            $this->request_uri = substr($this->request_uri, 0, -(strlen($response->getFormat())+1));
+        }
         $this->request_method = $request->getMethod();
 
-		// deduce the response method
-		$path = pathinfo($this->request_uri);
-		if(isset($path['extension']) && in_array($path['extension'], Response::$ALL)){
-			$this->response_method = $path['extension'];
-            $this->request_uri = substr($this->request_uri, 0, -(strlen($this->response_method)+1));
-        }
-		else
-            $this->response_method = Config::get('wave')->controller->default_response;
-		
-		if(Exception::$_response_method === null)
-			Exception::$_response_method = $this->response_method;
+        Hook::triggerAction('router.before_routing', array(&$this));
 
-		Hook::triggerAction('router.before_routing', array(&$this));
-		return $this->findRoute($this->request_method.$this->request_uri);
-	}
-
-	public function findRoute($url){
-
-		$var_stack = array();
-		$node = self::$root->findChild($url, $var_stack);
+        $url = $this->request_method.$this->request_uri;
+        $node = self::$root->findChild($url, $this->request);
 
         /** @var \Wave\Router\Action $action */
-		if($node instanceof Router\Node && $action = $node->getAction()){
-			
-			if(!$action->canRespondWith($this->response_method)){
-				throw new Exception(
-					'The requested action '.$action->getAction().
-					' can not respond with '.$this->response_method.
-					'. (Accepts: '.implode(', ', $action->getRespondsWith()).')');
-			}
-			elseif(!$action->checkRequiredLevel($var_stack)){
-					
-				$auth_obj = Auth::getIdentity();
-				$auth_class = Auth::getHandlerClass();
-
-				if(!in_array('Wave\IAuthable', class_implements($auth_class)))
-					throw new Exception('A valid Wave\IAuthable class is required to use RequiresLevel annotations', 500);
-				
-				if(!$auth_class::noAuthAction(array(
-					'destination' => $action,
-					'auth_obj' => $auth_obj,
-					'args' => $var_stack
-				)))
-					throw new Exception(
-						'The current user does not have the required level to access this page', 403);
-			}
-			Hook::triggerAction('router.before_invoke', array(&$action, &$var_stack, &$this));
-			return Controller::invoke($action->getAction(), array(
-                'request' => $this->request,
-                'router' => $this,
-                'data' => $var_stack,
-                'validation_schema' => $action->getValidationSchema()
-            ));
-		}
-		else
-			throw new Exception('The requested URL '.$url.' does not exist', 404);
+        if($node instanceof Router\Node && $action = $node->getAction()){
+            Hook::triggerAction('router.before_invoke', array(&$action, &$this));
+            $this->response = Controller::invoke($action, $this->request, $this->response);
+            if(!($this->response instanceof Response)){
+                throw new \LogicException("Action {$action->getAction()} should return a \\Wave\\Http\\Response object", 500);
+            }
+            else {
+                return $this->response->prepare($this->request);
+            }
+        }
+        else
+            throw new NotFoundException('The requested URL '.$url.' does not exist', $this->request, $this->response);
 	}
 	
 	public function loadRoutesCache($host){
@@ -132,6 +114,34 @@ class Router {
 	public static function getCacheName($host){
 		return 'routes/'.md5($host);
 	}
+
+    /**
+     * @return \Wave\Http\Request
+     */
+    public function getRequest() {
+        return $this->request;
+    }
+
+    /**
+     * @param \Wave\Http\Request $request
+     */
+    public function setRequest($request) {
+        $this->request = $request;
+    }
+
+    /**
+     * @return \Wave\Http\Response
+     */
+    public function getResponse() {
+        return $this->response;
+    }
+
+    /**
+     * @param \Wave\Http\Response $response
+     */
+    public function setResponse($response) {
+        $this->response = $response;
+    }
 
 }
 

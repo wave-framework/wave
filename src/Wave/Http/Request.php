@@ -2,6 +2,7 @@
 
 namespace Wave\Http;
 
+use Guzzle\Http\Message\Header;
 use InvalidArgumentException;
 
 class Request {
@@ -22,19 +23,40 @@ class Request {
 
     private $method;
 
+    /**
+     * Arguments passed in via a query string
+     * @var array $query
+     */
     private $query = array();
+
+    /**
+     * Parameters passed in via the request body
+     * @var array $parameters
+     */
     private $parameters = array();
+
+    /**
+     * The componets that make up the request URL
+     * @var array $components
+     */
     private $components = array();
+
+    /**
+     * The headers for this request
+     * @var \Wave\Http\HeaderBag $headers
+     */
+    private $headers;
 
 
     public function __construct($url, $method = self::METHOD_GET,
-                                array $query = array(), array $parameters = array()){
+                                array $query = array(), array $parameters = array(), array $headers = array()){
 
         $this->url = $url;
         $this->setMethod($method);
         $this->setQuery($query);
         $this->setParameters($parameters);
         $this->components = parse_url($url);
+        $this->headers = new HeaderBag($headers);
     }
 
     public static function createFromGlobals(){
@@ -78,8 +100,9 @@ class Request {
             }
         }
 
+        $headers = static::parseHeaders($_SERVER);
 
-        return new static($url, $method, $query, $parameters);
+        return new static($url, $method, $query, $parameters, $headers);
     }
 
     protected static function parseRequestBody($content_type = self::TYPE_FORM_ENCODED){
@@ -94,6 +117,39 @@ class Request {
             default:
                 return $_POST;
         }
+
+    }
+
+    private static function parseHeaders($sent_headers = null) {
+
+        if($sent_headers === null)
+            $sent_headers = $_SERVER;
+
+        $headers = array();
+        foreach ($sent_headers as $key => $value) {
+            if (strpos($key, 'HTTP_') === 0) {
+                $headers[substr($key, 5)] = $value;
+            }
+
+            else if(in_array($key, array('CONTENT_LENGTH', 'CONTENT_MD5', 'CONTENT_TYPE'))) {
+                $headers[$key] = $value;
+            }
+        }
+
+        return $headers;
+
+    }
+
+    public function get($parameter){
+
+        if(array_key_exists($parameter, $this->query)){
+            return $this->query[$parameter];
+        }
+        else if(array_key_exists($parameter, $this->parameters)){
+            return $this->query[$parameter];
+        }
+        else
+            return null;
 
     }
 
@@ -126,6 +182,19 @@ class Request {
 
     public function setQuery($query) {
         $this->query = $query;
+    }
+
+    /**
+     * Adds a query string parameter. Supports array notation for the $key parameter where
+     * an existing query array might be array('foo' => array('bar')) with $key = 'foo[]' and
+     * $value = 'qux' the new query array would be array('foo' => array('bar', 'qux'))
+     *
+     * @param string $key
+     * @param string $value
+     */
+    public function addQueryParameter($key, $value){
+        parse_str("{$key}={$value}", $parameter);
+        $this->query = array_merge_recursive($this->query, $parameter);
     }
 
     public function getParameters() {
@@ -161,6 +230,24 @@ class Request {
 
     public function getQueryString(){
         return $this->getComponent('query');
+    }
+
+    public function getPathAndQueryString(){
+        return $this->getPath() . $this->getQueryString();
+    }
+
+    /**
+     * @return \Wave\Http\HeaderBag
+     */
+    public function getHeaders() {
+        return $this->headers;
+    }
+
+    /**
+     * @param \Wave\Http\HeaderBag $headers
+     */
+    public function setHeaders(HeaderBag $headers) {
+        $this->headers = $headers;
     }
 
 }

@@ -2,11 +2,19 @@
 
 namespace Wave;
 
-use Wave\Utils\JSON,
-    Wave\Utils\XML,
-    Wave\Http\Request;
+use Wave\Http\Exception\ForbiddenException;
+use Wave\Http\Exception\NotFoundException;
+use Wave\Http\Exception\UnauthorizedException;
+use Wave\Router\Action;
+use Wave\Utils\JSON;
+use Wave\Utils\XML;
+use Wave\Http\Request;
+use Wave\Http\Response;
 
-class Controller { 
+class Controller {
+
+    /** @var \Wave\Http\Response */
+    public $_response;
 
     /** @var \Wave\Http\Request */
     protected $_request;
@@ -21,69 +29,83 @@ class Controller {
 	protected $_is_post = false;
 	protected $_is_get = false;
 
+    protected $_status;
+    protected $_message;
 
-	public static final function invoke($action, array $arguments = array()){
+
+    /**
+     * @param Action   $action
+     * @param Request  $request
+     * @param Response $response
+     * @param array    $data
+     *
+     * @return Http\Response
+     * @throws Http\Exception\UnauthorizedException
+     * @throws Http\Exception\NotFoundException
+     * @throws Exception
+     * @throws Http\Exception\ForbiddenException
+     */
+    public static final function invoke(Action $action, Request $request, Response $response, $data = array()){
 		
-		list($controller_class, $action_method) = explode('.', $action, 2) + array(null, null);
-		if(!isset($action_method))
+		list($controller_class, $action_method) = explode('.', $action->getAction(), 2) + array(null, null);
+        if(!isset($action_method))
             $action_method = Config::get('wave')->controller->default_method;
 
-        $data = array();
-        if(isset($arguments['data']) && is_array($arguments['data']))
-            $data = $arguments['data'];
-
-		if(class_exists($controller_class, true)){
+		if(class_exists($controller_class, true) && method_exists($controller_class, $action_method)){
 
             /** @var \Wave\Controller $controller */
 			$controller = new $controller_class();
 
-            if(isset($arguments['request'])){
-                $controller->_request = $arguments['request'];
+            $controller->_action = $action;
+            $controller->_request = $request;
+            $controller->_response = $response;
+            $controller->_response_method = $response->getFormat();
 
-                switch($controller->_request->getMethod()){
-                    case Request::METHOD_GET:
-                        $controller->_is_get = true;
-                    case Request::METHOD_HEAD:
-                    case Request::METHOD_DELETE:
-                        $data = array_merge($controller->_request->getQuery(), $data);
-                        break;
-                    case Request::METHOD_POST:
-                        $controller->_is_post = true;
-                    case Request::METHOD_PUT:
-                        $data = array_merge($controller->_request->getParameters(), $data);
-                        break;
-                }
+            switch($controller->_request->getMethod()){
+                case Request::METHOD_GET:
+                    $controller->_is_get = true;
+                case Request::METHOD_HEAD:
+                case Request::METHOD_DELETE:
+                    $data = array_merge($request->getQuery(), $data);
+                    break;
+                case Request::METHOD_POST:
+                    $controller->_is_post = true;
+                case Request::METHOD_PUT:
+                    $data = array_merge($request->getParameters(), $data);
+                    break;
             }
 
             $controller->_data = $data;
-            $controller->_action = $action;
-            if(isset($arguments['router']) && $arguments['router'] instanceof Router)
-                $controller->_response_method = $arguments['router']->response_method;
+            $controller->init();
 
-			if($controller->_response_method == null)
-				$controller->_response_method = Config::get('wave')->controller->default_response;
+            if(!$action->canRespondWith($response->getFormat())){
+                throw new NotFoundException(
+                    'The requested action ' . $action->getAction().
+                    ' can not respond with ' . $response->getFormat() .
+                    '. (Accepts: '.implode(', ', $action->getRespondsWith()).')', $request, $response);
+            }
+            else if(!$action->checkRequiredLevel($request)){
+
+                $auth_obj = Auth::getIdentity();
+                $auth_class = Auth::getHandlerClass();
+
+                if(!in_array('Wave\IAuthable', class_implements($auth_class)))
+                    throw new Exception('A valid Wave\IAuthable class is required to use RequiresLevel annotations', Response::STATUS_SERVER_ERROR);
+                else if(!$auth_obj instanceof IAuthable)
+                    throw new UnauthorizedException('You are not authorized to view this resource');
+                else
+                    throw new ForbiddenException('The current user does not have the required level to access this page');
+            }
+            else if($action->needsValidation() && !$controller->inputValid($action->getValidationSchema())){
+                return $controller->request();
+            }
 
 
-
-			if(method_exists($controller, $action_method)){
-                $controller->init();
-                $validated = true;
-                if(isset($arguments['validation_schema'])){
-                    $validated = $controller->inputValid($arguments['validation_schema']);
-                }
-                if($validated)
-				    return $controller->{$action_method}();
-                else {
-                    return $controller->request();
-                }
-
-			}
-			else 
-				throw new \Wave\Exception('Could not invoke action '.$action.'. Method '.$controller_class.'::'.$action_method.'() does not exist');
+            return $controller->{$action_method}();
 
 		}
-		else 
-			throw new \Wave\Exception('Could not invoke action '.$action.'. Controller '.$controller_class.' does not exist');
+		else
+            throw new Exception('Could not invoke action '.$action->getAction().'. Method '.$controller_class.'::'.$action_method.'() does not exist', Response::STATUS_SERVER_ERROR);
 		
 	}
 	
@@ -185,10 +207,12 @@ class Controller {
 		if(!isset($this->_template))
 			throw new Exception('Template not set for '.$this->_response_method.' in action '.$this->_action);
 
-        header('X-Wave-Response: html');
-		header('Content-type: text/html; charset=utf-8');
-        echo View::getInstance()->render($this->_template, $this->_buildDataSet());
-        exit(0);
+        //header('X-Wave-Response: html');
+		//header('Content-type: text/html; charset=utf-8');
+        $content = View::getInstance()->render($this->_template, $this->_buildDataSet());
+        $this->_response->setContent($content);
+
+        return $this->_response;
 	}
 	
 	protected function requestHTML(){
@@ -216,27 +240,30 @@ class Controller {
 
         // @todo This should be extracted into a response object of some sort.
         // added in so json can be returned as text/plain if something needs it (js uploader in this case)
-        $content_type = 'application/json';
-        if(isset($_SERVER['HTTP_ACCEPT'])){
-            $accepts = explode(',', $_SERVER['HTTP_ACCEPT']);
-            foreach($accepts as $accept){
-                if(in_array($accept, array('application/json', 'text/plain'))){
-                    $content_type = $accept;
-                }
-            }
-        }
+        //$content_type = 'application/json';
+        //if(isset($_SERVER['HTTP_ACCEPT'])){
+        //    $accepts = explode(',', $_SERVER['HTTP_ACCEPT']);
+        //    foreach($accepts as $accept){
+        //        if(in_array($accept, array('application/json', 'text/plain'))){
+        //            $content_type = $accept;
+        //        }
+        //    }
+        //}
 
-        header('X-Wave-Response: json');
-		header('Cache-Control: no-cache, must-revalidate');
-        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-        header('Content-type: ' . $content_type);
-        echo JSON::encode($this->_buildPayload($this->_status, $this->_message, $payload));
-        exit(0);
+        //header('X-Wave-Response: json');
+		//header('Cache-Control: no-cache, must-revalidate');
+        //header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+        //header('Content-type: ' . $content_type);
+
+        $this->_response->setStatusCode($this->_status);
+        $this->_response->setContent($this->_buildPayload($this->_status, $this->_message, $payload));
+
+        return $this->_response;
 	}
 	
 	protected function requestJSON(){
-		if(!isset($this->_status)) $this->_status = Response::STATUS_INPUT_REQUIRED;
-		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
+		if(!isset($this->_status)) $this->_status = Response::STATUS_BAD_REQUEST;
+		if(!isset($this->_message)) $this->_message = 'Invalid request or parameters';
         $payload = array('errors' => isset($this->_input_errors) ? $this->_input_errors : array());
 		return $this->respondJSON($payload);
 	}
@@ -244,28 +271,21 @@ class Controller {
 	protected function respondXML(){
 		if(!isset($this->_status)) $this->_status = Response::STATUS_OK;
 		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
-        header('X-Wave-Response: xml');
-		header('Cache-Control: no-cache, must-revalidate');
-        header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-		header("content-type: text/xml; charset=utf-8");
-		echo XML::encode($this->_buildPayload($this->_status, $this->_message));
-		exit(0);
+        //header('X-Wave-Response: xml');
+		//header('Cache-Control: no-cache, must-revalidate');
+        //header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+		//header("content-type: text/xml; charset=utf-8");
+
+        $this->_response->setStatusCode($this->_status);
+        $this->_response->setContent($this->_buildPayload($this->_status, $this->_message));
+
+		return $this->_response;
 	}
 	
 	protected function requestXML(){
-		if(!isset($this->_status)) $this->_status = Response::STATUS_INPUT_REQUIRED;
+		if(!isset($this->_status)) $this->_status = Response::STATUS_BAD_REQUEST;
 		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
 		return $this->respondXML();
-	}
-	
-	protected function respondInternal(){
-    	if(isset($this->_input_errors)){
-	    	$this->validation = $this->_input_errors;
-    	}
-    	return $this->_getResponseProperties();
-	}
-	protected function requestInternal(){
-    	return $this->respondInternal();
 	}
 
 }
