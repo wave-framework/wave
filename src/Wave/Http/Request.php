@@ -36,6 +36,12 @@ class Request {
     private $parameters = array();
 
     /**
+     * Used by the router to set parameters passed in via route variables
+     * @var array $path_parameters
+     */
+    private $path_parameters = array();
+
+    /**
      * The componets that make up the request URL
      * @var array $components
      */
@@ -140,13 +146,29 @@ class Request {
 
     }
 
+    public function getData(){
+        switch($this->getMethod()){
+            case self::METHOD_HEAD:
+            case self::METHOD_GET:
+            case self::METHOD_DELETE:
+                return array_replace($this->query, $this->path_parameters);
+            case self::METHOD_POST:
+            case self::METHOD_PUT:
+                return array_replace($this->parameters, $this->path_parameters);
+        }
+        return array_merge($this->query, $this->parameters);
+    }
+
     public function get($parameter){
 
-        if(array_key_exists($parameter, $this->query)){
+        if(isset($this->path_parameters[$parameter])){
+            return $this->path_parameters[$parameter];
+        }
+        else if(isset($this->query[$parameter])){
             return $this->query[$parameter];
         }
-        else if(array_key_exists($parameter, $this->parameters)){
-            return $this->query[$parameter];
+        else if(isset($this->parameters[$parameter])){
+            return $this->parameters[$parameter];
         }
         else
             return null;
@@ -192,9 +214,13 @@ class Request {
      * @param string $key
      * @param string $value
      */
-    public function addQueryParameter($key, $value){
+    public function addPathParameter($key, $value){
         parse_str("{$key}={$value}", $parameter);
-        $this->query = array_merge_recursive($this->query, $parameter);
+        $this->path_parameters = array_merge_recursive($this->query, $parameter);
+    }
+
+    public function getPathParameters(){
+        return $this->path_parameters;
     }
 
     public function getParameters() {

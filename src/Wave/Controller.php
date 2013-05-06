@@ -64,16 +64,12 @@ class Controller {
             switch($controller->_request->getMethod()){
                 case Request::METHOD_GET:
                     $controller->_is_get = true;
-                case Request::METHOD_HEAD:
-                case Request::METHOD_DELETE:
-                    $data = array_merge($request->getQuery(), $data);
                     break;
                 case Request::METHOD_POST:
                     $controller->_is_post = true;
-                case Request::METHOD_PUT:
-                    $data = array_merge($request->getParameters(), $data);
                     break;
             }
+            $data = array_replace($controller->_request->getData(), $data);
 
             $controller->_data = $data;
             $controller->init();
@@ -205,7 +201,7 @@ class Controller {
 
 	protected function respondHTML(){
 		if(!isset($this->_template))
-			throw new Exception('Template not set for '.$this->_response_method.' in action '.$this->_action);
+			throw new Exception('Template not set for '.$this->_response_method.' in action '.$this->_action->getAction());
 
         //header('X-Wave-Response: html');
 		//header('Content-type: text/html; charset=utf-8');

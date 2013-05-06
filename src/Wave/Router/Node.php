@@ -86,7 +86,7 @@ class Node {
 						$remaining = substr($url, strlen($segment) + 1) ?: null;
 						$matching_node = $node->findChild($remaining, $request);
 						if($matching_node !== null && $matching_node->hasValidAction())
-                            $request->addQueryParameter(substr($path, $expression_end + 2), $segment);
+                            $request->addPathParameter(substr($path, $expression_end + 2), $segment);
 					}
 				}
 				elseif((is_numeric($segment) && strpos($path, self::VAR_INT) !== false)
@@ -94,7 +94,7 @@ class Node {
 						
 					$matching_node = $node->findChild($remaining, $request);
 					if($matching_node !== null && $matching_node->hasValidAction())
-                        $request->addQueryParameter(substr($path, strpos($path, '>') + 1), $segment);
+                        $request->addPathParameter(substr($path, strpos($path, '>') + 1), $segment);
 				}
 				
 				if($matching_node !== null)
