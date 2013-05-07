@@ -118,7 +118,7 @@ class Request {
             }
         }
 
-        return new static($url, $method, $_GET, $parameters, $_SERVER);
+        return new static($url, $method, $_GET, $parameters, array(), $_SERVER);
     }
 
     /**
