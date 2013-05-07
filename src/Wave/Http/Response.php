@@ -4,7 +4,6 @@
 namespace Wave\Http;
 
 use Wave\Config;
-use Wave\Http\Exception\InvalidResponseFormatException;
 
 class Response {
 
@@ -109,12 +108,6 @@ class Response {
     protected $content;
 
     /**
-     * The response format (html, json, xml etc) to respond with
-     * @var string $format
-     */
-    protected $format;
-
-    /**
      * Holds the HTTP status code for this response
      * @var int $status
      */
@@ -135,54 +128,21 @@ class Response {
     protected $version = '1.1';
 
 
-    public function __construct($content = '', $status = self::STATUS_OK, $format = null, array $headers = array()){
-        $this->setContent($content);
+    public function __construct($content = '', $status = self::STATUS_OK, array $headers = array()){
+
         $this->setHeaders(new HeaderBag($headers));
-
+        $this->setContent($content);
         $this->setStatusCode($status);
-        $this->setFormat($format);
+        $this->setProtocolVersion('1.0');
+
     }
 
-    /**
-     * @param \Wave\Http\Response $class
-     *
-     * @throws \InvalidArgumentException
-     */
-    public static function registerFormat($class){
-        if(!in_array(__CLASS__, class_parents($class))){
-            throw new \InvalidArgumentException("Response format must extend ".__CLASS__, 500);
-        }
-
-        $extension = $class::getExtension();
-        static::$formats[$extension] = $class;
-    }
-
-    public static function getExtension(){
-        static $default = null;
-        if($default === null)
-            $default = Config::get('wave')->response->default_format;
-
-        return $default;
-    }
-
-    /**
-     * @param Request $request
-     *
-     * @return Response
-     */
-    public static function createFromRequest(Request $request) {
-
-        $path = pathinfo($request->getPath());
-        $format = self::getExtension();
-        if(isset($path['extension']) && array_key_exists($path['extension'], static::$formats))
-            $format = $path['extension'];
-
-        $response_class = static::$formats[$format];
-        return new $response_class(null, self::STATUS_OK, $format);
-    }
 
     public function prepare(Request $request){
-        $this->headers->set('X-Wave-Response', $this->format);
+
+        if ('HTTP/1.0' != $request->server->get('SERVER_PROTOCOL')) {
+            $this->setProtocolVersion('1.1');
+        }
 
         return $this;
     }
@@ -217,34 +177,11 @@ class Response {
         return $this;
     }
 
-    /**
-     * @param $format
-     *
-     * @throws Exception\InvalidResponseFormatException
-     */
-    private function setFormat($format) {
-        if($format === null){
-            $format = Config::get('wave')->response->default_method;
-        }
-        if(!array_key_exists($format, self::$formats)) {
-            throw new InvalidResponseFormatException("Format $format is not a recognised response format");
-        }
-        $this->format = $format;
-    }
-
-    public static function getFormats() {
-        return self::$formats;
-    }
-
     public static function getMessageForCode($_status) {
         if(array_key_exists($_status, static::$statusTexts)){
             return static::$statusTexts[$_status];
         }
         return '';
-    }
-
-    public function getFormat() {
-        return $this->format;
     }
 
     public function setContent($content) {
@@ -271,6 +208,14 @@ class Response {
      */
     public function setHeaders(HeaderBag $headers) {
         $this->headers = $headers;
+    }
+
+    public function setProtocolVersion($version) {
+        $this->version = $version;
+    }
+
+    public function getProtocolVersion(){
+        return $this->version;
     }
 
 }

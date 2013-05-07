@@ -5,6 +5,8 @@ namespace Wave;
 use Wave\Http\Exception\ForbiddenException;
 use Wave\Http\Exception\NotFoundException;
 use Wave\Http\Exception\UnauthorizedException;
+use Wave\Http\Response\HtmlResponse;
+use Wave\Http\Response\JsonResponse;
 use Wave\Router\Action;
 use Wave\Utils\JSON;
 use Wave\Utils\XML;
@@ -36,7 +38,6 @@ class Controller {
     /**
      * @param Action   $action
      * @param Request  $request
-     * @param Response $response
      * @param array    $data
      *
      * @return Http\Response
@@ -45,7 +46,7 @@ class Controller {
      * @throws Exception
      * @throws Http\Exception\ForbiddenException
      */
-    public static final function invoke(Action $action, Request $request, Response $response, $data = array()){
+    public static final function invoke(Action $action, Request $request, $data = array()){
 		
 		list($controller_class, $action_method) = explode('.', $action->getAction(), 2) + array(null, null);
         if(!isset($action_method))
@@ -58,8 +59,7 @@ class Controller {
 
             $controller->_action = $action;
             $controller->_request = $request;
-            $controller->_response = $response;
-            $controller->_response_method = $response->getFormat();
+            $controller->_response_method = $request->getFormat();
 
             switch($controller->_request->getMethod()){
                 case Request::METHOD_GET:
@@ -74,11 +74,11 @@ class Controller {
             $controller->_data = $data;
             $controller->init();
 
-            if(!$action->canRespondWith($response->getFormat())){
+            if(!$action->canRespondWith($request->getFormat())){
                 throw new NotFoundException(
                     'The requested action ' . $action->getAction().
-                    ' can not respond with ' . $response->getFormat() .
-                    '. (Accepts: '.implode(', ', $action->getRespondsWith()).')', $request, $response);
+                    ' can not respond with ' . $request->getFormat() .
+                    '. (Accepts: '.implode(', ', $action->getRespondsWith()).')', $request);
             }
             else if(!$action->checkRequiredLevel($request)){
 
@@ -194,7 +194,7 @@ class Controller {
 			return $this->{$response_method}();
 		else
 			throw new Exception(
-				'The action "'.$this->_action.'" tried to respond with "'.
+				'The action "'.$this->_action->getAction().'" tried to respond with "'.
 				$this->_response_method.'" but the method does not exist'
 			);
 	}
@@ -203,12 +203,9 @@ class Controller {
 		if(!isset($this->_template))
 			throw new Exception('Template not set for '.$this->_response_method.' in action '.$this->_action->getAction());
 
-        //header('X-Wave-Response: html');
-		//header('Content-type: text/html; charset=utf-8');
-        $content = View::getInstance()->render($this->_template, $this->_buildDataSet());
-        $this->_response->setContent($content);
 
-        return $this->_response;
+        $content = View::getInstance()->render($this->_template, $this->_buildDataSet());
+        return new HtmlResponse($content);
 	}
 	
 	protected function requestHTML(){
@@ -234,27 +231,8 @@ class Controller {
 		if(!isset($this->_status)) $this->_status = Response::STATUS_OK;
 		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
 
-        // @todo This should be extracted into a response object of some sort.
-        // added in so json can be returned as text/plain if something needs it (js uploader in this case)
-        //$content_type = 'application/json';
-        //if(isset($_SERVER['HTTP_ACCEPT'])){
-        //    $accepts = explode(',', $_SERVER['HTTP_ACCEPT']);
-        //    foreach($accepts as $accept){
-        //        if(in_array($accept, array('application/json', 'text/plain'))){
-        //            $content_type = $accept;
-        //        }
-        //    }
-        //}
-
-        //header('X-Wave-Response: json');
-		//header('Cache-Control: no-cache, must-revalidate');
-        //header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-        //header('Content-type: ' . $content_type);
-
-        $this->_response->setStatusCode($this->_status);
-        $this->_response->setContent($this->_buildPayload($this->_status, $this->_message, $payload));
-
-        return $this->_response;
+        $payload = $this->_buildPayload($this->_status, $this->_message, $payload);
+        return new JsonResponse($payload, $this->_status);
 	}
 	
 	protected function requestJSON(){
@@ -267,15 +245,8 @@ class Controller {
 	protected function respondXML(){
 		if(!isset($this->_status)) $this->_status = Response::STATUS_OK;
 		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
-        //header('X-Wave-Response: xml');
-		//header('Cache-Control: no-cache, must-revalidate');
-        //header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-		//header("content-type: text/xml; charset=utf-8");
 
-        $this->_response->setStatusCode($this->_status);
-        $this->_response->setContent($this->_buildPayload($this->_status, $this->_message));
-
-		return $this->_response;
+        return new XmlResponse($this->_buildPayload($this->_status, $this->_message));
 	}
 	
 	protected function requestXML(){

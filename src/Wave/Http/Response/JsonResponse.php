@@ -33,6 +33,7 @@ class JsonResponse extends Response {
         $this->headers->set('Content-Type', $content_type);
         $this->headers->set('Cache-Control', 'no-cache, must-revalidate');
         $this->headers->set('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT');
+        $this->headers->set('X-Wave-Response', 'json');
 
         return $this;
     }

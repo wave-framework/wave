@@ -19,9 +19,6 @@ class Router {
     /** @var \Wave\Http\Request $request */
     protected $request;
 
-    /** @var \Wave\Http\Response $response */
-    protected $response;
-
     public function __construct($host){
 		self::$root = $this->loadRoutesCache($host);
 	}
@@ -41,26 +38,21 @@ class Router {
 
     /**
      * @param Request  $request
-     * @param Response $response
      *
      * @throws \LogicException
      * @throws Http\Exception\NotFoundException
      * @return Response
      */
-    public function route(Request $request = null, Response $response = null){
+    public function route(Request $request = null){
 
         if(null === $request)
             $request = Request::createFromGlobals();
 
-        if(null === $response)
-            $response = Response::createFromRequest($request);
-
         $this->request = $request;
-        $this->response = $response;
 
         $this->request_uri = $request->getPath();
-        if(strrpos($this->request_uri, $response->getFormat()) !== false){
-            $this->request_uri = substr($this->request_uri, 0, -(strlen($response->getFormat())+1));
+        if(strrpos($this->request_uri, $request->getFormat()) !== false){
+            $this->request_uri = substr($this->request_uri, 0, -(strlen($request->getFormat())+1));
         }
         $this->request_method = $request->getMethod();
 
@@ -72,7 +64,7 @@ class Router {
         /** @var \Wave\Router\Action $action */
         if($node instanceof Router\Node && $action = $node->getAction()){
             Hook::triggerAction('router.before_invoke', array(&$action, &$this));
-            $this->response = Controller::invoke($action, $this->request, $this->response);
+            $this->response = Controller::invoke($action, $this->request);
             if(!($this->response instanceof Response)){
                 throw new \LogicException("Action {$action->getAction()} should return a \\Wave\\Http\\Response object", 500);
             }
@@ -81,7 +73,7 @@ class Router {
             }
         }
         else
-            throw new NotFoundException('The requested URL '.$url.' does not exist', $this->request, $this->response);
+            throw new NotFoundException('The requested URL '.$url.' does not exist', $this->request);
 	}
 	
 	public function loadRoutesCache($host){
@@ -128,21 +120,6 @@ class Router {
     public function setRequest($request) {
         $this->request = $request;
     }
-
-    /**
-     * @return \Wave\Http\Response
-     */
-    public function getResponse() {
-        return $this->response;
-    }
-
-    /**
-     * @param \Wave\Http\Response $response
-     */
-    public function setResponse($response) {
-        $this->response = $response;
-    }
-
 }
 
 ?>

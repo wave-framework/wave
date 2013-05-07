@@ -12,6 +12,7 @@ class HtmlResponse extends Response {
         parent::prepare($request);
 
         $this->headers->set('Content-Type', 'text/html; charset=utf8');
+        $this->headers->set('X-Wave-Response', 'html');
 
         return $this;
     }

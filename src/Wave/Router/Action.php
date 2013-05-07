@@ -83,7 +83,12 @@ class Action {
     public function getRespondsWith() { return $this->response_methods; }
 
 	public function canRespondWith($method){
-		return array_search($method, $this->response_methods) !== false;
+        foreach($this->response_methods as $allowed){
+            if($allowed === '*' || $allowed === $method){
+                return true;
+            }
+        }
+		return false;
 	}
 	
 	public function setBaseURL($baseurl){

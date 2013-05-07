@@ -2,8 +2,8 @@
 
 namespace Wave\Http;
 
-use Guzzle\Http\Message\Header;
 use InvalidArgumentException;
+use Wave\Config;
 
 class Request {
 
@@ -23,26 +23,28 @@ class Request {
 
     private $method;
 
+    private $format;
+
     /**
      * Arguments passed in via a query string
-     * @var array $query
+     * @var ParameterBag $query
      */
-    private $query = array();
+    public $query = array();
 
     /**
      * Parameters passed in via the request body
-     * @var array $parameters
+     * @var ParameterBag $parameters
      */
-    private $parameters = array();
+    public $parameters = array();
 
     /**
      * Used by the router to set parameters passed in via route variables
-     * @var array $path_parameters
+     * @var ParameterBag $path_parameters
      */
-    private $path_parameters = array();
+    public $attributes = array();
 
     /**
-     * The componets that make up the request URL
+     * The components that make up the request URL
      * @var array $components
      */
     private $components = array();
@@ -51,20 +53,37 @@ class Request {
      * The headers for this request
      * @var \Wave\Http\HeaderBag $headers
      */
-    private $headers;
+    public $headers;
+
+
+    /**
+     * @var ServerBag $server
+     */
+    public $server;
 
 
     public function __construct($url, $method = self::METHOD_GET,
-                                array $query = array(), array $parameters = array(), array $headers = array()){
+                                array $query = array(),
+                                array $parameters = array(),
+                                array $attributes = array(),
+                                array $server = array()){
 
-        $this->url = $url;
+        $this->setUrl($url);
         $this->setMethod($method);
-        $this->setQuery($query);
-        $this->setParameters($parameters);
-        $this->components = parse_url($url);
-        $this->headers = new HeaderBag($headers);
+
+        $this->query = new ParameterBag($query);
+        $this->parameters = new ParameterBag($parameters);
+        $this->attributes = new ParameterBag($attributes);
+        $this->server = new ServerBag($server);
+        $this->headers = new HeaderBag($this->server->getHeaders());
+
     }
 
+    /**
+     * Creates a new Request based on the PHP globals.
+     *
+     * @return Request
+     */
     public static function createFromGlobals(){
 
         $url = 'http://localhost';
@@ -85,7 +104,6 @@ class Request {
             $url .= $_SERVER['REQUEST_URI'];
         }
 
-        $query = array();
         $parameters = array();
         $method = static::METHOD_CLI;
         if(isset($_SERVER['REQUEST_METHOD'])){
@@ -97,20 +115,19 @@ class Request {
                         $parameters = static::parseRequestBody($_SERVER['CONTENT_TYPE']);
                     else
                         $parameters = $_POST;
-
-                case static::METHOD_HEAD:
-                case static::METHOD_GET:
-                case static::METHOD_DELETE:
-                default:
-                    $query = $_GET;
             }
         }
 
-        $headers = static::parseHeaders($_SERVER);
-
-        return new static($url, $method, $query, $parameters, $headers);
+        return new static($url, $method, $_GET, $parameters, $_SERVER);
     }
 
+    /**
+     * Parses the request body into a readable parameter set. Used by the createFromGlobals method
+     *
+     * @param string $content_type
+     *
+     * @return array
+     */
     protected static function parseRequestBody($content_type = self::TYPE_FORM_ENCODED){
         list($content_type) = explode(';', $content_type);
         switch($content_type){
@@ -126,69 +143,100 @@ class Request {
 
     }
 
-    private static function parseHeaders($sent_headers = null) {
-
-        if($sent_headers === null)
-            $sent_headers = $_SERVER;
-
-        $headers = array();
-        foreach ($sent_headers as $key => $value) {
-            if (strpos($key, 'HTTP_') === 0) {
-                $headers[substr($key, 5)] = $value;
-            }
-
-            else if(in_array($key, array('CONTENT_LENGTH', 'CONTENT_MD5', 'CONTENT_TYPE'))) {
-                $headers[$key] = $value;
-            }
+    /**
+     * Determines the request format (html, json, xml etc) for a request based on the extension in the
+     * given url
+     *
+     * @param string       $url
+     * @param string|null  $default
+     *
+     * @return string
+     */
+    protected static function parseFormat($url, $default = null){
+        if(null === $default){
+            $default = Config::get('wave')->response->default_format;
         }
+        $path = pathinfo($url);
 
-        return $headers;
-
+        return isset($path['extension']) ? $path['extension'] : $default;
     }
 
+    /**
+     * Returns an array dataset for this request, which is a merge of either the query or parameter sets and the
+     * attribute set depending on the request method.
+     *
+     * @return array
+     */
     public function getData(){
         switch($this->getMethod()){
+            case self::METHOD_POST:
+            case self::METHOD_PUT:
+                return array_replace($this->parameters->all(), $this->attributes->all());
             case self::METHOD_HEAD:
             case self::METHOD_GET:
             case self::METHOD_DELETE:
-                return array_replace($this->query, $this->path_parameters);
-            case self::METHOD_POST:
-            case self::METHOD_PUT:
-                return array_replace($this->parameters, $this->path_parameters);
+            default:
+                return array_replace($this->query->all(), $this->attributes->all());
         }
-        return array_merge($this->query, $this->parameters);
     }
 
+    /**
+     * This will search attribute, query and parameter sets for a specified argument
+     *
+     * @param $parameter
+     *
+     * @return mixed
+     */
     public function get($parameter){
 
-        if(isset($this->path_parameters[$parameter])){
-            return $this->path_parameters[$parameter];
+        foreach(array('attributes', 'query', 'parameters') as $property){
+            if($this->$property->has($parameter)){
+                return $this->$property->get($parameter);
+            }
         }
-        else if(isset($this->query[$parameter])){
-            return $this->query[$parameter];
-        }
-        else if(isset($this->parameters[$parameter])){
-            return $this->parameters[$parameter];
-        }
-        else
-            return null;
 
+        return null;
     }
 
+    /**
+     * Sets the full URL for this request. This will *not* update the server parameter bag.
+     *
+     * @param $url
+     */
     public function setUrl($url){
         $this->components = parse_url($url);
         $this->url = $url;
+
+        $this->format = static::parseFormat($this->getPath());
     }
 
+    /**
+     * Get the full URL of this request
+     *
+     * @return string
+     */
     public function getUrl(){
         return $this->url;
     }
 
+    /**
+     * Get the HTTP method for this request
+     *
+     * @return string
+     */
     public function getMethod() {
         return $this->method;
     }
 
+    /**
+     * Sets the HTTP method for this request. If an invalid method is passed an exception is thrown
+     *
+     * @param $method
+     *
+     * @throws \InvalidArgumentException
+     */
     public function setMethod($method) {
+        $method = strtoupper($method);
         if(!in_array($method, array(
             static::METHOD_HEAD, static::METHOD_GET, static::METHOD_POST,
             static::METHOD_PUT, static::METHOD_DELETE, static::METHOD_CLI
@@ -198,39 +246,14 @@ class Request {
         $this->method = $method;
     }
 
-    public function getQuery() {
-        return $this->query;
-    }
-
-    public function setQuery($query) {
-        $this->query = $query;
-    }
 
     /**
-     * Adds a query string parameter. Supports array notation for the $key parameter where
-     * an existing query array might be array('foo' => array('bar')) with $key = 'foo[]' and
-     * $value = 'qux' the new query array would be array('foo' => array('bar', 'qux'))
+     * Returns a component of the request url. See the parse_url() docs for available parameters
      *
-     * @param string $key
-     * @param string $value
+     * @param $component
+     *
+     * @return string|null
      */
-    public function addPathParameter($key, $value){
-        parse_str("{$key}={$value}", $parameter);
-        $this->path_parameters = array_merge_recursive($this->query, $parameter);
-    }
-
-    public function getPathParameters(){
-        return $this->path_parameters;
-    }
-
-    public function getParameters() {
-        return $this->parameters;
-    }
-
-    public function setParameters($parameters) {
-        $this->parameters = $parameters;
-    }
-
     public function getComponent($component){
         if(isset($this->components[$component]))
             return $this->components[$component];
@@ -238,26 +261,57 @@ class Request {
             return null;
     }
 
+    /**
+     * Get the request scheme (http/https)s
+     *
+     * @return null|string
+     */
     public function getScheme(){
         return $this->getComponent('scheme');
     }
 
+    /**
+     * Get the host
+     *
+     * @return null|string
+     */
     public function getHost(){
         return $this->getComponent('host');
     }
 
+    /**
+     * Get the port
+     *
+     * @return null|string
+     */
     public function getPort(){
         return $this->getComponent('port');
     }
 
+    /**
+     * Get the path of the request. This is the part after the host without the querystring
+     *
+     * @return null|string
+     */
     public function getPath(){
         return $this->getComponent('path');
     }
 
+
+    /**
+     * Get the raw querystring of the request
+     *
+     * @return null|string
+     */
     public function getQueryString(){
         return $this->getComponent('query');
     }
 
+    /**
+     * Gets the path and query string component (basically the URL without the host)
+     *
+     * @return string
+     */
     public function getPathAndQueryString(){
         return $this->getPath() . $this->getQueryString();
     }
@@ -274,6 +328,25 @@ class Request {
      */
     public function setHeaders(HeaderBag $headers) {
         $this->headers = $headers;
+    }
+
+    /**
+     * Returns the format for this request (e.g. html, json etc). This is denoted by the extension on the REQUEST_URI.
+     * If no extension is present the default format is inherited.
+     *
+     * @return string
+     */
+    public function getFormat() {
+        return $this->format;
+    }
+
+    /**
+     * Sets the format for this request
+     *
+     * @param $format
+     */
+    public function setFormat($format) {
+        $this->format = $format;
     }
 
 }

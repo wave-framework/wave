@@ -25,10 +25,9 @@ class Exception extends \Exception {
 
         Hook::registerHandler('router.before_routing', function(Router $router){
             if(Exception::$_response_method === null)
-                Exception::$_response_method = $router->getResponse()->getFormat();
+                Exception::$_response_method = $router->getRequest()->getFormat();
 
             Exception::setRequest($router->getRequest());
-            Exception::setResponse($router->getResponse());
         });
 
 	}
@@ -50,11 +49,7 @@ class Exception extends \Exception {
         if($request === null)
             $request = Request::createFromGlobals();
 
-        $response = static::$response;
-        if($response === null)
-            $response = Response::createFromRequest($request);
-
-		$response = Controller::invoke(self::getRouterAction(), $request, $response, array('exception' => $e));
+		$response = Controller::invoke(self::getRouterAction(), $request, array('exception' => $e));
 
         $response->prepare($request)->send();
 	}
@@ -89,7 +84,7 @@ class Exception extends \Exception {
     protected static function getRouterAction(){
         $action = new Action();
         $action->setAction(self::$_controller);
-        $action->setRespondsWith(array_keys(Response::getFormats()), false);
+        $action->setRespondsWith(array('*'), false);
 
         return $action;
     }
