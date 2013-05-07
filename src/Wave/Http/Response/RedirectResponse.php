@@ -9,8 +9,8 @@ class RedirectResponse extends Response {
 
     private $target;
 
-    public function __construct($url, $status = self::STATUS_FOUND, $format = self::FORMAT_HTML, array $headers = array()){
-        parent::__construct('', $status, $format, $headers);
+    public function __construct($url, $status = self::STATUS_FOUND, array $headers = array()){
+        parent::__construct('', $status, $headers);
 
         $this->setTarget($url);
     }
