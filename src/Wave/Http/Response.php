@@ -125,7 +125,7 @@ class Response {
      */
     protected $headers;
 
-    protected $version = '1.1';
+    protected $version;
 
 
     public function __construct($content = '', $status = self::STATUS_OK, array $headers = array()){
