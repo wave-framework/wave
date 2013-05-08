@@ -18,13 +18,6 @@ class RespondsWith extends Annotation {
 	public function validate($class) {
 		$this->minimumParameterCount(1);
 		$this->validOnSubclassesOf($class, Annotation::CLASS_CONTROLLER);
-        $valid_options = array_keys(Response::getFormats());
-		if(isset($this->parameters[0])){
-			foreach($this->parameters as $i => $method){
-				if(is_numeric($i) && !in_array($method, $valid_options))
-					$this->errors[] = "Parameter $i contains \"" . $method . "\". Valid values: " . implode(', ', $valid_options) . '.';
-			}
-		}
 	}
 		
 		
