@@ -17,8 +17,9 @@
 
 namespace {{ table.Database.Namespace }}\Base;
 
-use Wave,
-	Wave\DB;
+use Wave;
+use Wave\DB;
+
 /**
  * Properties defined by magic accessor methods
  {% for column in table.Columns %}
@@ -30,7 +31,7 @@ use Wave,
 * @property \{{ relation.ReferencedColumn.Table.getClassName(true) }} ${{ relation.Name }}
  {% endfor %}
 */
-abstract class {{ table.ClassName }} extends Wave\DB\Model {
+abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 
 	//Table name
 	protected static $_database = '{{ table.Database.getNamespace(false) }}';
