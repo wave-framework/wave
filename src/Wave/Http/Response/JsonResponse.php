@@ -26,7 +26,7 @@ class JsonResponse extends Response {
     public function prepare(Request $request){
         parent::prepare($request);
 
-        $content_type = $request->getHeaders()->get('accept', static::$default_type, true);
+        $content_type = $request->headers->get('accept', static::$default_type, true);
         if($content_type !== static::$default_type && !in_array($content_type, static::$acceptable_types)){
             $content_type = static::$default_type;
         }

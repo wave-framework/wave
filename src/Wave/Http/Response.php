@@ -123,7 +123,7 @@ class Response {
      * Holds the headers to be sent with this response
      * @var \Wave\Http\HeaderBag
      */
-    protected $headers;
+    public $headers;
 
     protected $version;
 
