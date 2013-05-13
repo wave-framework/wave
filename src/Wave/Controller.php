@@ -7,6 +7,7 @@ use Wave\Http\Exception\NotFoundException;
 use Wave\Http\Exception\UnauthorizedException;
 use Wave\Http\Response\HtmlResponse;
 use Wave\Http\Response\JsonResponse;
+use Wave\Http\Response\XmlResponse;
 use Wave\Router\Action;
 use Wave\Utils\JSON;
 use Wave\Utils\XML;
