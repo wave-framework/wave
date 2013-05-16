@@ -49,7 +49,7 @@ class Exception extends \Exception {
         if($request === null)
             $request = Request::createFromGlobals();
 
-		$response = Controller::invoke(self::getRouterAction(), $request, array('exception' => $e));
+		$response = Controller::invoke(self::$_controller, $request, array('exception' => $e));
 
         $response->prepare($request)->send();
 	}
@@ -80,14 +80,6 @@ class Exception extends \Exception {
 				return 'Unknown error';
 		}
 	}
-
-    protected static function getRouterAction(){
-        $action = new Action();
-        $action->setAction(self::$_controller);
-        $action->setRespondsWith(array('*'), false);
-
-        return $action;
-    }
 	
 	public static function getResponseMethod(){
 		if(self::$_response_method == null){

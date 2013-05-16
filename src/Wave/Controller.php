@@ -16,6 +16,13 @@ use Wave\Http\Response;
 
 class Controller {
 
+    /**
+     * If invoking this controller from within another it is possible to get the computed data
+     * as an array rather than formatting it into one of the response objects
+     */
+    const INVOKE_NORMAL = 1;
+    const INVOKE_SUB_REQUEST = 2;
+
     /** @var \Wave\Http\Response */
     public $_response;
 
@@ -35,11 +42,13 @@ class Controller {
     protected $_status;
     protected $_message;
 
+    private $_invoke_method = self::INVOKE_NORMAL;
+
 
     /**
-     * @param Action   $action
-     * @param Request  $request
-     * @param array    $data
+     * @param string|Action   $action
+     * @param Request         $request
+     * @param array           $data
      *
      * @return Http\Response
      * @throws Http\Exception\UnauthorizedException
@@ -47,8 +56,15 @@ class Controller {
      * @throws Exception
      * @throws Http\Exception\ForbiddenException
      */
-    public static final function invoke(Action $action, Request $request, $data = array()){
-		
+    public static final function invoke($action, Request $request, $data = array(), $invoke_type = self::INVOKE_NORMAL){
+
+        if(!($action instanceof Action)){
+            $action_method = $action;
+            $action = new Action();
+            $action->setAction($action_method);
+            $action->setRespondsWith(array('*'), false);
+        }
+
 		list($controller_class, $action_method) = explode('.', $action->getAction(), 2) + array(null, null);
         if(!isset($action_method))
             $action_method = Config::get('wave')->controller->default_method;
@@ -61,6 +77,7 @@ class Controller {
             $controller->_action = $action;
             $controller->_request = $request;
             $controller->_response_method = $request->getFormat();
+            $controller->_invoke_method = $invoke_type;
 
             switch($controller->_request->getMethod()){
                 case Request::METHOD_GET:
@@ -182,7 +199,7 @@ class Controller {
 	}
 	
 	final protected function respond(){
-		return $this->_invoke('respond');
+        return $this->_invoke('respond');
 	}
 	
 	final protected function request(){
@@ -190,14 +207,20 @@ class Controller {
 	}
 	
 	final private function _invoke($type){
-		$response_method = $type.strtoupper($this->_response_method);
-		if(method_exists($this, $response_method) && $response_method !== $type)
-			return $this->{$response_method}();
-		else
-			throw new Exception(
-				'The action "'.$this->_action->getAction().'" tried to respond with "'.
-				$this->_response_method.'" but the method does not exist'
-			);
+        // if this controller is running under a sub request then just return the computed response array
+        if($this->_invoke_method === self::INVOKE_SUB_REQUEST){
+            return $this->_getResponseProperties();
+        }
+        else {
+            $response_method = $type.strtoupper($this->_response_method);
+            if(method_exists($this, $response_method) && $response_method !== $type)
+                return $this->{$response_method}();
+            else
+                throw new Exception(
+                    'The action "'.$this->_action->getAction().'" tried to respond with "'.
+                    $this->_response_method.'" but the method does not exist'
+                );
+        }
 	}
 
 	protected function respondHTML(){
