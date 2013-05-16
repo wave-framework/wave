@@ -92,7 +92,7 @@ class Exception extends \Exception {
 	public static function getResponseMethod(){
 		if(self::$_response_method == null){
 			if(PHP_SAPI === 'cli') return Response::FORMAT_CLI;
-			else return Config::get('wave')->response->default_method;
+			else return Config::get('wave')->response->default_format;
 		} 
 		else
 			return self::$_response_method;
