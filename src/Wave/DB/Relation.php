@@ -19,59 +19,66 @@ class Relation {
 	const MANY_TO_ONE = 21;
 	const MANY_TO_MANY = 22;
 	
-	static $instance_names = array();
+	static $instances = array();
 	
-	private $local_column;
-	private $referenced_column;
+	private $local_columns = array();
+	private $referenced_columns = array();
 	private $target_relation = null;
 	
 	private $is_reverse_relation;
 	private $type;
 	
-	private function __construct(Column $local_column, Column $referenced_column, $is_reverse_relation){
+	private $instance_name;
+
+	private function __construct(Column $local_column, Column $referenced_column, $is_reverse_relation, $instance_name = ''){
 		
-		$this->local_column = $is_reverse_relation ? $referenced_column : $local_column;
-		$this->referenced_column = $is_reverse_relation ? $local_column : $referenced_column;
+		$this->local_columns[] = $is_reverse_relation ? $referenced_column : $local_column;
+		$this->referenced_columns[] = $is_reverse_relation ? $local_column : $referenced_column;
 		$this->is_reverse_relation = $is_reverse_relation;
+		$this->instance_name = $instance_name;
 		$this->type = $this->determineRelationType();
 		
 	}
 	
-	public static function create(Column $local_column, Column $referenced_column, $is_reverse_relation){
+	public static function create(Column $local_column, Column $referenced_column, $constraint_name, $is_reverse_relation){
 		
-		$instance_name = sprintf('%s.%s.%s__%s.%s.%s__%s', $local_column->getTable()->getDatabase()->getName(), $local_column->getTable()->getName(), $local_column->getName(),
-													   $referenced_column->getTable()->getDatabase()->getName(), $referenced_column->getTable()->getName(), $referenced_column->getName(),
-													   $is_reverse_relation ? 'reverse' : 'forward');
+		//This is to support multiple column foreign keys, any constraints with the same name will be treated as an additional column.
+		//An assumption is made in the driver that the constraint names will be unique across the table
+		$instance_name = sprintf('%s.%s.%s__%s', $local_column->getTable()->getDatabase()->getName(), $local_column->getTable()->getName(), $constraint_name,
+												 $is_reverse_relation ? 'reverse' : 'forward');
 		
-		if(in_array($instance_name, self::$instance_names))
-			return null;
+		if(isset(self::$instances[$instance_name])){
+			self::$instances[$instance_name]->addColumns($local_column, $referenced_column, $is_reverse_relation);
+		} else{
+			self::$instances[$instance_name] = new self($local_column, $referenced_column, $is_reverse_relation, $instance_name);	
+		}
 		
-		self::$instance_names[] = $instance_name;
-		
-		return new self($local_column, $referenced_column, $is_reverse_relation);
+		return self::$instances[$instance_name];
 		
 	}
 	
 	private function determineRelationType(){
 
-		if($this->local_column->isPrimaryKey() && $this->referenced_column->isPrimaryKey()){
+		//all relation definitions based on the first column in the key
+		if($this->local_columns[0]->isPrimaryKey() && $this->referenced_columns[0]->isPrimaryKey()){
 			//will either be a one-one relation or a many-many join table
 
-			if($this->local_column->getTable()->getPrimaryKey() !== null && count($this->local_column->getTable()->getPrimaryKey()->getColumns()) > 1){
+			if($this->getLocalTable()->getPrimaryKey() !== null && count($this->getLocalTable()->getPrimaryKey()->getColumns()) > 1){
 				//if local table has more than one PK it's modt likely a join table.
 				$type = self::MANY_TO_ONE;
-			} elseif($this->referenced_column->getTable()->getPrimaryKey() !== null && 1 < $num_ref_column = count($this->referenced_column->getTable()->getPrimaryKey()->getColumns())){
+			} elseif($this->getReferencedTable()->getPrimaryKey() !== null && 1 < $num_ref_column = count($this->getReferencedTable()->getPrimaryKey()->getColumns())){
 				//if referencing a table with dual PK, it's most likely a m2m join table that has more to load.
 				if($num_ref_column === 2){
 					$type = self::MANY_TO_MANY;
 					//go back and find the other relation
 					//need to iterate to find the one that's not this.
-					foreach($this->referenced_column->getTable()->getRelations() as $relation)
-						if($relation->getReferencedColumn() != $this->local_column)
+					foreach($this->getReferencedTable()->getRelations() as $relation)
+						if($relation->getReferencedColumns() != $this->local_columns)
 							$this->target_relation = $relation;
 
                     //if target relation isn't found, there must be a special case, so just roll back to one-to-many
-                    if($this->target_relation === null)
+                    //or if target relation has a dual primary key, can't base it being a join table on it anymore.
+                    if($this->target_relation === null || count($this->target_relation->getReferencedTable()->getPrimaryKey()->getColumns()) > 1)
                         $type = self::ONE_TO_MANY;
 
 				} else {
@@ -93,12 +100,27 @@ class Relation {
 		return $type;			
 	}
 	
-	public function getLocalColumn(){
-		return $this->local_column;
+	public function addColumns($local_column, $referenced_column, $is_reverse_relation){
+		$this->local_columns[] = $is_reverse_relation ? $referenced_column : $local_column;
+		$this->referenced_columns[] = $is_reverse_relation ? $local_column : $referenced_column;
 	}
 	
-	public function getReferencedColumn(){
-		return $this->referenced_column;
+	public function getLocalColumns(){
+		return $this->local_columns;
+	}
+	
+	public function getLocalTable(){
+		//it will always be the same if there are multiple columns
+		return $this->local_columns[0]->getTable();
+	}
+	
+	public function getReferencedColumns(){
+		return $this->referenced_columns;
+	}
+
+	public function getReferencedTable(){
+		//it will always be the same if there are multiple columns
+		return $this->referenced_columns[0]->getTable();
 	}
 	
 	public function getTargetRelation(){
@@ -107,6 +129,10 @@ class Relation {
 		
 	public function getType(){
 		return $this->type;	
+	}
+	
+	public function getIdentifyingName(){
+		return $this->instance_name;
 	}
 	
 	/**
@@ -119,25 +145,25 @@ class Relation {
 		//$local_column		
 		switch($this->type){
 			case self::ONE_TO_ONE:
-				$name = $this->referenced_column->getTable()->getName();
+				$name = $this->getReferencedTable()->getName();
 				break;
 			case self::MANY_TO_ONE:
 				//in this case we need to name the relation based on the column, trimming off _id (if it exists)
-				$name = $this->local_column->getName();
+				$name = $this->local_columns[0]->getName();
 				if(substr($name, -3) === '_id')
 					$name = substr($name, 0, -3);
 				break;
 			case self::ONE_TO_MANY:
 				//slightly more complex to remove collisions between m2m names
-				$name = Wave\Inflector::pluralize($this->referenced_column->getTable()->getName());
-				$ref_name = $this->referenced_column->getName();
+				$name = Wave\Inflector::pluralize($this->getReferencedTable()->getName());
+				$ref_name = $this->referenced_columns[0]->getName();
 				if(substr($ref_name, -3) === '_id')
 					$ref_name = substr($ref_name, 0, -3);
-				if($ref_name !== $this->local_column->getTable()->getName())
+				if($ref_name !== $this->getLocalTable()->getName())
 					$name .= '_'.$ref_name;	
 				break;			
 			case self::MANY_TO_MANY:
-				$name = Wave\Inflector::pluralize($this->target_relation->getReferencedColumn()->getTable()->getName());
+				$name = Wave\Inflector::pluralize($this->target_relation->getReferencedTable()->getName());
 				break;
 		}
 		

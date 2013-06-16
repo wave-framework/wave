@@ -16,6 +16,11 @@ use \Wave;
  */
 class Query {
 	
+	const CLAUSE_JOIN = 1;
+	const CLAUSE_WHERE = 2;
+
+	private $_last_clause = 0;
+
 	private $escape_character;
 	
 	private $class_aliases	= array();
@@ -39,6 +44,7 @@ class Query {
 	private $_built = false;
 	private $_executed = false;
 	private $_params = array();
+	
 	
 	private $relation_tables = array();
 		
@@ -103,21 +109,37 @@ class Query {
 		//if it's many to many, load the related class and flag the first join to be attached as relation data
 		if($relation_data['relation_type'] === Wave\DB\Relation::MANY_TO_MANY){
 			
-			$this->leftJoin($relation_data['related_class'], $related_alias, $target_alias)
-				 ->on(sprintf('%s.%s = %s.%s', $related_alias, $this->escape($relation_data['related_column']), 
-				 							   $this->from_alias, $this->escape($relation_data['local_column'])));
+			$this->leftJoin($relation_data['related_class'], $related_alias, $target_alias);
 			
-			$this->leftJoin($relation_data['target_relation']['related_class'], $alias)
-				 ->on(sprintf('%s.%s = %s.%s', $alias, $this->escape($relation_data['target_relation']['related_column']), 
-				 							   $related_alias, $this->escape($relation_data['target_relation']['local_column'])));
+			//more iteration for multi-column relations
+			foreach($relation_data['related_columns'] as $index => $related_column){
+				$func = $index === 0 ? 'on' : 'and';
+				$this->$func(sprintf('%s.%s = %s.%s', $related_alias, $this->escape($related_column), 
+ 					$this->from_alias, $this->escape($relation_data['local_columns'][$index])));
+			}
+			
+			$this->leftJoin($relation_data['target_relation']['related_class'], $alias);
+
+			foreach($relation_data['target_relation']['related_columns'] as $index => $related_column){
+				$func = $index === 0 ? 'on' : 'and';
+				$this->$func(sprintf('%s.%s = %s.%s', $alias, $this->escape($related_column), 
+ 					$related_alias, $this->escape($relation_data['target_relation']['local_columns'][$index])));
+			}
+
 			//go back and set the target alias to the joined row
 			$target_alias = $alias;
 
 		} else {
 			//any other type of join is a simple table-table join
-			$this->leftJoin($relation_data['related_class'], $alias)
-				 ->on(sprintf('%s.%s = %s.%s', $alias, $this->escape($relation_data['related_column']), 
-			 								   $this->from_alias, $this->escape($relation_data['local_column'])));
+			$this->leftJoin($relation_data['related_class'], $alias);
+
+			//more iteration for multi-column relations
+			foreach($relation_data['related_columns'] as $index => $related_column){
+				$func = $index === 0 ? 'on' : 'and';
+				$this->$func(sprintf('%s.%s = %s.%s', $alias, $this->escape($related_column), 
+ 					$this->from_alias, $this->escape($relation_data['local_columns'][$index])));
+			}
+			
 		}
 		
 		//this needs recording so the object can be added as a relation, not a join
@@ -169,6 +191,8 @@ class Query {
      */
 	public function join($type, $class, &$alias = null, &$target_alias = null){
 		
+		$this->_last_clause = self::CLAUSE_JOIN;
+		
 		//this is where to stick the joined object
 		if($target_alias === null)
 			$target_alias = $this->from_alias;
@@ -187,7 +211,7 @@ class Query {
 							   'class'		=> $class,
 							   'table_alias' => $alias,
 							   'target_alias' => &$target_alias, //for many to many, this won't be known till the target table is joined
-							   'condition' => null);
+							   'condition' => '');
 		
 		return $this;
 	}
@@ -236,7 +260,7 @@ class Query {
 		if($last_index === -1)
 			throw new Wave\Exception('Wave\DB\Query::on and ::using may only be used following a join.');
 		
-		$this->joins[$last_index]['condition'] = $condition;
+		$this->joins[$last_index]['condition'] .= $condition;
 	}
 	
 	/*
@@ -269,6 +293,8 @@ class Query {
      * @see where
      */
     public function orWhere($condition, $params = array()){
+		$this->_last_clause = self::CLAUSE_WHERE;
+
 		$this->addWhereCondition($condition, $params, 'OR', true);
 		return $this;
 	}
@@ -279,31 +305,9 @@ class Query {
      * @see where
      */
 	public function andWhere($condition, $params = array()){
+		$this->_last_clause = self::CLAUSE_WHERE;
+
 		$this->addWhereCondition($condition, $params, 'AND', true);
-		return $this;
-	}
-
-    /**
-     * Add a condition to the current subclause using OR between the conditions. This is an alias function
-     * because or is a reserved word and cannot be used to declare a method (but can be used at runtime).
-     * The equivilent function (without the prefixing underscore) is defined via magic methods).
-     *
-     * @see where
-     */
-	public function _or($condition, $params = array()){
-		$this->addWhereCondition($condition, $params, 'OR');
-		return $this;
-	}
-
-    /**
-     * Add a condition to the current subclause using AND between the conditions. This is an alias function
-     * because or is a reserved word and cannot be used to declare a method (but can be used at runtime).
-     * The equivilent function (without the prefixing underscore) is defined via magic methods).
-     *
-     * @see where
-     */
-	public function _and($condition, $params = array()){
-		$this->addWhereCondition($condition, $params, 'AND');
 		return $this;
 	}
 
@@ -383,6 +387,53 @@ class Query {
 	/*
 	*	END WHERE METHODS
 	*/
+
+	/*
+	*	CLAUSE CONCATINATION OPERATORS
+	*/
+	
+	 /**
+     * Add a condition to the current subclause using OR between the conditions. This is an alias function
+     * because or is a reserved word and cannot be used to declare a method (but can be used at runtime).
+     * The equivilent function (without the prefixing underscore) is defined via magic methods).
+     */
+	public function _or($condition, $params = array()){
+		switch($this->_last_clause){
+			case self::CLAUSE_WHERE:
+				$this->addWhereCondition($condition, $params, 'OR');
+				break;
+			
+			case self::CLAUSE_JOIN:
+				$this->addJoinCondition("OR $condition", $params);
+				break;
+		}
+		
+		return $this;
+	}
+
+    /**
+     * Add a condition to the current subclause using AND between the conditions. This is an alias function
+     * because or is a reserved word and cannot be used to declare a method (but can be used at runtime).
+     * The equivilent function (without the prefixing underscore) is defined via magic methods).
+     */
+	public function _and($condition, $params = array()){
+		switch($this->_last_clause){
+			case self::CLAUSE_WHERE:
+				$this->addWhereCondition($condition, $params, 'AND');
+				break;
+			
+			case self::CLAUSE_JOIN:
+				$this->addJoinCondition("AND $condition", $params);
+				break;
+		}
+		
+		return $this;
+	}
+
+	/*
+	*	END CLAUSE CONCATINATION OPERATORS
+	*/
+	
 
     /**
      * Add a GROUP BY statement

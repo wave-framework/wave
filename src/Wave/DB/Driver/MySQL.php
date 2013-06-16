@@ -131,10 +131,10 @@ class MySQL extends AbstractDriver implements DriverInterface {
 				$referenced_column = $referenced_db->getColumn($cached_row['REFERENCED_TABLE_NAME'], $cached_row['REFERENCED_COLUMN_NAME']);
 				//-----
 				
-				$relation = DB\Relation::create($local_column, $referenced_column, isset($cached_row['REVERSE']));
+				$relation = DB\Relation::create($local_column, $referenced_column, $cached_row['CONSTRAINT_NAME'], isset($cached_row['REVERSE']));
 				
 				if($relation !== null)
-					$relations[] = $relation;
+					$relations[$relation->getIdentifyingName()] = $relation;
 				else
 					Wave\Log::write('mysql_driver', sprintf('[%s.%s.%s] has duplicate relations.', $cached_row['TABLE_SCHEMA'], $cached_row['TABLE_NAME'], $cached_row['COLUMN_NAME']), Wave\Log::WARNING);
 				
