@@ -2,17 +2,34 @@
 
 namespace Wave;
 
+use Wave\Http\Request;
+use Wave\Http\Response;
+use Wave\Router\Action;
+
 class Exception extends \Exception {
 	
 	private static $_controller = null;
 	public static $_response_method = null;
+
+    /** @var \Wave\Http\Request $request */
+    private static $request;
+    /** @var \Wave\Http\Response $response */
+    private static $response;
 	
 	public static function register($controller){
 		if(!class_exists($controller) || !is_subclass_of($controller, '\\Wave\\Controller')){
 			throw new \Exception("Controller $controller must be an instance of \\Wave\\Controller");
 		}
 		self::$_controller = $controller;
-		set_exception_handler(array('\Wave\Exception', 'handle'));
+		set_exception_handler(array('\\Wave\\Exception', 'handle'));
+
+        Hook::registerHandler('router.before_routing', function(Router $router){
+            if(Exception::$_response_method === null)
+                Exception::$_response_method = $router->getRequest()->getFormat();
+
+            Exception::setRequest($router->getRequest());
+        });
+
 	}
 	
 	public function __construct($message, $code = null){
@@ -27,7 +44,14 @@ class Exception extends \Exception {
 		$log_message = sprintf('%-4s %s', "({$e->getCode()})", $e->getMessage());
 		// get the channel manually so the introspection works properly.
 		Log::getChannel('exception')->addRecord(Log::ERROR, $log_message);
-		Controller::invoke(self::$_controller, array('data' => array('exception' => $e)));
+
+        $request = static::$request;
+        if($request === null)
+            $request = Request::createFromGlobals();
+
+		$response = Controller::invoke(self::$_controller, $request, array('exception' => $e));
+
+        $response->prepare($request)->send();
 	}
 	
 	protected function getInternalMessage($type){
@@ -59,12 +83,20 @@ class Exception extends \Exception {
 	
 	public static function getResponseMethod(){
 		if(self::$_response_method == null){
-			if(PHP_SAPI === 'cli') return Response::CLI;
-			else return \Wave\Config::get('wave')->controller->default_response;
+			if(PHP_SAPI === 'cli') return Response::FORMAT_CLI;
+			else return Config::get('wave')->response->default_format;
 		} 
 		else
 			return self::$_response_method;
 	}
+
+    public static function setRequest($request) {
+        self::$request = $request;
+    }
+
+    public static function setResponse($response) {
+        self::$response = $response;
+    }
 }
 
 ?>

@@ -1,7 +1,10 @@
 <?php
 
 namespace Wave\Router;
-use Wave;
+
+
+use Wave\Exception;
+use Wave\Http\Request;
 
 class Node {
 
@@ -17,7 +20,7 @@ class Node {
 		if($this->action === null)
 			$this->action = $action;
 		else {
-			throw new \Wave\Exception($this->action->getAction() . ' shares a duplicate route with ' . $action->getAction());
+			throw new Exception($this->action->getAction() . ' shares a duplicate route with ' . $action->getAction());
 		}
 	}
 	
@@ -53,7 +56,7 @@ class Node {
 		
 	}
 	
-	public function findChild($url, &$var_stack){
+	public function findChild($url, Request &$request){
 		
 		if($url == null) return $this;
 				
@@ -67,7 +70,7 @@ class Node {
 		if(isset($this->children[$segment])){
 			$node = $this->children[$segment];
 			// if there is more to go, recurse with the rest
-			return $node !== null ? $node->findChild($remaining, $var_stack) : $node;
+			return $node !== null ? $node->findChild($remaining, $request) : $node;
 		}
 		else {
 			// otherwise, start searching through all the child paths
@@ -81,17 +84,17 @@ class Node {
 					if(preg_match($pattern, $url, $matches) == 1){
 						$segment = $matches[0];
 						$remaining = substr($url, strlen($segment) + 1) ?: null;
-						$matching_node = $node->findChild($remaining, $var_stack);
+						$matching_node = $node->findChild($remaining, $request);
 						if($matching_node !== null && $matching_node->hasValidAction())
-							$var_stack[substr($path, $expression_end + 2)] = $segment;
+                            $request->attributes->set(substr($path, $expression_end + 2), $segment);
 					}
 				}
 				elseif((is_numeric($segment) && strpos($path, self::VAR_INT) !== false)
 						|| strpos($path, self::VAR_STRING) !== false) {
 						
-					$matching_node = $node->findChild($remaining, $var_stack);	
+					$matching_node = $node->findChild($remaining, $request);
 					if($matching_node !== null && $matching_node->hasValidAction())
-							$var_stack[substr($path, strpos($path, '>') + 1)] = $segment;
+                        $request->attributes->set(substr($path, strpos($path, '>') + 1), $segment);
 				}
 				
 				if($matching_node !== null)
@@ -107,7 +110,7 @@ class Node {
 	}
 	
 	public function hasValidAction(){
-		return $this->action instanceof Wave\Router\Action;
+		return $this->action instanceof Action;
 	}
 	
 }

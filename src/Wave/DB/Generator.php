@@ -8,14 +8,16 @@
 
 namespace Wave\DB;
 
-use Wave,
-    Twig_Environment,
-    Twig_Loader_Filesystem;
+use Wave;
+use Twig_Environment;
+use Twig_Loader_Filesystem;
 
 class Generator {
 
     /** @var Twig_Environment $twig */
 	private static $twig;
+
+    private static $baseModelClass = '\\Wave\\DB\\Model';
 
     /**
      * Generate the base models (and any model stubs if they don't exist) based on the schema
@@ -64,8 +66,8 @@ class Generator {
 		self::$twig = new Twig_Environment($loader);
 		self::$twig->addFilter('addslashes', new \Twig_Filter_Function('addslashes'));
 		self::$twig->addFilter('implode', new \Twig_Filter_Function('implode'));
-		self::$twig->addFilter('singularize', new \Twig_Filter_Function('\Wave\Inflector::singularize'));
-
+		self::$twig->addFilter('singularize', new \Twig_Filter_Function('\\Wave\\Inflector::singularize'));
+        self::$twig->addGlobal('baseModelClass', static::$baseModelClass);
 	}
 
     /**
@@ -101,7 +103,11 @@ class Generator {
 		return $model_directory.DS.$namespace.DS;
 		
 	}
-	
+
+    public static function setBaseModelClass($baseModelClass) {
+        self::$baseModelClass = $baseModelClass;
+    }
+
 }
 
 ?>

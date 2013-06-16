@@ -1,7 +1,15 @@
 <?php
 
 namespace Wave\Router;
-use Wave;
+
+
+
+use Wave\Auth;
+use Wave\Config;
+use Wave\Exception;
+use Wave\Http\Request;
+use Wave\IAuthable;
+use Wave\Method;
 
 class Action {
 	
@@ -18,7 +26,7 @@ class Action {
 	
 	public function __construct(){
 		$this->baseurl = self::getBaseURLFromConf('default');
-		$this->response_methods = (array) Wave\Config::get('wave')->router->base->methods;
+		$this->response_methods = (array) Config::get('wave')->router->base->methods;
 	}
 	
 	public function setBaseRoute($baseroute){
@@ -35,8 +43,8 @@ class Action {
 		if(substr($route, -1, 1) == '/')
 			$route = substr($route, 0, -1);
 
-		if(array_search(Wave\Method::ANY, $methods) !== false)
-			$methods = Wave\Method::$ALL;
+		if(array_search(Method::ANY, $methods) !== false)
+			$methods = Method::$ALL;
 				
 		foreach($methods as $method){
 			$this->routes[] = $method . $route;
@@ -47,18 +55,18 @@ class Action {
 	public function hasRoutes(){ return isset($this->routes[0]); }
 	
 	public function setAction($action){ $this->target_action = $action; }
-	public function getAction() { return $this->target_action;}
+	public function getAction() { return $this->target_action; }
 	
 	public function setRequiresLevel(array $levels, $inherit){
 		$this->mergeArrays('requires_level', $levels, $inherit);
 		return $this;
 	}
-	public function checkRequiredLevel($var_stack){
+	public function checkRequiredLevel(Request $request){
 		if(!empty($this->requires_level)){
-			$auth_obj = Wave\Auth::getIdentity();
+			$auth_obj = Auth::getIdentity();
 			
-			if($auth_obj instanceof Wave\IAuthable)
-				return $auth_obj->hasAccess($this->requires_level, $var_stack);
+			if($auth_obj instanceof IAuthable)
+				return $auth_obj->hasAccess($this->requires_level, $request);
 			else
 				return false;
 		}
@@ -71,9 +79,16 @@ class Action {
 		$this->mergeArrays('response_methods', $levels, $inherit);
 		return $this;
 	}
-	public function getRespondsWith() { return $this->response_methods; }
+
+    public function getRespondsWith() { return $this->response_methods; }
+
 	public function canRespondWith($method){
-		return array_search($method, $this->response_methods) !== false;
+        foreach($this->response_methods as $allowed){
+            if($allowed === '*' || $allowed === $method){
+                return true;
+            }
+        }
+		return false;
 	}
 	
 	public function setBaseURL($baseurl){
@@ -87,9 +102,9 @@ class Action {
 	}
 	
 	private static function getBaseURLFromConf($profile){
-		$profiles = Wave\Config::get('deploy')->profiles;
+		$profiles = Config::get('deploy')->profiles;
 		if(!isset($profiles->$profile)){
-			throw new \Wave\Exception('BaseURL profile "'.$profile.'" is not defined in deploy configuration');
+			throw new Exception('BaseURL profile "'.$profile.'" is not defined in deploy configuration');
 		}
 		else 
 			return $profiles->$profile->baseurl;
@@ -101,6 +116,10 @@ class Action {
 
     public function getValidationSchema() {
         return $this->validation_schema;
+    }
+
+    public function needsValidation(){
+        return $this->validation_schema !== null;
     }
 
 
