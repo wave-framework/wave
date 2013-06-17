@@ -325,16 +325,20 @@ class Query {
     private function addWhereCondition($condition, $params, $type, $create = false){
 		
 		$current_index = count($this->where);
-				
+
+        $condition = self::parseWhereCondition($condition, $params);
+        if($condition === false)
+            return;
+
 		if($create){
 			$this->where[] = array('type'		=> $type,
-								   'condition'	=> self::parseWhereCondition($condition, $params), 
+								   'condition'	=> $condition,
 								   'params'		=> array());
 		} else {
 			if($current_index-- === 0)
 				throw new Wave\Exception('Wave\DB\Query::and and ::or may only be used following a where.');
 			
-			$this->where[$current_index]['condition'] .= sprintf(' %s %s', $type, self::parseWhereCondition($condition, $params));
+			$this->where[$current_index]['condition'] .= sprintf(' %s %s', $type, $condition);
 		}
 		
 		if($params !== null)
@@ -366,6 +370,8 @@ class Query {
 			
 		if(is_array($params)){
 			$num_params = count($params);
+            if($num_params <= 0) return false;
+
 			if($num_placeholders < $num_params){
 				//otherwise change the parameters to matcht he num in the array and make it an 'IN' clause.
 				$condition = str_replace('?', '('.implode(',', array_fill(0, $num_params, '?')).')', $condition);
