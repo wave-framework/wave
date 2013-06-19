@@ -113,6 +113,10 @@ class Validator implements ArrayAccess {
         return isset($this->_violations[$field]) ? $this->_violations[$field] : null;
     }
 
+    public function getViolations(){
+        return $this->_violations;
+    }
+
     /**
      * @param string $schema A schema file to load from the configured schema path
      * @param array $input
