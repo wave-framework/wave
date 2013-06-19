@@ -13,6 +13,7 @@ use Wave\Validator,
 class MapConstraint extends AbstractConstraint implements CleanerInterface {
 
     private $cleaned = array();
+    private $violations = array();
 
     public function __construct($property, $arguments, &$validator){
         parent::__construct($property, $arguments, $validator);
@@ -35,7 +36,11 @@ class MapConstraint extends AbstractConstraint implements CleanerInterface {
                 $cleaned = $instance->getCleanedData();
                 $this->cleaned[$i] = $cleaned[$this->property];
             }
-            else return false;
+            else {
+                $violations = $instance->getViolations();
+                $this->violations = $violations[$this->property];
+                return false;
+            }
         }
 
         return true;
@@ -43,7 +48,7 @@ class MapConstraint extends AbstractConstraint implements CleanerInterface {
     }
 
     public function getViolationPayload(){
-        return array();
+        return $this->violations;
     }
 
     public function getCleanedData() {

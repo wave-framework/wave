@@ -56,6 +56,7 @@ abstract class AbstractConstraint implements CleanerInterface {
     public function getViolationPayload(){
         return array(
             'field_name' => $this->property,
+            'field_value' => $this->data,
             'reason'     => $this->getViolationKey(),
             'message'    => $this->getViolationMessage()
         );
