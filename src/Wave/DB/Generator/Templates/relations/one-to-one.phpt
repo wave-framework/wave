@@ -1,4 +1,4 @@
-{% if false %}<?php{% endif %}
+{# <?php #}
 //{{ relation.Name }} 
 	public function set{{ relation.Name }}(&$obj, $create_relation = true){
 		$this->_data['{{ relation.Name }}'] = &$obj;
@@ -8,9 +8,9 @@
 	public function get{{ relation.Name }}(){
 		
 		if(!isset($this->_data['{{ relation.Name }}'])){
-			$this->_data['{{ relation.Name }}'] = Wave\DB::get('{{ relation.ReferencedColumn.Table.Database.getNamespace(false) }}')->from('{{ relation.ReferencedColumn.Table.ClassName }}', $from_alias)
-									->where("$from_alias.{{ relation.ReferencedColumn.getName(true) }} = ?", $this->_data['{{ relation.LocalColumn.Name }}'])
-									->fetchRow();
+			$this->_data['{{ relation.Name }}'] = Wave\DB::get('{{ relation.ReferencedTable.Database.getNamespace(false) }}')->from('{{ relation.ReferencedTable.ClassName }}', $from_alias)
+									{% for column in relation.ReferencedColumns %}->{% if loop.first %}where{% else %}and{% endif %}("$from_alias.{{ column.getName(true) }} = ?", $this->_data['{{ relation.LocalColumns[loop.index0].Name }}'])
+									{% endfor %}->fetchRow();
 		}
 		
 		return $this->_data['{{ relation.Name }}'];
