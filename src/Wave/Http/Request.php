@@ -12,6 +12,7 @@ class Request {
     const METHOD_POST = 'POST';
     const METHOD_PUT = 'PUT';
     const METHOD_DELETE = 'DELETE';
+    const METHOD_PATCH = 'PATCH';
 
     const METHOD_CLI = 'CLI';
 
@@ -108,13 +109,24 @@ class Request {
         $method = static::METHOD_CLI;
         if(isset($_SERVER['REQUEST_METHOD'])){
             $method = strtoupper($_SERVER['REQUEST_METHOD']);
+            if('POST' === $method && isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])){
+                $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+            }
             switch($method){
                 case static::METHOD_POST:
+                case static::METHOD_PATCH:
                 case static::METHOD_PUT:
                     if(isset($_SERVER['CONTENT_TYPE']))
                         $parameters = static::parseRequestBody($_SERVER['CONTENT_TYPE']);
                     else
                         $parameters = $_POST;
+                    break;
+                case static::METHOD_HEAD:
+                case static::METHOD_GET:
+                case static::METHOD_CLI:
+                    break;
+                default:
+                    throw new InvalidArgumentException("Invalid HTTP method $method");
             }
         }
 
@@ -136,6 +148,9 @@ class Request {
                 if(!is_array($data)) return array();
                 else return $data;
             case static::TYPE_FORM_ENCODED:
+                parse_str(file_get_contents('php://input'), $data);
+                if(!is_array($data)) return array();
+                else return $data;
             case static::TYPE_MULTIPART:
             default:
                 return $_POST;
@@ -171,6 +186,7 @@ class Request {
         switch($this->getMethod()){
             case self::METHOD_POST:
             case self::METHOD_PUT:
+            case self::METHOD_PATCH:
                 return array_replace($this->parameters->all(), $this->attributes->all());
             case self::METHOD_HEAD:
             case self::METHOD_GET:
@@ -239,7 +255,8 @@ class Request {
         $method = strtoupper($method);
         if(!in_array($method, array(
             static::METHOD_HEAD, static::METHOD_GET, static::METHOD_POST,
-            static::METHOD_PUT, static::METHOD_DELETE, static::METHOD_CLI
+            static::METHOD_PUT, static::METHOD_DELETE, static::METHOD_CLI,
+            static::METHOD_PATCH
         )))
             throw new InvalidArgumentException("Request method [$method] is not valid");
 
