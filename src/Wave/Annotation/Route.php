@@ -15,10 +15,6 @@ class Route extends Wave\Annotation {
 		$this->validOnSubclassesOf($class, Wave\Annotation::CLASS_CONTROLLER);
 		if(isset($this->parameters[0])){
 			$methods = explode('|', $this->parameters[0]);
-			foreach($methods as $method){
-				if(!in_array($method, Wave\Method::$ALL))
-					$this->errors[] = "Parameter 0 contains \"" . $method . "\". Valid values: " . implode(', ', Wave\Method::$ALL) . '.';
-			}
 		}
 	}
 	
