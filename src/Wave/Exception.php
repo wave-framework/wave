@@ -49,7 +49,8 @@ class Exception extends \Exception {
         if($request === null)
             $request = Request::createFromGlobals();
 
-		$response = Controller::invoke(self::$_controller, $request, array('exception' => $e));
+        $action = Action::getDefaultAction(self::$_controller);
+		$response = Controller::invoke($action, $request, array('exception' => $e));
 
         $response->prepare($request)->send();
 	}

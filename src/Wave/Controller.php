@@ -46,24 +46,19 @@ class Controller {
 
 
     /**
-     * @param string|Action   $action
-     * @param Request         $request
-     * @param array           $data
+     * @param Action $action
+     * @param Request       $request
+     * @param array         $data
+     * @param int           $invoke_type
      *
-     * @return Http\Response
      * @throws Http\Exception\UnauthorizedException
      * @throws Http\Exception\NotFoundException
      * @throws Exception
      * @throws Http\Exception\ForbiddenException
+     * @return Http\Response
+     * @throws Http\Exception\ForbiddenException
      */
-    public static final function invoke($action, Request $request, $data = array(), $invoke_type = self::INVOKE_NORMAL){
-
-        if(!($action instanceof Action)){
-            $action_method = $action;
-            $action = new Action();
-            $action->setAction($action_method);
-            $action->setRespondsWith(array('*'), false);
-        }
+    public static final function invoke(Action $action, Request $request, $data = array(), $invoke_type = self::INVOKE_NORMAL){
 
 		list($controller_class, $action_method) = explode('.', $action->getAction(), 2) + array(null, null);
         if(!isset($action_method))
@@ -92,7 +87,7 @@ class Controller {
             $controller->_data = $data;
             $controller->init();
 
-            if(!$action->canRespondWith($request->getFormat())){
+            if($invoke_type !== self::INVOKE_SUB_REQUEST && !$action->canRespondWith($request->getFormat())){
                 throw new NotFoundException(
                     'The requested action ' . $action->getAction().
                     ' can not respond with ' . $request->getFormat() .

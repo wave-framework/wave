@@ -5,10 +5,15 @@ namespace Wave;
 use Wave\Http\Exception\NotFoundException;
 use Wave\Http\Request;
 use Wave\Http\Response;
+use Wave\Router\Node;
+use Wave\Router\RoutingException;
 
 class Router {
 
-	private static $root;
+    private static $profiles;
+
+	private $root;
+    private $table;
 	
 	public $request_method;
 	public $request_uri;
@@ -19,9 +24,8 @@ class Router {
     /** @var \Wave\Http\Request $request */
     protected $request;
 
-    public function __construct($host){
-		self::$root = $this->loadRoutesCache($host);
-	}
+    /** @var \Wave\Http\Response $response */
+    protected $response;
 	
 	public static function init($host = null){
 		Hook::triggerAction('router.before_init', array(&$host));
@@ -35,6 +39,67 @@ class Router {
 		Hook::triggerAction('router.after_init', array(&$instance));
 		return $instance;
 	}
+
+    public static function getActionByName($profile, $action_name){
+        $table = static::getRoutesTableCache($profile);
+        $action_name = ltrim($action_name, '\\');
+
+        return isset($table[$action_name]) ? $table[$action_name] : null;
+    }
+
+    public static function getProfiles(){
+        if(!isset(self::$profiles))
+            self::$profiles = Config::get('deploy')->profiles;
+
+        return self::$profiles;
+    }
+
+    public static function getCacheName($host, $type){
+        return "routes/$host.$type";
+    }
+
+    public static function getRoutesTreeCache($profile){
+        $root = Cache::load(self::getCacheName($profile, 'tree'));
+        if($root == null){
+            $root = Cache::load(self::getCacheName('default', 'tree'));
+        }
+
+        if(!($root instanceof Node))
+            throw new RoutingException("Could not load route tree for profile: {$profile} nor default profile");
+
+        return $root;
+    }
+
+    public static function getRoutesTableCache($profile){
+        $table = Cache::load(self::getCacheName($profile, 'table'));
+        if($table == null){
+            $table = Cache::load(self::getCacheName('default', 'table'));
+        }
+
+        if(!is_array($table))
+            throw new RoutingException("Could not load routes table for profile: {$profile} nor default profile");
+
+        return $table;
+    }
+
+    public function __construct($profile){
+        if(isset(static::getProfiles()->$profile)){
+            $this->profile = $profile;
+        }
+        else {
+            // try looking for the profile using the baseurl instead
+            foreach(static::getProfiles() as $name => $config){
+                if($config->baseurl == $profile){
+                    $this->profile = $name;
+                    break;
+                }
+            }
+        }
+
+        if(!isset($this->profile)){
+            throw new RoutingException("Unknown routing profile {$profile}");
+        }
+    }
 
     /**
      * @param Request  $request
@@ -59,7 +124,7 @@ class Router {
         Hook::triggerAction('router.before_routing', array(&$this));
 
         $url = $this->request_method.$this->request_uri;
-        $node = self::$root->findChild($url, $this->request);
+        $node = $this->getRootNode()->findChild($url, $this->request);
 
         /** @var \Wave\Router\Action $action */
         if($node instanceof Router\Node && $action = $node->getAction()){
@@ -75,37 +140,13 @@ class Router {
         else
             throw new NotFoundException('The requested URL '.$url.' does not exist', $this->request);
 	}
-	
-	public function loadRoutesCache($host){
-		$profiles = Config::get('deploy')->profiles;
-        if(isset($profiles->$host)){
-            $this->profile = $host;
-            $host = $profiles->$host->baseurl;
-        }
-        else {
-            foreach($profiles as $name => $profile){
-                if($profile->baseurl == $host){
-                    $this->profile = $name;
-                    break;
-                }
-            }
-        }
 
-		$routes = Cache::load(self::getCacheName($host));
-		if($routes == null){
-			$defaultdomain = $profiles->default->baseurl;
-			$routes = Cache::load(self::getCacheName($defaultdomain));
-		}
-		
-		if($routes == null)
-			throw new Exception('Could not load routes for domain: '.$host.' nor default domain: '.$defaultdomain);
-		else
-			return $routes;
-	}
-	
-	public static function getCacheName($host){
-		return 'routes/'.md5($host);
-	}
+    public function getRootNode(){
+        if(!($this->root instanceof Node)){
+            $this->root = static::getRoutesTreeCache($this->profile);
+        }
+        return $this->root;
+    }
 
     /**
      * @return \Wave\Http\Request

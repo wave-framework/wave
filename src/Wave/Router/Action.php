@@ -12,7 +12,8 @@ use Wave\IAuthable;
 use Wave\Method;
 
 class Action {
-	
+
+    private $profile; // the URL profile this route lives under
 	private $baseurl; 	// the URL this route lives under (subdomain ususally)
 	private $baseroute = '/'; // a URL to prepend to relative routes in this route
 	
@@ -23,9 +24,16 @@ class Action {
 	private $response_methods = array();
 
     private $validation_schema = null;
-	
+
+    public static function getDefaultAction($action_method){
+        $action = new Action();
+        $action->setAction($action_method);
+
+        return $action;
+    }
+
 	public function __construct(){
-		$this->baseurl = self::getBaseURLFromConf('default');
+        $this->setProfile('default');
 		$this->response_methods = (array) Config::get('wave')->router->base->methods;
 	}
 	
@@ -90,25 +98,28 @@ class Action {
         }
 		return false;
 	}
-	
+
+    public function setProfile($profile){
+        $profiles = Config::get('deploy')->profiles;
+        if(!isset($profiles->$profile)){
+            throw new Exception('BaseURL profile "'.$profile.'" is not defined in deploy configuration');
+        }
+        else {
+            $this->profile = $profile;
+            $this->setBaseURL($profiles->$profile->baseurl);
+        }
+    }
+    public function getProfile() { return $this->profile; }
+
 	public function setBaseURL($baseurl){
-		$this->baseurl = self::getBaseURLFromConf($baseurl);
+		$this->baseurl = $baseurl;
 	}
 	public function getBaseURL(){ return $this->baseurl; }
 	
 	private function mergeArrays($property, array $items, $merge){
 		if($merge) $this->$property = $items + $this->$property;
 		else $this->$property = $items;
-	}
-	
-	private static function getBaseURLFromConf($profile){
-		$profiles = Config::get('deploy')->profiles;
-		if(!isset($profiles->$profile)){
-			throw new Exception('BaseURL profile "'.$profile.'" is not defined in deploy configuration');
-		}
-		else 
-			return $profiles->$profile->baseurl;
-	}
+    }
 
     public function setValidationSchema($schema) {
         $this->validation_schema = $schema;

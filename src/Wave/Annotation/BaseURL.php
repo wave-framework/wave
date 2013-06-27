@@ -18,7 +18,7 @@ class BaseURL extends Wave\Annotation {
 	}
 
 	public function apply(Wave\Router\Action &$action){
-		return $action->setBaseURL($this->parameters[0]);
+		$action->setProfile($this->parameters[0]);
 	}
 
 }

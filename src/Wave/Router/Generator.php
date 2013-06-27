@@ -11,16 +11,15 @@ class Generator {
 		$reflected_options = $reflector->execute();
 
 		$all_actions = self::buildRoutes($reflected_options);
-
-		foreach($all_actions as $domain => $actions){					
+		foreach($all_actions as $profile => $actions){
 			$route_node = new Node();
 			foreach($actions as $action){
 				foreach($action->getRoutes() as $route){
 					$route_node->addChild($route, $action);
 				}
 			}
-			
-			Wave\Cache::store(Router::getCacheName($domain), $route_node);
+            Wave\Cache::store(Router::getCacheName($profile, 'table'), $actions);
+			Wave\Cache::store(Router::getCacheName($profile, 'tree'), $route_node);
 		}
 	}
 	
@@ -45,8 +44,12 @@ class Generator {
 				
 				$route->setAction($controller['class']['name'] . '.' . $method['name']);
 				
-				if($route->hasRoutes())
-					$compiled_routes[$base_route->getBaseURL()][] = $route;
+				if($route->hasRoutes()){
+					if(isset($compiled_routes[$base_route->getProfile()][$route->getAction()])){
+                        throw new \LogicException(sprintf("Action %s is declared twice", $route->getAction()));
+                    }
+                    $compiled_routes[$base_route->getProfile()][$route->getAction()] = $route;
+                }
 			}
 		}
 		return $compiled_routes;	
