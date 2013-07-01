@@ -20,7 +20,7 @@ class Exception extends \Exception {
 		if(!class_exists($controller) || !is_subclass_of($controller, '\\Wave\\Controller')){
 			throw new \Exception("Controller $controller must be an instance of \\Wave\\Controller");
 		}
-		self::$_controller = $controller;
+		self::$_controller = "$controller.execute";
 		set_exception_handler(array('\\Wave\\Exception', 'handle'));
 
         Hook::registerHandler('router.before_routing', function(Router $router){
@@ -37,7 +37,7 @@ class Exception extends \Exception {
 			$code = intval($message);
 			$message = $this->getInternalMessage($code);
 		}
-		parent::__construct($message, $code);	
+		parent::__construct($message, $code);
 	}
 	
 	public static function handle(\Exception $e){
@@ -45,24 +45,32 @@ class Exception extends \Exception {
 		// get the channel manually so the introspection works properly.
 		Log::getChannel('exception')->addRecord(Log::ERROR, $log_message);
 
-        $request = static::$request;
-        if($request === null)
-            $request = Request::createFromGlobals();
+        try {
+            $request = static::$request;
+            if($request === null)
+                $request = Request::createFromGlobals();
 
-        $action = Action::getDefaultAction(self::$_controller);
-		$response = Controller::invoke($action, $request, array('exception' => $e));
+            $action = Action::getDefaultAction(self::$_controller);
+            $action->setRespondsWith(array('*'), false);
+    		$response = Controller::invoke($action, $request, array('exception' => $e));
 
-        $response->prepare($request)->send();
+            $response->prepare($request)->send();
+        }
+        catch(Exception $_e){
+            echo $e->__toString();
+            echo "\n\nAdditionally, the following exception occurred while trying to handle the error:\n";
+            echo $_e->__toString();
+        }
 	}
-	
-	protected function getInternalMessage($type){
 		
+	protected function getInternalMessage($type){
+	
 		switch($type){
-			case Response::STATUS_NOT_FOUND : 
+			case Response::STATUS_NOT_FOUND :
 				return 'The requested resource was not found';
-			case Response::STATUS_FORBIDDEN : 
+			case Response::STATUS_FORBIDDEN :
 				return 'You do not have permission to access the requested resource';
-			case Response::STATUS_UNAUTHORISED :  
+			case Response::STATUS_UNAUTHORISED :
 				return 'Authorisation is required to complete this action';
 			case Response::STATUS_OK :
 				return 'Request OK';
@@ -73,9 +81,9 @@ class Exception extends \Exception {
 			case Response::STATUS_MOVED_PERMANENTLY :
 			case Response::STATUS_NOT_MODIFIED :
 			case Response::STATUS_MOVED_TEMPORARILY :
-			case Response::STATUS_INPUT_REQUIRED : 
+			case Response::STATUS_INPUT_REQUIRED :
 			case Response::STATUS_EXCEPTION :
-			case Response::STATUS_SERVER_ERROR :  
+			case Response::STATUS_SERVER_ERROR :
 			case Response::STATUS_NOT_IMPLEMENTED :
 			default :
 				return 'Unknown error';
@@ -86,7 +94,7 @@ class Exception extends \Exception {
 		if(self::$_response_method == null){
 			if(PHP_SAPI === 'cli') return Response::FORMAT_CLI;
 			else return Config::get('wave')->response->default_format;
-		} 
+		}
 		else
 			return self::$_response_method;
 	}
