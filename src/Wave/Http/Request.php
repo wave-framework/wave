@@ -169,7 +169,7 @@ class Request {
      */
     protected static function parseFormat($url, $default = null){
         if(null === $default){
-            $default = Config::get('wave')->response->default_format;
+            $default = PHP_SAPI === 'cli' ? 'cli' : Config::get('wave')->response->default_format;
         }
         $path = pathinfo($url);
 
