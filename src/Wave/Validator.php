@@ -83,7 +83,9 @@ class Validator implements ArrayAccess {
                 /** @var $instance \Wave\Validator\Constraints\AbstractConstraint */
                 $instance = new $handler($field, $arguments, $this);
                 if(!$instance->evaluate()){
-                    $this->addViolation($field, $instance->getViolationPayload());
+                    $violations = $instance->getViolationPayload();
+                    if(!empty($violations))
+                        $this->addViolation($field, $violations);
                     $this->_cleaned[$field] = null;
                     break;
                 }

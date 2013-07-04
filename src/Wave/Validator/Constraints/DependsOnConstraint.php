@@ -18,15 +18,9 @@ class DependsOnConstraint extends AbstractConstraint {
         return $this->validator->getViolation($this->arguments) === null;
     }
 
-    /**
-     * @return string
-     */
-    protected function getViolationKey(){
-        return static::ERROR_DEPENDS_ON;
-    }
 
-    protected function getViolationMessage($context = 'This value'){
-        return sprintf('%s is not valid', $context);
+    public function getViolationPayload(){
+        return array();
     }
 
 }

@@ -13,7 +13,7 @@ use \Wave\Validator,
 class AnyConstraint extends AbstractConstraint {
 
     private $cleaned = null;
-    private $violation_payloads = array();
+    private $violations = array();
 
     /**
      * @return bool
@@ -30,17 +30,27 @@ class AnyConstraint extends AbstractConstraint {
             $schema = array($this->property => $constraint_group);
             $instance = new Validator($input, $schema);
 
-            if($instance->execute(true)){
+            if($instance->execute()){
                 $cleaned = $instance->getCleanedData();
                 $this->cleaned = $cleaned[$this->property];
                 return true;
             }
+            else {
+                $violations = $instance->getViolations();
+                $messages = array_intersect_key($violations[$this->property], array_flip(array('reason', 'message')));
+                if(!empty($messages))
+                    $this->violations[] = $messages;
+            }
         }
-        return false;
+        return empty($this->violations);
     }
 
     public function getViolationPayload(){
-        return array();
+        return array(
+            'reason' => 'invalid',
+            'message' => 'This value does not match any of the following conditions',
+            'conditions' => $this->violations
+        );
     }
 
     public function getCleanedData() {
