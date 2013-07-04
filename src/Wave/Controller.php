@@ -131,7 +131,7 @@ class Controller {
         if ($data === null)
             $data = $this->_data;
 
-        if(($output = Validator::validate($schema, $data)) && $output->isValid()){
+        if(($output = Validator::validate($schema, $data, true)) && $output->isValid()){
             $this->_cleaned = $output;
             return true;
         }

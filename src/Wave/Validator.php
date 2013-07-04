@@ -125,7 +125,7 @@ class Validator implements ArrayAccess {
      * @throws Validator\Exception
      * @return array|bool|\Wave\Validator\Result
      */
-    public static function validate($schema, array $input){
+    public static function validate($schema, array $input, $use_result = false){
         self::$last_errors = array();
 
         if(!array_key_exists($schema, self::$_schema_cache)) {
@@ -145,9 +145,14 @@ class Validator implements ArrayAccess {
         $instance = new self($input, self::$_schema_cache[$schema]);
 
 
-        $instance->execute();
-        return new Result($instance->getCleanedData(), $instance->getViolations(), $instance);
-
+        $result = $instance->execute();
+        if($use_result){
+            return new Result($instance->getCleanedData(), $instance->getViolations());
+        }
+        else {
+            trigger_error('Deprecated use of validator. Validator::validate() will return a Wave\\Validator\\Result object soon', E_USER_DEPRECATED);
+            return $result ? $instance->getCleanedData() : false;
+        }
     }
 
     public function getCleanedData(){
