@@ -5,6 +5,7 @@ namespace Wave;
 use Wave\Config,
     Wave\Validator\CleanerInterface,
     \ArrayAccess;
+use Wave\Validator\Result;
 
 class Validator implements ArrayAccess {
 
@@ -18,6 +19,10 @@ class Validator implements ArrayAccess {
     private $_cleaned = array();
     private $_violations = array();
 
+    /**
+     * @var array
+     * @deprecated Errors can be found in the Validator\Result object passed back from Validator::validate()
+     */
     public static $last_errors = array();
 
     /**
@@ -31,7 +36,7 @@ class Validator implements ArrayAccess {
         $this->parent_instance = $parent_instance;
     }
 
-    public function execute($merge_violations = false){
+    public function execute(){
 
         foreach($this->_schema as $field => $definition){
             $this->_cleaned[$field] = null;
@@ -89,11 +94,6 @@ class Validator implements ArrayAccess {
             }
         }
 
-        if($merge_violations)
-            self::$last_errors = array_merge(self::$last_errors, $this->_violations);
-        else
-            self::$last_errors = $this->_violations;
-
         return empty($this->_violations);
     }
 
@@ -120,9 +120,10 @@ class Validator implements ArrayAccess {
     /**
      * @param string $schema A schema file to load from the configured schema path
      * @param array $input
+     * @param bool $use_result
      *
-     * @return array|bool
      * @throws Validator\Exception
+     * @return array|bool|\Wave\Validator\Result
      */
     public static function validate($schema, array $input){
         self::$last_errors = array();
@@ -143,10 +144,9 @@ class Validator implements ArrayAccess {
 
         $instance = new self($input, self::$_schema_cache[$schema]);
 
-        if($instance->execute())
-            return $instance->getCleanedData();
-        else
-            return false;
+
+        $instance->execute();
+        return new Result($instance->getCleanedData(), $instance->getViolations(), $instance);
 
     }
 
