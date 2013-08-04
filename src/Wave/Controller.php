@@ -204,7 +204,10 @@ class Controller {
 	final private function _invoke($type){
         // if this controller is running under a sub request then just return the computed response array
         if($this->_invoke_method === self::INVOKE_SUB_REQUEST){
-            return $this->_getResponseProperties();
+            if($type === 'request')
+                return array('errors' => isset($this->_input_errors) ? $this->_input_errors : array());
+            else
+                return $this->_getResponseProperties();
         }
         else {
             $response_method = $type.strtoupper($this->_response_method);
