@@ -81,8 +81,6 @@ class Exception extends \Exception {
 			case Response::STATUS_MOVED_PERMANENTLY :
 			case Response::STATUS_NOT_MODIFIED :
 			case Response::STATUS_MOVED_TEMPORARILY :
-			case Response::STATUS_INPUT_REQUIRED :
-			case Response::STATUS_EXCEPTION :
 			case Response::STATUS_SERVER_ERROR :
 			case Response::STATUS_NOT_IMPLEMENTED :
 			default :
