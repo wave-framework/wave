@@ -32,7 +32,8 @@ class Controller {
 	protected $_response_method;
 	
 	protected $_data;
-    protected $_cleaned = array();
+    /** @var \Wave\Validator\Result */
+    protected $_cleaned;
 	protected $_action;
 	protected $_input_errors;
 
