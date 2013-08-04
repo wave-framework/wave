@@ -243,7 +243,7 @@ class Query {
 		if(!is_array($fields))
 			$fields = array($fields);
 		
-		$this->addJoinCondition(printf('USING(%s)', implode(',', $fields)));
+		$this->addJoinCondition(sprintf('USING(%s)', implode(',', $fields)));
 		return $this;
 	}
 
