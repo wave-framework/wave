@@ -26,10 +26,10 @@ class JsonResponse extends Response {
     public function prepare(Request $request){
         parent::prepare($request);
 
-        $content_type = $request->headers->get('accept', static::$default_type, true);
-        if($content_type !== static::$default_type && !in_array($content_type, static::$acceptable_types)){
-            $content_type = static::$default_type;
-        }
+        $content_types = array_map('trim', explode(',', $request->headers->get('accept', static::$default_type, true)));
+        $allowed = array_intersect($content_types, static::$acceptable_types);
+        $content_type = empty($content_types) ? static::$default_type : array_pop($allowed);
+
         $this->headers->set('Content-Type', $content_type);
         $this->headers->set('Cache-Control', 'no-cache, must-revalidate');
         $this->headers->set('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT');
