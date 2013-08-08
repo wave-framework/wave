@@ -28,7 +28,7 @@ class JsonResponse extends Response {
 
         $content_types = array_map('trim', explode(',', $request->headers->get('accept', static::$default_type, true)));
         $allowed = array_intersect($content_types, static::$acceptable_types);
-        $content_type = empty($content_types) ? static::$default_type : array_pop($allowed);
+        $content_type = empty($allowed) ? static::$default_type : array_pop($allowed);
 
         $this->headers->set('Content-Type', $content_type);
         $this->headers->set('Cache-Control', 'no-cache, must-revalidate');
