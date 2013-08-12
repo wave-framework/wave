@@ -71,12 +71,13 @@ class Action {
 	}
 	public function checkRequiredLevel(Request $request){
 		if(!empty($this->requires_level)){
-			$auth_obj = Auth::getIdentity();
-			
-			if($auth_obj instanceof IAuthable)
-				return $auth_obj->hasAccess($this->requires_level, $request);
-			else
-				return false;
+			$authorization = $request->getAuthorization();
+            if($authorization instanceof Request\AuthorizationAware)
+                return $authorization->hasAuthorization($this->requires_level, $request);
+            elseif(is_callable($authorization))
+                return $authorization($this->requires_level, $request);
+            else
+                throw new \InvalidArgumentException('Can not determine required level without authorization function');
 		}
 		else
 			return true;

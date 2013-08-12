@@ -196,6 +196,14 @@ class Request {
         }
     }
 
+    public function getAuthorization(){
+        return $this->attributes->get('_authorization');
+    }
+
+    public function setAuthorization($authorization){
+        $this->attributes->set('_authorization', $authorization);
+    }
+
     /**
      * This will search attribute, query and parameter sets for a specified argument
      *
