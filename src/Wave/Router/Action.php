@@ -7,6 +7,7 @@ namespace Wave\Router;
 use Wave\Auth;
 use Wave\Config;
 use Wave\Exception;
+use Wave\Http\Exception\UnauthorizedException;
 use Wave\Http\Request;
 use Wave\IAuthable;
 use Wave\Method;
@@ -77,7 +78,7 @@ class Action {
             elseif(is_callable($authorization))
                 return $authorization($this->requires_level, $request);
             else
-                throw new \InvalidArgumentException('Can not determine required level without authorization function');
+                throw new UnauthorizedException("Unauthorized");
 		}
 		else
 			return true;
