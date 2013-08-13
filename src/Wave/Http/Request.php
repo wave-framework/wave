@@ -205,13 +205,32 @@ class Request {
     }
 
     /**
-     * This will search attribute, query and parameter sets for a specified argument
+     * Returns whether the given parameter is found in the attributes, query or parameters
      *
      * @param $parameter
      *
+     * @return bool
+     */
+    public function has($parameter){
+
+        foreach(array('attributes', 'query', 'parameters') as $property){
+            if($this->$property->has($parameter)){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * This will search attribute, query and parameter sets for a specified argument
+     *
+     * @param $parameter
+     * @param null $default the default value if the parameter is not set
+     *
      * @return mixed
      */
-    public function get($parameter){
+    public function get($parameter, $default = null){
 
         foreach(array('attributes', 'query', 'parameters') as $property){
             if($this->$property->has($parameter)){
@@ -219,7 +238,7 @@ class Request {
             }
         }
 
-        return null;
+        return $default;
     }
 
     /**
