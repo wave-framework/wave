@@ -95,16 +95,7 @@ class Controller {
                     '. (Accepts: '.implode(', ', $action->getRespondsWith()).')', $request);
             }
             else if(!$action->checkRequiredLevel($request)){
-
-                $auth_obj = Auth::getIdentity();
-                $auth_class = Auth::getHandlerClass();
-
-                if(!in_array('Wave\IAuthable', class_implements($auth_class)))
-                    throw new Exception('A valid Wave\IAuthable class is required to use RequiresLevel annotations', Response::STATUS_SERVER_ERROR);
-                else if(!$auth_obj instanceof IAuthable)
-                    throw new UnauthorizedException('You are not authorized to view this resource');
-                else
-                    throw new ForbiddenException('The current user does not have the required level to access this page');
+                throw new UnauthorizedException('You are not authorized to view this resource');
             }
             else if($action->needsValidation() && !$controller->inputValid($action->getValidationSchema())){
                 return $controller->request();
