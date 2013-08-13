@@ -18,8 +18,19 @@ class TypeConstraint extends AbstractConstraint {
      */
     private $handler;
 
+    private $message;
+
     public function __construct($property, $arguments, Validator &$validator){
         parent::__construct($property, $arguments, $validator);
+
+        $this->message = '%s is not a valid %s';
+        if(is_array($arguments)){
+            if(isset($arguments['message'], $arguments['datatype'])){
+                $this->message = $arguments['message'];
+                $this->arguments = $arguments = $arguments['datatype'];
+            }
+            else throw new Validator\Exception("Invalid format for type constraint, must contain a [message] and [datatype]");
+        }
 
         if(is_callable($arguments)){
             $this->handler = $arguments;
@@ -55,7 +66,7 @@ class TypeConstraint extends AbstractConstraint {
         if($this->handler instanceof AbstractDatatype)
             $type = $this->handler->getType();
 
-        return sprintf('%s is not a valid %s', $context, $type);
+        return sprintf($this->message, $context, $type);
     }
 
     public function getViolationPayload(){
