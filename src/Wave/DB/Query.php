@@ -654,8 +654,17 @@ class Query {
 				$output = array();
 				foreach($this->class_aliases as $alias => $class_details){
 					$output[$alias] = array();
-					foreach($class_details['columns'] as $column => $column_alias)
-						$output[$alias][$column] = $this->_last_row[$column_alias];
+                    if($this->manual_select){
+                        foreach($this->fields as $field){
+                            $field = str_replace("$alias.", '', $field);
+                            if(isset($this->_last_row[$field]))
+                                $output[$alias][$field] = $this->_last_row[$field];
+                        }
+                    }
+                    else {
+                        foreach($class_details['columns'] as $column => $column_alias)
+                            $output[$alias][$column] = $this->_last_row[$column_alias];
+                    }
 				}
 				$this->_last_row = false;
 				return $output;
