@@ -61,12 +61,22 @@ class Validator implements ArrayAccess {
                         $is_required = call_user_func($definition['required'], $this);
                     elseif(is_string($definition['required']))
                         $is_required = isset($this->_data[$definition['required']]);
+                    elseif(is_array($definition['required'])){
+                        if(is_callable($definition['required']['value']))
+                            $is_required = call_user_func($definition['required']['value'], $this);
+                        elseif(is_string($definition['required']['value']))
+                            $is_required = isset($this->_data[$definition['required']['value']]);
+                        elseif(is_bool($definition['required']['value']))
+                            $is_required = $definition['required']['value'];
+                    }
+
                 }
                 if($is_required){
+                    $message = isset($definition['required']['message']) ? $definition['required']['message'] : 'This field is required';
                     $this->addViolation($field, array(
                         'field_name' => $field,
                         'reason' => 'missing',
-                        'message' => 'This field is required'
+                        'message' => $message
                     ));
                 }
                 // don't continue if there isn't a default value set
