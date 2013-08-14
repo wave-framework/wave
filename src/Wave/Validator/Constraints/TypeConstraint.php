@@ -24,7 +24,7 @@ class TypeConstraint extends AbstractConstraint {
         parent::__construct($property, $arguments, $validator);
 
         $this->message = '%s is not a valid %s';
-        if(is_array($arguments)){
+        if(is_array($arguments) && !is_callable($arguments)){
             if(isset($arguments['message'], $arguments['datatype'])){
                 $this->message = $arguments['message'];
                 $this->arguments = $arguments = $arguments['datatype'];
