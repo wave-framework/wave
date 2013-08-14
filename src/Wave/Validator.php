@@ -40,14 +40,6 @@ class Validator implements ArrayAccess {
 
         foreach($this->_schema as $field => $definition){
             $this->_cleaned[$field] = null;
-            if(isset($this->_data[$field]))
-                $this->_cleaned[$field] = $this->_data[$field];
-            else if(isset($definition['default'])){
-                if(is_callable($definition['default']))
-                    $this->_cleaned[$field] = call_user_func($definition['default'], $this);
-                else
-                    $this->_cleaned[$field] = $definition['default'];
-            }
 
             // manual check, if the field isn't in the data array throw an error
             // if it is a required field, otherwise just skip and continue validating the rest
@@ -79,6 +71,15 @@ class Validator implements ArrayAccess {
                 // don't continue if there isn't a default value set
                 if(!isset($definition['default']))
                     continue;
+            }
+
+            if(isset($this->_data[$field]))
+                $this->_cleaned[$field] = $this->_data[$field];
+            else if(isset($definition['default'])){
+                if(is_callable($definition['default']))
+                    $this->_cleaned[$field] = call_user_func($definition['default'], $this);
+                else
+                    $this->_cleaned[$field] = $definition['default'];
             }
 
             foreach($definition as $constraint => $arguments){
