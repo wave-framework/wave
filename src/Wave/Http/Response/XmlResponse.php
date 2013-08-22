@@ -4,9 +4,11 @@ namespace Wave\Http\Response;
 
 use Wave\Http\Request;
 use Wave\Http\Response;
+use Wave\Utils\XML;
 
 class XmlResponse extends Response {
 
+    private $data;
 
     public function prepare(Request $request){
         parent::prepare($request);
@@ -17,6 +19,22 @@ class XmlResponse extends Response {
         $this->headers->set('X-Wave-Response', 'xml');
 
         return $this;
+    }
+
+    public function setContent($data, $convert = true){
+        if($convert){
+            $this->data = $data;
+            $data = XML::encode($data);
+        }
+
+        parent::setContent($data);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getData() {
+        return $this->data;
     }
 
 }
