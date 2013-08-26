@@ -56,9 +56,9 @@ class Exception extends \Exception {
 
             $response->prepare($request)->send();
         }
-        catch(Exception $_e){
+        catch(\Exception $_e){
             echo $e->__toString();
-            echo "\n\nAdditionally, the following exception occurred while trying to handle the error:\n";
+            echo "\n\n\nAdditionally, the following exception occurred while trying to handle the error:\n\n";
             echo $_e->__toString();
         }
 	}
