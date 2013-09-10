@@ -28,7 +28,7 @@ use Wave\DB;
 *
  * Relations defined by magic accessor methods
  {% for relation in table.Relations %}
-* @property \{{ relation.ReferencedColumn.Table.getClassName(true) }} ${{ relation.Name }}
+* @property \{{ relation.ReferencedTable.getClassName(true) }} ${{ relation.Name }}
  {% endfor %}
 */
 abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
