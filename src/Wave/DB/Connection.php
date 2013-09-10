@@ -28,7 +28,7 @@ class Connection extends PDO {
 
         $options = array();
         if(isset($config->driver_options))
-            $options = (array) $config->driver_options;
+            $options = $config->driver_options->getArrayCopy();
 
 		parent::__construct($driver_class::constructDSN($config), $config->username, $config->password, $options);
 		
