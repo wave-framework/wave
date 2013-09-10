@@ -7,11 +7,12 @@
 **/
 
 namespace Wave\DB;
-use Wave,
-    Wave\DB\Driver\DriverInterface,
-    Wave\Config\Row as ConfigRow;
+use PDO;
+use Wave\DB\Driver\DriverInterface;
+use Wave\Config\Row as ConfigRow;
+use Wave\DB;
 
-class Connection extends \PDO {
+class Connection extends PDO {
 
     /** @var DriverInterface $driver_class */
 	private $driver_class;
@@ -22,13 +23,17 @@ class Connection extends \PDO {
     public function __construct(ConfigRow $config){
 
         /** @var DriverInterface $driver_class  */
-		$driver_class = Wave\DB::getDriverClass($config->driver);
+		$driver_class = DB::getDriverClass($config->driver);
 		$this->driver_class = $driver_class;
-				
-		parent::__construct($driver_class::constructDSN($config), $config->username, $config->password);
+
+        $options = array();
+        if(isset($config->driver_options))
+            $options = (array) $config->driver_options;
+
+		parent::__construct($driver_class::constructDSN($config), $config->username, $config->password, $options);
 		
 		//Override the default PDOStatement 
-		$this->setAttribute(\PDO::ATTR_STATEMENT_CLASS, array('\\Wave\\DB\\Statement', array($this)));
+		$this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('\\Wave\\DB\\Statement', array($this)));
 	
 	}
 	
