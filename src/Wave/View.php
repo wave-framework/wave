@@ -64,10 +64,12 @@ class View {
 		
 		// locate the template file
 		$template .= Config::get('wave')->view->extension;
-		
+        Hook::triggerAction('view.before_load_template', array(&$this, &$template));
 		$loaded_template = $this->twig->loadTemplate($template);
-		
-		return $loaded_template->render($data);
+        Hook::triggerAction('view.before_render', array(&$this, &$data));
+        $html = $loaded_template->render($data);
+        Hook::triggerAction('view.after_render', array(&$this, &$html));
+        return $html;
 		
 	}
 	

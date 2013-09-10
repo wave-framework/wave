@@ -130,6 +130,7 @@ class Router {
         if($node instanceof Router\Node && $action = $node->getAction()){
             Hook::triggerAction('router.before_invoke', array(&$action, &$this));
             $this->response = Controller::invoke($action, $this->request);
+            Hook::triggerAction('router.before_response', array(&$action, &$this));
             if(!($this->response instanceof Response)){
                 throw new \LogicException("Action {$action->getAction()} should return a \\Wave\\Http\\Response object", 500);
             }

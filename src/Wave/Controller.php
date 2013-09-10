@@ -86,6 +86,7 @@ class Controller {
             $data = array_replace($controller->_request->getData(), $data);
 
             $controller->_data = $data;
+            Hook::triggerAction('controller.before_init', array(&$controller));
             $controller->init();
 
             if($invoke_type !== self::INVOKE_SUB_REQUEST && !$action->canRespondWith($request->getFormat())){
@@ -101,8 +102,11 @@ class Controller {
                 return $controller->request();
             }
 
+            Hook::triggerAction('controller.before_dispatch', array(&$controller));
+            $response = $controller->{$action_method}();
+            Hook::triggerAction('controller.after_dispatch', array(&$controller, &$response));
 
-            return $controller->{$action_method}();
+            return $response;
 
 		}
 		else
@@ -217,8 +221,9 @@ class Controller {
 		if(!isset($this->_template))
 			throw new Exception('Template not set for '.$this->_response_method.' in action '.$this->_action->getAction());
 
-
+        Hook::triggerAction('controller.before_build_html', array(&$this));
         $content = View::getInstance()->render($this->_template, $this->_buildDataSet());
+        Hook::triggerAction('controller.after_build_html', array(&$this));
         return new HtmlResponse($content);
 	}
 	
@@ -230,8 +235,10 @@ class Controller {
 	
 	protected function respondDialog(){
 		$this->_template .= '-dialog';
-		
+
+        Hook::triggerAction('controller.before_build_dialog', array(&$this));
 		$html = View::getInstance()->render($this->_template, $this->_buildDataSet());
+        Hook::triggerAction('controller.after_build_dialog', array(&$this));
 		return $this->respondJSON(array('html' => $html));
 	}
 	
@@ -245,7 +252,9 @@ class Controller {
 		if(!isset($this->_status)) $this->_status = Response::STATUS_OK;
 		if(!isset($this->_message)) $this->_message = Response::getMessageForCode($this->_status);
 
+        Hook::triggerAction('controller.before_build_json', array(&$this));
         $payload = $this->_buildPayload($this->_status, $this->_message, $payload);
+        Hook::triggerAction('controller.before_build_json', array(&$this));
         return new JsonResponse($payload, $this->_status);
 	}
 	

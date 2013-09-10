@@ -78,7 +78,10 @@ class DB {
 			throw new DBException(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
 		
 		self::$num_databases++;
-		return new self($namespace, $database);
+
+		$instance = new self($namespace, $database);
+        Hook::triggerAction('db.after_init', array(&$instance));
+        return $instance;
 
 	}
 

@@ -26,7 +26,8 @@ class Hook {
 	/**
 	 *	Fire the specified action, calling all the registered handlers for that action.
 	**/
-	public static function triggerAction($action, $data){
+	public static function triggerAction($action, $data = array()){
+        Debug::getInstance()->addCheckpoint($action);
 		if(isset(self::$handlers[$action])){
 			foreach(self::$handlers[$action] as $priority => $handlers){
 				foreach($handlers as $handler){

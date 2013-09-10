@@ -4,6 +4,7 @@
 namespace Wave\Http;
 
 use Wave\Config;
+use Wave\Hook;
 
 class Response {
 
@@ -148,9 +149,10 @@ class Response {
     }
 
     public function send(){
+        Hook::triggerAction('response.before_send', array(&$this));
         $this->sendHeaders();
         $this->sendContent();
-
+        Hook::triggerAction('response.after_send', array(&$this));
         return $this;
     }
 

@@ -7,6 +7,7 @@ class Debug {
 	private $queries = array();
 	private $used_files = array();
 	private $execution_start;
+    private $checkpoints = array();
 	
 	private static $instance = null;
 
@@ -21,8 +22,12 @@ class Debug {
 		$this->execution_start = microtime(true);
 	}
 
-	public function getMemoryUsage(){
-		return round(memory_get_peak_usage()/1000, 0);
+    public function getMemoryUsage(){
+        return round(memory_get_peak_usage()/pow(1024, 2), 2);
+    }
+
+	public function getCurrentMemoryUsage(){
+		return round(memory_get_usage()/pow(1024, 2), 2);
 	}
 
 	/**
@@ -32,6 +37,18 @@ class Debug {
 	public function getExecutionTime(){
 		return round((microtime(true) - $this->execution_start)*1000, 0);
 	}
+
+    public function getCheckpoints(){
+        return $this->checkpoints;
+    }
+
+    public function addCheckpoint($name){
+        $this->checkpoints[] = array(
+            'name' => $name,
+            'time' => $this->getExecutionTime(),
+            'memory' => $this->getCurrentMemoryUsage()
+        );
+    }
 
 	/**
 	 * Adds the details of a used file in to an array
@@ -65,7 +82,9 @@ class Debug {
 		$sql = str_replace(chr(0x0A), ' ', $sql);
 		$sql = str_replace('  ', ' ', $sql);
 
-		$this->queries[] = array('success' => $success, 'time' => $time, 'sql' => $sql, 'rows' => $rows);
+		$count = array_push($this->queries, array('success' => $success, 'time' => $time, 'sql' => $sql, 'rows' => $rows));
+
+        $this->addCheckpoint('query.' . $count);
 	}
 
 
@@ -99,13 +118,14 @@ class Debug {
 	}
 	
 	public function render(){
+        Hook::triggerAction('debugger.render', array(&$this));
 		?>
 		<!--DEBUG PANEL-->
 		<style type="text/css"><?php echo self::getCSS(); ?></style>
 		<div id="_wave_debugpanel">
 	        <div id="_wave_debugclosetrigger" class="item" style="margin-top:-1px;border-right:none;"><div id="_wave_debugclose"> x </div></div>
 	        <div class="item"><div class="_wave_debugicon" id="_wave_debugclock"></div><div class="itemlabel"><?php echo $this->getExecutionTime(); ?>ms</div></div>
-	        <div class="item"><div class="_wave_debugicon" id="_wave_debugmemory"></div><div class="itemlabel"><?php echo $this->getMemoryUsage(); ?>kb</div></div>
+	        <div class="item"><div class="_wave_debugicon" id="_wave_debugmemory"></div><div class="itemlabel"><?php echo $this->getMemoryUsage(); ?>mb</div></div>
 	        <div class="item"><div class="_wave_debugicon" id="_wave_debugdb"></div><div class="itemlabel"><?php echo $this->getNumberOfQueries(); ?></div></div>
 	        <div class="item"><div class="_wave_debugicon" id="_wave_debugfiles"></div><div class="itemlabel"><?php echo $this->getNumberOfFiles(); ?></div></div>
 	        <div style="margin-bottom:-8px; visibility:hidden;" id="_wave_debugitemdetails"></div>
@@ -114,19 +134,21 @@ class Debug {
 		<script type="text/javascript">
 		//      <![CDATA[
 		(function(){
-	        var details = new Array();
+	        var details=[];
 	        var oldrow;
 	        var contents;
 	        
-	        details['_wave_debugdb'] = "<?php foreach($this->getQueries() as $query): ?><div class=\"itemrow\" style=\"color:<?php echo $query['colour']; ?>;\">[:<?php echo $query['number']; ?>]&nbsp;&nbsp;<?php echo $query['sql']; ?><span class=\"right\">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<?php echo $query['time']; ?>,&nbsp;<?php echo $query['rows']; ?>)</span></div><?php endforeach; ?>";
+	        details['_wave_debugdb'] = "<?php foreach($this->getQueries() as $query): ?><div class=\"itemrow query\" style=\"color:<?php echo $query['colour']; ?>;\">[:<?php echo $query['number']; ?>]  <?php echo $query['sql']; ?><span class=\"r\">     (<?php echo $query['time']; ?>, <?php echo $query['rows']; ?>)</span></div><?php endforeach; ?>";
 	        
-	        details['_wave_debugfiles'] = '<?php foreach($this->getUsedFiles() as $file): ?><div class="itemrow">[<?php echo $file['number']; ?>]&nbsp;&nbsp;\'<?php echo $file['filename']; ?>\'</div><?php endforeach; ?>';
+	        details['_wave_debugfiles'] = '<?php foreach($this->getUsedFiles() as $file): ?><div class="itemrow">[<?php echo $file['number']; ?>]  \'<?php echo $file['filename']; ?>\'</div><?php endforeach; ?>';
+
+            details['_wave_debugcp'] = '<?php foreach($this->getCheckpoints() as $checkpoint): ?><div class="itemrow"><?php echo str_pad($checkpoint['name'], 30, ' '); ?> => <?php echo str_pad($checkpoint['memory'] . 'mb', 7, ' '); ?> | <?php echo str_pad($checkpoint['time'] . 'ms', 7, ' '); ?></div><?php endforeach; ?>';
+
+            bind();
 	        
-	        bind();
-	        
-	        function showDetails(row){
+	        function showDetails(row_id){
 	                var itemdetails = document.getElementById("_wave_debugitemdetails");
-	                if(itemdetails.style.height == "auto" && row == oldrow){
+	                if(itemdetails.style.height == "auto" && oldrow == row_id){
 	                        itemdetails.style.height = "0px";
 	                        itemdetails.style.marginBottom = "-8px";
 	                        itemdetails.style.visibility = "hidden";
@@ -135,8 +157,8 @@ class Debug {
 	                        itemdetails.style.height = "auto";
 	                        itemdetails.style.marginBottom = "0px";
 	                        itemdetails.style.visibility = "visible";
-	                        itemdetails.innerHTML = details[row.id]
-	                        oldrow = row
+	                        itemdetails.innerHTML = details[row_id];
+	                        oldrow = row_id
 	                }
 	        }
 	        function hide(){
@@ -153,9 +175,13 @@ class Debug {
 	        
 	        function bind(){
 	        	var e_db = document.getElementById('_wave_debugdb'),
-		        	e_fi = document.getElementById('_wave_debugfiles');
-		        e_db.onclick = function() { showDetails(e_db); }
-		        e_fi.onclick = function() { showDetails(e_fi); };
+		        	e_fi = document.getElementById('_wave_debugfiles'),
+                    e_ti = document.getElementById('_wave_debugclock'),
+                    e_me = document.getElementById('_wave_debugmemory');
+		        e_db.onclick = function() { showDetails(e_db.id); };
+		        e_fi.onclick = function() { showDetails(e_fi.id); };
+                e_ti.onclick = function() { showDetails('_wave_debugcp'); };
+                e_me.onclick = function() { showDetails('_wave_debugcp'); };
 		        
 		        document.getElementById('_wave_debugclosetrigger').onclick = hide;
 	        }
@@ -183,8 +209,8 @@ div#_wave_debugpanel .item{float:right; padding:0 5px 0 5px; border-right: solid
 div#_wave_debugpanel .item .itemlabel{margin:1px 0 0 3px; float:left;}
 
 div#_wave_debugitemdetails{float:left; clear:both; margin-top: 5px; font-size:11px; width:100%; overflow: hidden; background-color: #EEEEEE; border-top:#888888 solid 1px; padding-bottom:3px;}
-div#_wave_debugitemdetails .itemrow{font-family:monospace; float:left; clear:both; padding:3px 5px 0 5px;}
-div#_wave_debugitemdetails .right { display:block; }
+div#_wave_debugitemdetails .itemrow{font-family:monospace; float:left; clear:both; padding:3px 5px 0 5px;white-space: pre-wrap;}
+div#_wave_debugitemdetails .r { display:block; }
 
 div#_wave_debugclose{background-color:#DDDDDD; padding:2px;}
 div#_wave_debugclose:hover{cursor: pointer; background-color: #CCCCCC;}
