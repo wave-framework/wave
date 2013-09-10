@@ -33,7 +33,8 @@ class UniqueConstraint extends ExistsConstraint {
     }
 
     protected function getViolationMessage($context = 'This value'){
-        return sprintf('%s is not unique', $context);
+        $message = isset($this->message) ? $this->message : '%s is not unique';
+        return sprintf($message, $context);
     }
 
 }
