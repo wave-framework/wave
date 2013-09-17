@@ -14,6 +14,7 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
     const ERROR_NOT_EXISTS = 'not_exists';
 
     protected $type = 'exists';
+    protected $message = null;
     private $instance = null;
 
     public function __construct($property, $arguments, Validator &$validator){
@@ -22,6 +23,7 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
 
         parent::__construct($property, $arguments, $validator);
 
+        $this->message = isset($arguments['message']) ? $arguments['message'] : null;
         $this->instance = DB::get()->from($this->arguments['model'])
             ->where($this->arguments['property'] . ' = ?', $this->data)
             ->fetchRow();
@@ -46,7 +48,8 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
     }
 
     protected function getViolationMessage($context = 'This value'){
-        return sprintf('%s does not exist', $context);
+        $message = isset($this->message) ? $this->message : '%s does not exist';
+        return sprintf($message, $context);
     }
 
     public function getViolationPayload(){
