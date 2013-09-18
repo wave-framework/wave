@@ -19,7 +19,7 @@ class Debug {
 	}
 	
 	public function __construct(){
-		$this->execution_start = microtime(true);
+		$this->resetExecutionTime();
 	}
 
     public function getMemoryUsage(){
@@ -37,6 +37,10 @@ class Debug {
 	public function getExecutionTime(){
 		return round((microtime(true) - $this->execution_start)*1000, 0);
 	}
+
+    public function resetExecutionTime(){
+        $this->execution_start = microtime(true);
+    }
 
     public function getCheckpoints(){
         return $this->checkpoints;
