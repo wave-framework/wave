@@ -27,7 +27,7 @@ use Wave\DB;
  {% endfor %}
 *
  * Relations defined by magic accessor methods
- {% for relation in table.Relations %}
+ {% for relation in table.Relations if relation.Type != constant('\\Wave\\DB\\Relation::RELATION_UNKNOWN') %}
 * @property \{{ relation.ReferencedTable.getClassName(true) }} ${{ relation.Name }}
  {% endfor %}
 */
@@ -66,7 +66,7 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 	
 	//Relations
 	protected static $_relations = array(
-		{% for relation in table.Relations %}
+		{% for relation in table.Relations if relation.Type != constant('\\Wave\\DB\\Relation::RELATION_UNKNOWN') %}
 		
 		//{{ relation.Description }}
 		'{{ relation.Name }}' => array(
@@ -81,7 +81,7 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 			)
 			{% endif %}
 			
-		){% if not loop.last %},{% endif %}
+		),
 
 	{% endfor %});
 
