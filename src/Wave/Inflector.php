@@ -127,8 +127,15 @@ class Inflector {
     }
     
     public static function camelize($string, $suffix_to_remove = ''){
-    	
-		return str_replace(' ', '', ucwords(strtr(rtrim($string, $suffix_to_remove), '_', ' ')));   
+
+	    $camelized = '';
+		$words = preg_split('/([^a-zA-Z])/', rtrim($string, $suffix_to_remove), -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+		
+		foreach($words as $word)
+			if(!in_array($word, array('_', ' ')))
+				$camelized .= ucfirst($word);
+				
+		return $camelized;   
     }
     
  }
