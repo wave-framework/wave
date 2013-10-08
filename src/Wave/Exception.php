@@ -42,6 +42,8 @@ class Exception extends \Exception {
 	
 	public static function handle(\Exception $e){
         try {
+            Hook::triggerAction('exception.handle', array(&$e));
+
             $log_message = sprintf('%-4s %s', "({$e->getCode()})", $e->getMessage());
             // get the channel manually so the introspection works properly.
             Log::getChannel('exception')->addRecord(Log::ERROR, $log_message);

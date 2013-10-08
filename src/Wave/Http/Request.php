@@ -4,6 +4,7 @@ namespace Wave\Http;
 
 use InvalidArgumentException;
 use Wave\Config;
+use Wave\Router\Action;
 
 class Request {
 
@@ -25,6 +26,11 @@ class Request {
     private $method;
 
     private $format;
+
+    /**
+     * @var \Wave\Router\Action $action
+     */
+    private $action;
 
     /**
      * Arguments passed in via a query string
@@ -55,7 +61,6 @@ class Request {
      * @var \Wave\Http\HeaderBag $headers
      */
     public $headers;
-
 
     /**
      * @var ServerBag $server
@@ -391,6 +396,20 @@ class Request {
      */
     public function setFormat($format) {
         $this->format = $format;
+    }
+
+    /**
+     * @return Action
+     */
+    public function getAction() {
+        return $this->action;
+    }
+
+    /**
+     * @param Action $action
+     */
+    public function setAction(Action $action) {
+        $this->action = $action;
     }
 
 }

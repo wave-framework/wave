@@ -129,6 +129,7 @@ class Router {
         /** @var \Wave\Router\Action $action */
         if($node instanceof Router\Node && $action = $node->getAction()){
             Hook::triggerAction('router.before_invoke', array(&$action, &$this));
+            $this->request->setAction($action);
             $this->response = Controller::invoke($action, $this->request);
             Hook::triggerAction('router.before_response', array(&$action, &$this));
             if(!($this->response instanceof Response)){
