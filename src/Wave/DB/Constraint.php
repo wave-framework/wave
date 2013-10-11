@@ -34,7 +34,8 @@ class Constraint {
      * @param Column $column
      */
     public function addColumn(Column $column){
-		$this->columns[] = $column;
+        if(!in_array($column, $this->columns))
+		    $this->columns[] = $column;
 	}
 
     /**

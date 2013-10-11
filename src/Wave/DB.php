@@ -133,7 +133,7 @@ class DB {
      */
     public static function getAll(){
 
-		$databases = \Wave\Config::get('db')->databases;
+		$databases = Config::get('db')->databases;
 		foreach($databases as $namespace => $modes)
 			self::get($namespace);
 		
@@ -151,7 +151,7 @@ class DB {
      */
     public static function getByDatabaseName($name){
 		
-		$databases = \Wave\Config::get('db')->databases;
+		$databases = Config::get('db')->databases;
 		foreach($databases as $namespace => $modes)
 			foreach($modes as $mode)
 				if($mode['database'] === $name)
@@ -159,6 +159,23 @@ class DB {
 		
 		return null;
 	}
+
+    public static function getByConfig($config_options) {
+
+        $databases = Config::get('db')->databases;
+        foreach($databases as $namespace => $modes){
+            foreach($modes as $mode){
+                foreach($config_options as $option => $value){
+                    if($mode[$option] !== $value)
+                        continue 2;
+                }
+                return self::get($namespace);
+            }
+        }
+
+        return null;
+
+    }
 
     /**
      * Returns the tables list, refreshing it if the $cache parameter is false
@@ -201,7 +218,7 @@ class DB {
      */
     public static function getDefaultNamespace(){
 		
-		foreach(\Wave\Config::get('db')->databases as $ns => $database)
+		foreach(Config::get('db')->databases as $ns => $database)
 			return $ns;
 		
 	}
@@ -279,6 +296,13 @@ class DB {
 	}
 
     /**
+     * @return mixed
+     */
+    public function getSchema(){
+        return $this->config->schema;
+    }
+
+    /**
      * Alias to \Wave\DB\Query::from
      *
      * @param      $from
@@ -319,13 +343,24 @@ class DB {
      *
      * @return \PDOStatement
      */
-    public function basicStatement($sql, array $params = array()){
+    public function statement($sql, array $params = array()){
         $statement = $this->connection->prepare($sql);
         $statement->execute( $params );
 
         return $statement;
     }
 
+    /**
+     * @deprecated Because MC doesn't like this name
+		
+     *
+     * @param $sql
+     * @param array $params
+     * @return \PDOStatement
+     */
+    public function basicStatement($sql, array $params = array()){
+        return $this->statement($sql, $params);
+    }
 
     /**
      * Execute an insert query for an object.
@@ -341,18 +376,23 @@ class DB {
 		
 		$fields = $params = $placeholders = array();
         $object_data = $object->_getData();
-		foreach($object->_getFields(false) as $object_field){
+		foreach($object->_getFields(true) as $object_field => $field_properties){
             $object_value = $object_data[$object_field];
-			$fields[] = $database->escape($object_field);
-			$params[] = $database->valueToSQL($object_value);
-			$placeholders[] = '?';
+
+            $fields[] = $database->escape($object_field);
+            if($object_value === $field_properties['default'] && $field_properties['serial'] === true){
+                $placeholders[] = 'DEFAULT';
+            }
+            else {
+                $params[] = $database->valueToSQL($object_value);
+                $placeholders[] = '?';
+            }
 		}
 				
 		$sql = sprintf('INSERT INTO %s.%s (%s) VALUES (%s);', $database->escape($object::_getDatabaseName()), 
 															  $database->escape($object::_getTableName()), 
 															  implode(',', $fields), 
 															  implode(',', $placeholders));
-		
 		$connection->prepare($sql)->execute($params);
 		
 		$liid = intval($connection->lastInsertId());
@@ -393,7 +433,7 @@ class DB {
 			$params = array_merge($params, $value);
 		}
 				
-		$sql = sprintf('UPDATE %s.%s SET %s WHERE %s LIMIT 1;', $database->escape($object::_getDatabaseName()), 
+		$sql = sprintf('UPDATE %s.%s SET %s WHERE %s;', $database->escape($object::_getDatabaseName()),
 																$database->escape($object::_getTableName()), 
 																implode(',', $updates), 
 																implode(' AND ', $criteria));
