@@ -31,8 +31,9 @@ abstract class Annotation {
                 // attempt to explode the argument into a key:value
                 list($k, $value) = explode(':', $argument) + array(null, null);
                 // no value means it was just a plain argument, so just clean it and insert as normal
+                $k = trim($k, ' \'"');
                 if($value === null){
-                    $arguments[] = trim($k, ' \'"');
+                    $arguments[] = $k;
                 }
                 else {
                     $arguments[$k] = trim($value, ' \'"');
