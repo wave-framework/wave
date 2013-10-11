@@ -27,8 +27,8 @@
 
         if($remove_relation){
             $relation = Wave\DB::get('{{ relation.ReferencedTable.Database.getNamespace(false) }}')->from('{{ relation.ReferencedTable.ClassName }}', $from_alias)
-                                {% for column in relation.LocalColumns %}->{% if loop.first %}where{% else %}and{% endif %}("$from_alias.{{ column.getName(true) }} = ?", $this->_data['{{ relation.LocalColumns[loop.index0].Name }}'])
-                                  {% endfor %}{% for column in relation.TargetRelation.ReferencedColumns %}->and("$from_alias.{{ column.getName(true) }} = ?", $obj->{{ column.Name }})
+                                {% for column in relation.LocalColumns %}->{% if loop.first %}where{% else %}and{% endif %}("$from_alias.{{ column.getName(true)|addslashes }} = ?", $this->_data['{{ relation.LocalColumns[loop.index0].Name }}'])
+                                  {% endfor %}{% for column in relation.TargetRelation.ReferencedColumns %}->and("$from_alias.{{ column.getName(true)|addslashes }} = ?", $obj->{{ column.Name }})
                                 {% endfor %}->fetchRow();
 
             if($relation instanceof \Wave\DB\Model){
@@ -48,8 +48,8 @@
 		if(!isset($this->_data['{{ relation.Name }}'])){
 			$this->_data['{{ relation.Name }}'] = Wave\DB::get('{{ relation.ReferencedTable.Database.getNamespace(false) }}')->from('{{ relation.TargetRelation.ReferencedTable.ClassName }}', $from_alias)
 									->leftJoin('{{ relation.ReferencedTable.ClassName }}', $join_alias)
-										{% for column in relation.TargetRelation.LocalColumns %}->{% if loop.first %}on{% else %}and{% endif %}("$join_alias.{{ column.getName(true) }} = $from_alias.{{ relation.TargetRelation.ReferencedColumns[loop.index0].getName(true) }}")
-									{% endfor %}{% for column in relation.ReferencedColumns %}->{% if loop.first %}where{% else %}and{% endif %}("$join_alias.{{ column.getName(true) }} = ?", $this->_data['{{ relation.LocalColumns[loop.index0].Name }}'])
+										{% for column in relation.TargetRelation.LocalColumns %}->{% if loop.first %}on{% else %}and{% endif %}("$join_alias.{{ column.getName(true)|addslashes }} = $from_alias.{{ relation.TargetRelation.ReferencedColumns[loop.index0].getName(true)|addslashes }}")
+									{% endfor %}{% for column in relation.ReferencedColumns %}->{% if loop.first %}where{% else %}and{% endif %}("$join_alias.{{ column.getName(true)|addslashes }} = ?", $this->_data['{{ relation.LocalColumns[loop.index0].Name }}'])
 									{% endfor %}->fetchAll();
 		}
 		

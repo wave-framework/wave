@@ -63,12 +63,26 @@ class Generator {
     private static function initTwig(){
 		
 		$loader = new Twig_Loader_Filesystem(__DIR__.DS.'Generator'.DS.'Templates');
-		self::$twig = new Twig_Environment($loader);
+		self::$twig = new Twig_Environment($loader, array('autoescape' => false));
 		self::$twig->addFilter('addslashes', new \Twig_Filter_Function('addslashes'));
 		self::$twig->addFilter('implode', new \Twig_Filter_Function('implode'));
 		self::$twig->addFilter('singularize', new \Twig_Filter_Function('\\Wave\\Inflector::singularize'));
+        self::$twig->addFilter('formatType', new \Twig_Filter_Function('\\Wave\\DB\\Generator::formatTypeForSource'));
         self::$twig->addGlobal('baseModelClass', static::$baseModelClass);
 	}
+
+    public static function formatTypeForSource($type){
+
+        if(null === $type)
+            return "null";
+        else if(is_int($type) || is_float($type))
+            return "$type";
+        else if (is_bool($type))
+            return $type ? "true" : "false";
+        else
+            return "'$type'";
+
+    }
 
     /**
      * @param Wave\DB $database

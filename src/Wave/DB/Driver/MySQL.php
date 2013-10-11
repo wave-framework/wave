@@ -87,6 +87,7 @@ class MySQL extends AbstractDriver implements DriverInterface {
 										self::translateSQLNullable($cached_row['IS_NULLABLE']),
 										self::translateSQLDataType($cached_row['DATA_TYPE']),
 										$cached_row['COLUMN_DEFAULT'],
+										$cached_row['EXTRA'] === 'auto_increment',
 										$cached_row['COLUMN_TYPE'],
 										$cached_row['EXTRA'],
 										$cached_row['COLUMN_COMMENT']);
