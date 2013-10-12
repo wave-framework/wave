@@ -131,6 +131,12 @@ class MySQL extends AbstractDriver implements DriverInterface {
 				$referenced_column = $referenced_db->getColumn($cached_row['REFERENCED_TABLE_NAME'], $cached_row['REFERENCED_COLUMN_NAME']);
 				//-----
 				
+				if($cached_row['REFERENCED_TABLE_SCHEMA'] != $cached_row['TABLE_SCHEMA']){
+					//print_r($cached_row);
+					//exit;
+				}
+				
+				
 				$relation = DB\Relation::create($local_column, $referenced_column, $cached_row['CONSTRAINT_NAME'], isset($cached_row['REVERSE']));
 				
 				if($relation !== null)
@@ -155,6 +161,9 @@ class MySQL extends AbstractDriver implements DriverInterface {
 		foreach($relation_cache as $relation){
 
 			$column = $table->getDatabase()->getColumn($relation['TABLE_NAME'], $relation['COLUMN_NAME']);
+			
+			if($column === null)
+				continue;
 			
 			if(!isset($constraints[$relation['CONSTRAINT_NAME']])){
 				$constraints[$relation['CONSTRAINT_NAME']] = new DB\Constraint($column, self::translateSQLConstraintType($relation['CONSTRAINT_TYPE']), $relation['CONSTRAINT_NAME']);

@@ -186,6 +186,10 @@ class DB {
     public function getColumn($table, $column){
 		
 		$tables = $this->getTables();
+		
+		if(!isset($tables[$table]))
+			return null;
+					
 		$table = $tables[$table];
 		$columns = $table->getColumns();
 		
