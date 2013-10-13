@@ -7,7 +7,7 @@ use \Wave\Validator,
     \Wave\Validator\Datatypes\AbstractDatatype,
     \Wave\Validator\CleanerInterface;
 
-class TypeConstraint extends AbstractConstraint {
+class TypeConstraint extends AbstractConstraint implements CleanerInterface {
 
     const ERROR_INVALID = 'invalid';
 
@@ -29,7 +29,7 @@ class TypeConstraint extends AbstractConstraint {
                 $this->message = $arguments['message'];
                 $this->arguments = $arguments = $arguments['datatype'];
             }
-            else throw new Validator\Exception("Invalid format for type constraint, must contain a [message] and [datatype]");
+            else throw new \InvalidArgumentException("Invalid format for type constraint, must contain a [message] and [datatype]");
         }
 
         if(is_callable($arguments)){
@@ -38,12 +38,12 @@ class TypeConstraint extends AbstractConstraint {
         else if(is_string($arguments)) {
             $handler_class = sprintf(self::DATATYPE_CLASS_MASK, ucfirst($arguments));
             if(!class_exists($handler_class))
-                throw new \Wave\Validator\Exception("'type' handler '$arguments' is not valid for '$property'");
+                throw new \InvalidArgumentException("'type' handler '$arguments' is not valid for '$property'");
 
             $this->handler = new $handler_class($this->data);
         }
         else {
-            throw new \Wave\Validator\Exception("Invalid 'type' specified for $property");
+            throw new \InvalidArgumentException("Invalid 'type' specified for $property");
         }
     }
 

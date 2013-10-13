@@ -1,13 +1,10 @@
 <?php
 
-
-
 namespace Wave\Validator\Constraints;
 
-use Wave\Validator,
-    Wave\Validator\CleanerInterface;
+use Wave\Validator;
 
-abstract class AbstractConstraint implements CleanerInterface {
+abstract class AbstractConstraint {
 
     const ERROR_INVALID = 'invalid';
 
@@ -62,7 +59,4 @@ abstract class AbstractConstraint implements CleanerInterface {
         );
     }
 
-    public function getCleanedData(){
-        return $this->data;
-    }
 }

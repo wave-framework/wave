@@ -13,6 +13,7 @@ use Wave\Utils\JSON;
 use Wave\Utils\XML;
 use Wave\Http\Request;
 use Wave\Http\Response;
+use Wave\Validator\Exception\InvalidInputException;
 
 class Controller {
 
@@ -103,9 +104,15 @@ class Controller {
             }
 
             Hook::triggerAction('controller.before_dispatch', array(&$controller));
-            $response = $controller->{$action_method}();
-            Hook::triggerAction('controller.after_dispatch', array(&$controller, &$response));
+            try {
+                $response = $controller->{$action_method}();
+            }
+            catch(InvalidInputException $e){
+                $controller->_input_errors = $e->getViolations();
+                $response = $controller->request();
+            }
 
+            Hook::triggerAction('controller.after_dispatch', array(&$controller, &$response));
             return $response;
 
 		}

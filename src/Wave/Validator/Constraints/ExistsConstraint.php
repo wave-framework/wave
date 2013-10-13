@@ -19,7 +19,7 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
 
     public function __construct($property, $arguments, Validator &$validator){
         if(!is_array($arguments) || !isset($arguments['model']) || !isset($arguments['property']))
-            throw new Exception("[{$this->type}] constraint requires a model and property to be declared");
+            throw new \InvalidArgumentException("[{$this->type}] constraint requires a model and property to be declared");
 
         parent::__construct($property, $arguments, $validator);
 

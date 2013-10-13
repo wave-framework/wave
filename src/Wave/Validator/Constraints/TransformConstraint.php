@@ -11,9 +11,13 @@ use Wave\DB,
 
 class TransformConstraint extends AbstractConstraint implements CleanerInterface {
 
+    protected $key;
+    protected $value;
+
+
     public function __construct($property, $arguments, Validator &$validator){
         if(!is_callable($arguments))
-            throw new Exception('The argument passed to [transform] must be callable');
+            throw new \InvalidArgumentException('The argument passed to [transform] must be callable');
 
         parent::__construct($property, $arguments, $validator);
     }
@@ -33,5 +37,7 @@ class TransformConstraint extends AbstractConstraint implements CleanerInterface
     }
 
 
-
+    public function getCleanedData() {
+       return $this->data;
+    }
 }

@@ -19,7 +19,7 @@ class MapConstraint extends AbstractConstraint implements CleanerInterface {
         parent::__construct($property, $arguments, $validator);
 
         if(!is_array($this->data))
-            throw new Exception("[map] constraint requires an array of input data");
+            throw new \InvalidArgumentException("[map] constraint requires an array of input data");
     }
 
     /**

@@ -2,14 +2,19 @@
 
 namespace Wave;
 
-use Wave\Config,
-    Wave\Validator\CleanerInterface,
-    \ArrayAccess;
+use ArrayAccess;
+use Wave\Config;
+use Wave\Validator\CleanerInterface;
+use Wave\Validator\Exception\InvalidConstraintException;
+use Wave\Validator\Exception\InvalidInputException;
+use Wave\Validator\Exception\ValidationException;
 use Wave\Validator\Result;
 
 class Validator implements ArrayAccess {
 
     const CONSTRAINT_CLASS_MASK = "\\Wave\\Validator\\Constraints\\%sConstraint";
+
+    private static $use_exceptions = false;
 
     private static $_schema_cache = array();
     private $_schema;
@@ -39,7 +44,7 @@ class Validator implements ArrayAccess {
     public function execute(){
 
         foreach($this->_schema as $field => $definition){
-            $this->_cleaned[$field] = null;
+            $this->unsetCleanedData($field);
 
             // manual check, if the field isn't in the data array throw an error
             // if it is a required field, otherwise just skip and continue validating the rest
@@ -74,19 +79,19 @@ class Validator implements ArrayAccess {
             }
 
             if(isset($this->_data[$field]))
-                $this->_cleaned[$field] = $this->_data[$field];
+                $this->setCleanedData($field, $this->_data[$field]);
             else if(isset($definition['default'])){
                 if(is_callable($definition['default']))
-                    $this->_cleaned[$field] = call_user_func($definition['default'], $this);
+                    $this->setCleanedData($field, call_user_func($definition['default'], $this));
                 else
-                    $this->_cleaned[$field] = $definition['default'];
+                    $this->setCleanedData($field, $definition['default']);
             }
 
             foreach($definition as $constraint => $arguments){
                 if($constraint === 'required') continue;
                 $handler = self::translateConstraintKeyToClass($constraint);
                 if(!class_exists($handler))
-                    throw new \Wave\Validator\Exception("Handler for '$constraint' does not exist");
+                    throw new InvalidConstraintException("Handler for '$constraint' does not exist");
 
                 /** @var $instance \Wave\Validator\Constraints\AbstractConstraint */
                 $instance = new $handler($field, $arguments, $this);
@@ -94,12 +99,13 @@ class Validator implements ArrayAccess {
                     $violations = $instance->getViolationPayload();
                     if(!empty($violations))
                         $this->addViolation($field, $violations);
-                    $this->_cleaned[$field] = null;
+
+                    $this->unsetCleanedData($field);
                     break;
                 }
 
                 if($instance instanceof CleanerInterface){
-                    $this->_cleaned[$field] = $instance->getCleanedData();
+                    $this->setCleanedData($field, $instance->getCleanedData());
                 }
             }
         }
@@ -130,13 +136,15 @@ class Validator implements ArrayAccess {
     /**
      * @param string $schema A schema file to load from the configured schema path
      * @param array $input
+     *
      * @param bool $use_result
      *
-     * @throws Validator\Exception
+     * @throws Validator\Exception\ValidationException
+     * @throws Validator\Exception\InvalidInputException
+     *
      * @return array|bool|\Wave\Validator\Result
      */
     public static function validate($schema, array $input, $use_result = false){
-        self::$last_errors = array();
 
         if(!array_key_exists($schema, self::$_schema_cache)) {
             $schema_name = strtr($schema, '_', DIRECTORY_SEPARATOR);
@@ -148,21 +156,37 @@ class Validator implements ArrayAccess {
                 self::$_schema_cache[$schema] = &$schema_data['fields'];
             }
             else {
-                throw new Validator\Exception("Could not load schema [$schema] from file ($schema_path)");
+                throw new ValidationException("Could not load schema [$schema] from file ($schema_path)");
             }
         }
 
         $instance = new self($input, self::$_schema_cache[$schema]);
-
-
         $result = $instance->execute();
-        if($use_result){
+
+        if($use_result || $result){
             return new Result($instance->getCleanedData(), $instance->getViolations());
+        }
+        else if(self::$use_exceptions) {
+            throw new InvalidInputException($instance->getViolations());
         }
         else {
             trigger_error('Deprecated use of validator. Validator::validate() will return a Wave\\Validator\\Result object soon', E_USER_DEPRECATED);
             return $result ? $instance->getCleanedData() : false;
         }
+
+    }
+
+    public static function useExceptions($use_exceptions = false){
+        self::$use_exceptions = $use_exceptions;
+    }
+
+    public function setCleanedData($field, $value){
+        $this->_cleaned[$field] = $value;
+    }
+
+    public function unsetCleanedData($field, $remove = false){
+        if($remove) unset($this->_cleaned[$field]);
+        else $this->_cleaned[$field] = null;
     }
 
     public function getCleanedData(){
@@ -186,10 +210,10 @@ class Validator implements ArrayAccess {
     }
 
     public function offsetSet($offset, $value) {
-        throw new \Wave\Exception("Setting validator input data is not supported");
+        throw new \BadMethodCallException("Setting validator input data is not supported");
     }
 
     public function offsetUnset($offset) {
-        throw new \Wave\Exception("Unsetting validator input data is not supported");
+        throw new \BadMethodCallException("Unsetting validator input data is not supported");
     }
 }

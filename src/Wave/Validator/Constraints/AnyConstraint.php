@@ -10,18 +10,19 @@ use \Wave\Validator,
 /**
  * Reads an array of sub-constraints and returns true if any one of them returns true.
  */
-class AnyConstraint extends AbstractConstraint {
+class AnyConstraint extends AbstractConstraint implements CleanerInterface {
 
     private $cleaned = null;
     private $violations = array();
 
     /**
+     * @throws \InvalidArgumentException
      * @return bool
      */
     public function evaluate(){
 
         if(!is_array($this->arguments))
-            throw new Exception("[any] constraint requires an array argument");
+            throw new \InvalidArgumentException("[any] constraint requires an array argument");
         if(!isset($this->arguments[0]))
             $this->arguments = array($this->arguments);
 

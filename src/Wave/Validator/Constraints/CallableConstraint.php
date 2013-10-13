@@ -7,8 +7,9 @@ use \Wave\DB,
     \Wave\DB\Model,
     \Wave\Validator,
     \Wave\Validator\Exception;
+use Wave\Validator\CleanerInterface;
 
-class CallableConstraint extends AbstractConstraint {
+class CallableConstraint extends AbstractConstraint implements CleanerInterface {
 
     const ERROR_CALLABLE = 'callable';
 
@@ -17,7 +18,7 @@ class CallableConstraint extends AbstractConstraint {
 
     public function __construct($property, $arguments, Validator &$validator){
         if(!is_callable($arguments))
-            throw new Exception('The argument passed to [callable] must be callable');
+            throw new \InvalidArgumentException('The argument passed to [callable] must be callable');
 
         parent::__construct($property, $arguments, $validator);
         $this->cleaned = $this->data;
@@ -46,4 +47,7 @@ class CallableConstraint extends AbstractConstraint {
         return sprintf($this->message, $context);
     }
 
+    public function getCleanedData() {
+        return $this->data;
+    }
 }

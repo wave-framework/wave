@@ -10,7 +10,7 @@ class PropertyEqualsConstraint extends AbstractConstraint {
 
     public function __construct($property, $arguments, Validator &$validator){
         if(!is_array($arguments) || !isset($arguments['property']) || !isset($arguments['value']))
-            throw new Exception("[property_equals] constraint must have a property and value declared");
+            throw new \InvalidArgumentException("[property_equals] constraint must have a property and value declared");
 
         if(!isset($arguments['message']))
             $arguments['message'] = '%s failed a property comparison';
@@ -18,7 +18,7 @@ class PropertyEqualsConstraint extends AbstractConstraint {
         parent::__construct($property, $arguments, $validator);
 
         if(!is_object($this->data))
-            throw new Exception("[property_equals] constraint requires an object parameter");
+            throw new \InvalidArgumentException("[property_equals] constraint requires an object parameter");
     }
 
     /**

@@ -5,7 +5,7 @@ namespace Wave\Validator\Constraints;
 use \Wave\Validator,
     \DateTime;
 
-class DateConstraint extends AbstractConstraint {
+class DateConstraint extends AbstractConstraint implements CleanerInterface {
 
     private $format = null;
     private $datetime;

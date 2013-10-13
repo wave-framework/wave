@@ -1,6 +1,6 @@
 <?php
 
 
-namespace Wave\Validator;
+namespace Wave\Validator\Exception;
 
 class InvalidConstraintException extends ValidationException {};
