@@ -121,6 +121,7 @@ class Request {
                 case static::METHOD_POST:
                 case static::METHOD_PATCH:
                 case static::METHOD_PUT:
+                case static::METHOD_DELETE:
                     if(isset($_SERVER['CONTENT_TYPE']))
                         $parameters = static::parseRequestBody($_SERVER['CONTENT_TYPE']);
                     else
