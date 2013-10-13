@@ -4,6 +4,7 @@ namespace Wave\Http;
 
 use InvalidArgumentException;
 use Wave\Config;
+use Wave\Http\Exception\BadRequestException;
 use Wave\Router\Action;
 
 class Request {
@@ -144,6 +145,7 @@ class Request {
      *
      * @param string $content_type
      *
+     * @throws Exception\BadRequestException
      * @return array
      */
     protected static function parseRequestBody($content_type = self::TYPE_FORM_ENCODED){
@@ -151,8 +153,13 @@ class Request {
         switch($content_type){
             case static::TYPE_JSON:
                 $data = json_decode(file_get_contents('php://input'), true);
+
+                if(json_last_error() !== JSON_ERROR_NONE)
+                    throw new BadRequestException("Error encountered while decoding JSON payload");
+
                 if(!is_array($data)) return array();
                 else return $data;
+
             case static::TYPE_FORM_ENCODED:
                 parse_str(file_get_contents('php://input'), $data);
                 if(!is_array($data)) return array();
