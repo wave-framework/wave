@@ -133,7 +133,7 @@ class Table {
      */
     public function getClassName($with_namespace = false){
 	
-		$prefix = $with_namespace ? $this->database->getNamespace().'\\' : '';
+		$prefix = $with_namespace ? '\\'.$this->database->getNamespace().'\\' : '';
 		return $prefix . Wave\Inflector::camelize($this->table);
 	}
 	

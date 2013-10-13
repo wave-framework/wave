@@ -9,7 +9,7 @@
 
         //it's many to many so get the relation class
         if($create_relation){
-            $rc = new \{{ relation.ReferencedTable.getClassName(true) }}();
+            $rc = new {{ relation.ReferencedTable.getClassName(true) }}();
             {% for column in relation.TargetRelation.ReferencedColumns %}$rc->{{ column.Name }} = $obj->{{ column.Name }};
             {% endfor %}{% for column in relation.ReferencedColumns %}$rc->{{ column.Name }} = $this->_data['{{ relation.LocalColumns[loop.index0].Name }}'];
             {% endfor %}foreach($join_data as $key => $value){
