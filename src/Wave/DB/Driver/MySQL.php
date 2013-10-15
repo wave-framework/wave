@@ -86,7 +86,7 @@ class MySQL extends AbstractDriver implements DriverInterface {
 										$cached_row['COLUMN_NAME'],
 										self::translateSQLNullable($cached_row['IS_NULLABLE']),
 										self::translateSQLDataType($cached_row['DATA_TYPE']),
-										$cached_row['COLUMN_DEFAULT'],
+										self::translateSQLDefault($cached_row),
 										$cached_row['EXTRA'] === 'auto_increment',
 										$cached_row['COLUMN_TYPE'],
 										$cached_row['EXTRA'],
@@ -256,8 +256,29 @@ class MySQL extends AbstractDriver implements DriverInterface {
 			case 'YES':
 				return true;
 		}
-	}	
-	
+	}
+
+    public static function translateSQLDefault($row) {
+
+        $value = $row['DEFAULT_VALUE'];
+        $type = self::translateSQLDataType($row['DATA_TYPE']);
+
+        if(strtolower($value) === 'null' || self::translateSQLNullable($row['IS_NULLABLE'])){
+            $value = null;
+        }
+        else if(DB\Column::TYPE_FLOAT == $type){
+            $value = (float) $value;
+        }
+        else if(DB\Column::TYPE_INT === $type){
+            $value = (int) $value;
+        }
+        elseif(DB\Column::TYPE_BOOL === $type){
+            $value = !!$value;
+        }
+
+        return $value;
+    }
+
 
 }
 

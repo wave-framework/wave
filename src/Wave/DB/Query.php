@@ -788,10 +788,10 @@ class Query {
      * @return string
      */
     private function resolveNamespace(&$class){
-		
-		if($class[0] !== '\\')
-			$class = '\\'.$this->database->getNamespace().'\\'.$class;
-		
+
+        $class_parts = explode('\\', trim($this->database->getNamespace() . '\\' . $class, '\\'));
+        $class = '\\' . implode('\\', array_filter(array_unique($class_parts), function($input){ return !empty($input); }));
+
 		return $class;
 	}
 

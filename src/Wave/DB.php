@@ -14,6 +14,7 @@ use Wave\Core,
     Wave\Config,
     Wave\DB\Model,
     Wave\DB\Exception as DBException;
+use Wave\DB\Driver\MySQL;
 
 class DB {
 
@@ -299,6 +300,9 @@ class DB {
      * @return mixed
      */
     public function getSchema(){
+        if(!$this->config->offsetExists('schema'))
+            return $this->config->database;
+
         return $this->config->schema;
     }
 
@@ -393,6 +397,7 @@ class DB {
 															  $database->escape($object::_getTableName()), 
 															  implode(',', $fields), 
 															  implode(',', $placeholders));
+
 		$connection->prepare($sql)->execute($params);
 		
 		$liid = intval($connection->lastInsertId());
