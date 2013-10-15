@@ -10,6 +10,8 @@ abstract class AbstractDriver {
 	public static function valueToSQL($value){
 	
 		switch(true){
+            case is_bool($value):
+                return $value ? 1: 0;
 			case $value instanceof DateTime:
 				return $value->format('Y-m-d H:i:s');
 
