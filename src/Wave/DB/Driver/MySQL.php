@@ -260,7 +260,7 @@ class MySQL extends AbstractDriver implements DriverInterface {
 
     public static function translateSQLDefault($row) {
 
-        $value = $row['DEFAULT_VALUE'];
+        $value = $row['COLUMN_DEFAULT'];
         $type = self::translateSQLDataType($row['DATA_TYPE']);
 
         if(strtolower($value) === 'null' || self::translateSQLNullable($row['IS_NULLABLE'])){
