@@ -210,7 +210,8 @@ class MySQL extends AbstractDriver implements DriverInterface {
 		switch($type){
 			case 'varchar':
 				return DB\Column::TYPE_STRING;
-				
+
+            case 'bigint':
 			case 'int':
 				return DB\Column::TYPE_INT;
 
