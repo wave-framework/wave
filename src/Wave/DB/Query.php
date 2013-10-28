@@ -789,10 +789,12 @@ class Query {
      */
     private function resolveNamespace(&$class){
 
-        $class_parts = explode('\\', trim($this->database->getNamespace() . '\\' . $class, '\\'));
-        $class = '\\' . implode('\\', array_filter(array_unique($class_parts), function($input){ return !empty($input); }));
+        $class = trim($class, '\\');
+        $namespace = $this->database->getNamespace();
+        if(strpos($class, $namespace) !== 0)
+            $class = $namespace. '\\' . $class;
 
-		return $class;
+		return "\\$class";
 	}
 
     /**
