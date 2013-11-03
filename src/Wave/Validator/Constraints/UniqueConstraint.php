@@ -3,10 +3,9 @@
 
 namespace Wave\Validator\Constraints;
 
-use \Wave\Validator,
-    \Wave\Validator\Constraints\ExistsConstraint;
+use Wave\Validator\CleanerInterface;
 
-class UniqueConstraint extends ExistsConstraint {
+class UniqueConstraint extends ExistsConstraint implements CleanerInterface {
 
     const ERROR_NOT_UNIQUE = 'not_unique';
 
@@ -17,6 +16,10 @@ class UniqueConstraint extends ExistsConstraint {
      */
     public function evaluate(){
         return !parent::evaluate();
+    }
+
+    public function getCleanedData(){
+        return $this->data;
     }
 
     /**
