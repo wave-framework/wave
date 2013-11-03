@@ -788,11 +788,13 @@ class Query {
      * @return string
      */
     private function resolveNamespace(&$class){
-		
-		if($class[0] !== '\\')
-			$class = '\\'.$this->database->getNamespace().'\\'.$class;
-		
-		return $class;
+
+        $class = trim($class, '\\');
+        $namespace = $this->database->getNamespace();
+        if(strpos($class, $namespace) !== 0)
+            $class = $namespace. '\\' . $class;
+
+		return "\\$class";
 	}
 
     /**
