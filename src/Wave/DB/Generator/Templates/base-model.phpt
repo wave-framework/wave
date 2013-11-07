@@ -35,7 +35,7 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 
 	//Table name
 	protected static $_database = '{{ table.Database.getNamespace(false) }}';
-	protected static $_schema_name = '{{ table.Database.Name }}';
+	protected static $_schema_name = '{{ table.Database.Schema }}';
 	protected static $_table_name = '{{ table.Name }}';
 	
 	//Fields
@@ -44,9 +44,10 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 	
 		//{{ column.TypeDescription|raw }} {{ column.Extra }} {{ column.Comment }}
 		'{{ column.Name }}' => array(
-			'default'	=> {% if column.isNullable and column.Default == '' %}null{% else %}'{{ column.Default }}'{% endif %},
+			'default'	=> {{ column.Default|formatType }},
 			'data_type'	=> {{ column.DataType }},
-			'nullable'	=> {% if column.isNullable %}true{% else %}false{% endif %}
+			'nullable'	=> {% if column.isNullable %}true{% else %}false{% endif %},
+			'serial'    => {% if column.isSerial %}true{% else %}false{% endif %}
 
 		){% if not loop.last %},{% endif %}
 		

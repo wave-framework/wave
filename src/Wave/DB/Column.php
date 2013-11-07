@@ -30,6 +30,8 @@ class Column {
 	private $data_type;
     /** @var mixed $default */
 	private $default;
+    /** @var boolean $is_serial */
+    private $is_serial;
     /** @var string $type_desc */
 	private $type_desc;
     /** @var string $extra */
@@ -37,13 +39,14 @@ class Column {
     /** @var string $comment */
 	private $comment;
 									
-	public function __construct(Table $table, $name, $nullable, $data_type, $default, $type_desc = '', $extra = '', $comment = ''){
+	public function __construct(Table $table, $name, $nullable, $data_type, $default_value, $is_serial = false, $type_desc = '', $extra = '', $comment = ''){
 		
 		$this->table = $table;
 		$this->name = $name;
 		$this->nullable = $nullable;
 		$this->data_type = $data_type;
-		$this->default = $default;
+		$this->default = $default_value;
+		$this->is_serial = $is_serial;
 		$this->type_desc = $type_desc;
 		$this->extra = $extra;
 		$this->comment = $comment;
@@ -72,6 +75,13 @@ class Column {
     public function isNullable(){
 		return $this->nullable;
 	}
+
+    /**
+     * @return boolean
+     */
+    public function isSerial() {
+        return $this->is_serial;
+    }
 
     /**
      * @return int

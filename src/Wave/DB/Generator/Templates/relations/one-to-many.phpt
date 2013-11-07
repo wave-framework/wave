@@ -9,7 +9,7 @@
 			
 		if(!isset($this->_data['{{ relation.Name }}'])){
 			$this->_data['{{ relation.Name }}'] = Wave\DB::get('{{ relation.ReferencedTable.Database.getNamespace(false) }}')->from('{{ relation.ReferencedTable.ClassName }}', $from_alias)
-									{% for column in relation.ReferencedColumns %}->{% if loop.first %}where{% else %}and{% endif %}("$from_alias.{{ column.getName(true) }} = ?", $this->_data['{{ relation.LocalColumns[loop.index0].Name }}'])
+									{% for column in relation.ReferencedColumns %}->{% if loop.first %}where{% else %}and{% endif %}("$from_alias.{{ column.getName(true)|addslashes }} = ?", $this->_data['{{ relation.LocalColumns[loop.index0].Name }}'])
 									{% endfor %}->fetchAll();
 		}
 		

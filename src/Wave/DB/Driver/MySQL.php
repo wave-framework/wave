@@ -86,7 +86,8 @@ class MySQL extends AbstractDriver implements DriverInterface {
 										$cached_row['COLUMN_NAME'],
 										self::translateSQLNullable($cached_row['IS_NULLABLE']),
 										self::translateSQLDataType($cached_row['DATA_TYPE']),
-										$cached_row['COLUMN_DEFAULT'],
+										self::translateSQLDefault($cached_row),
+										$cached_row['EXTRA'] === 'auto_increment',
 										$cached_row['COLUMN_TYPE'],
 										$cached_row['EXTRA'],
 										$cached_row['COLUMN_COMMENT']);
@@ -209,7 +210,8 @@ class MySQL extends AbstractDriver implements DriverInterface {
 		switch($type){
 			case 'varchar':
 				return DB\Column::TYPE_STRING;
-				
+
+            case 'bigint':
 			case 'int':
 				return DB\Column::TYPE_INT;
 
@@ -255,8 +257,29 @@ class MySQL extends AbstractDriver implements DriverInterface {
 			case 'YES':
 				return true;
 		}
-	}	
-	
+	}
+
+    public static function translateSQLDefault($row) {
+
+        $value = $row['COLUMN_DEFAULT'];
+        $type = self::translateSQLDataType($row['DATA_TYPE']);
+
+        if(strtolower($value) === 'null' || self::translateSQLNullable($row['IS_NULLABLE'])){
+            $value = null;
+        }
+        else if(DB\Column::TYPE_FLOAT == $type){
+            $value = (float) $value;
+        }
+        else if(DB\Column::TYPE_INT === $type){
+            $value = (int) $value;
+        }
+        elseif(DB\Column::TYPE_BOOL === $type){
+            $value = !!$value;
+        }
+
+        return $value;
+    }
+
 
 }
 

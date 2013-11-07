@@ -101,8 +101,13 @@ class Relation {
 	}
 	
 	public function addColumns($local_column, $referenced_column, $is_reverse_relation){
-		$this->local_columns[] = $is_reverse_relation ? $referenced_column : $local_column;
-		$this->referenced_columns[] = $is_reverse_relation ? $local_column : $referenced_column;
+        $column = $is_reverse_relation ? $referenced_column : $local_column;
+        if(!in_array($column, $this->local_columns))
+		    $this->local_columns[] = $column;
+
+        $column = $is_reverse_relation ? $local_column : $referenced_column;
+        if(!in_array($column, $this->referenced_columns))
+		    $this->referenced_columns[] = $column;
 	}
 	
 	public function getLocalColumns(){
