@@ -40,7 +40,7 @@ class Exception extends \Exception {
 		parent::__construct($message, $code);
 	}
 	
-	public static function handle(\Exception $e){
+	public static function handle(\Exception $e, $send_response = true){
         try {
             Hook::triggerAction('exception.handle', array(&$e));
 
@@ -55,8 +55,12 @@ class Exception extends \Exception {
             $action = Action::getDefaultAction(self::$_controller);
             $action->setRespondsWith(array('*'), false);
     		$response = Controller::invoke($action, $request, array('exception' => $e));
+            $response->prepare($request);
 
-            $response->prepare($request)->send();
+            if($send_response)
+                $response->send();
+
+            return $response;
         }
         catch(\Exception $_e){
             echo $e->__toString();
