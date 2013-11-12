@@ -22,15 +22,23 @@ class JsonResponse extends Response {
      */
     protected $data;
 
+    protected $jsonp_callback = null;
 
     public function prepare(Request $request){
         parent::prepare($request);
 
-        $content_types = array_map('trim', explode(',', $request->headers->get('accept', static::$default_type, true)));
-        $allowed = array_intersect($content_types, static::$acceptable_types);
-        $content_type = empty($allowed) ? static::$default_type : array_shift($allowed);
+        if($request->query->has('jsonp_callback')){
+            $this->jsonp_callback = $request->query->get('jsonp_callback');
+        }
 
-        $this->headers->set('Content-Type', $content_type);
+        if(!$this->headers->has('Content-Type')){
+            $content_types = array_map('trim', explode(',', $request->headers->get('accept', static::$default_type, true)));
+        	$allowed = array_intersect($content_types, static::$acceptable_types);
+        	$content_type = empty($allowed) ? static::$default_type : array_shift($allowed);
+
+            $this->headers->set('Content-Type', $content_type);
+        }
+
         $this->headers->set('Cache-Control', 'no-cache, must-revalidate');
         $this->headers->set('Expires', 'Mon, 26 Jul 1997 05:00:00 GMT');
         $this->headers->set('X-Wave-Response', 'json');
@@ -45,6 +53,16 @@ class JsonResponse extends Response {
         }
 
         parent::setContent($data);
+    }
+
+    public function sendContent(){
+
+        if($this->jsonp_callback !== null){
+            echo "{$this->jsonp_callback}($this->content);";
+        }
+
+        else parent::sendContent();
+
     }
 
     /**

@@ -31,7 +31,7 @@ class Response {
 
 
     private static $formats = array(
-        'plain' => '\\Wave\\Http\\Response',
+        'plain' => '\\Wave\\Http\\Response\\TextResponse',
         'html'  => '\\Wave\\Http\\Response\\HtmlResponse',
         'json'  => '\\Wave\\Http\\Response\\JsonResponse',
         'xml'   => '\\Wave\\Http\\Response\\XmlResponse',
