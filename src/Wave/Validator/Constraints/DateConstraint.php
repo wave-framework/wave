@@ -2,8 +2,9 @@
 
 namespace Wave\Validator\Constraints;
 
-use \Wave\Validator,
-    \DateTime;
+use Wave\Validator;
+use DateTime;
+use Wave\Validator\CleanerInterface;
 
 class DateConstraint extends AbstractConstraint implements CleanerInterface {
 
