@@ -15,7 +15,12 @@ class DependsOnConstraint extends AbstractConstraint {
      * @return bool
      */
     public function evaluate(){
-        return $this->validator->getViolation($this->arguments) === null;
+        if(!is_array($this->arguments)) $this->arguments = array($this->arguments);
+        foreach($this->arguments as $field){
+            if(!array_key_exists($field, $this->validator) || $this->validator->getViolation($field) !== null)
+                return false;
+        }
+        return true;
     }
 
 
