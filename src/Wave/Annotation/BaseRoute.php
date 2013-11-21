@@ -16,7 +16,7 @@ class BaseRoute extends Wave\Annotation {
 	}
 
 	public function apply(Wave\Router\Action &$action){
-		return $action->setBaseRoute($this->parameters[0]);
+		return $action->addBaseRoute($this->parameters[0]);
 	}
 
 }

@@ -16,7 +16,7 @@ class Action {
 
     private $profile; // the URL profile this route lives under
 	private $baseurl; 	// the URL this route lives under (subdomain ususally)
-	private $baseroute = '/'; // a URL to prepend to relative routes in this route
+	private $baseroutes = array(); // a URL to prepend to relative routes in this route
 	
 	private $routes = array();
 	
@@ -38,26 +38,39 @@ class Action {
 		$this->response_methods = (array) Config::get('wave')->router->base->methods;
 	}
 	
-	public function setBaseRoute($baseroute){
-		$this->baseroute = $baseroute;
-		if(substr($this->baseroute, -1, 1) !== '/')
-			$this->baseroute .= '/';
+	public function addBaseRoute($baseroute){
+		if(substr($baseroute, -1, 1) !== '/')
+            $baseroute .= '/';
+
+        $this->baseroutes[] = $baseroute;
 	}
+
+    public function getBaseRoutes(){
+        if(empty($this->baseroutes)){
+            return array('/');
+        }
+        else return $this->baseroutes;
+    }
 		
 	public function addRoute($methods, $route){
-		// prepend the baseroute if the route is relative
-		if(!isset($route[0]) || $route[0] !== '/')
-			$route = $this->baseroute . $route;
-		// trim the last / off the end if necessary
-		if(substr($route, -1, 1) == '/')
-			$route = substr($route, 0, -1);
 
-		if(array_search(Method::ANY, $methods) !== false)
-			$methods = Method::$ALL;
-				
-		foreach($methods as $method){
-			$this->routes[] = $method . $route;
-		}
+        // trim the last / off the end if necessary
+        if(substr($route, -1, 1) == '/')
+            $route = substr($route, 0, -1);
+
+        if(array_search(Method::ANY, $methods) !== false)
+            $methods = Method::$ALL;
+
+        foreach($this->getBaseRoutes() as $baseroute){
+
+            $new_route = $route;
+            if(!isset($route[0]) || $route[0] !== '/')
+                $new_route = $baseroute . $route;
+
+            foreach($methods as $method){
+                $this->routes[] = $method . $new_route;
+            }
+        }
 	}
 	public function getRoutes() { return $this->routes; }
 	
@@ -127,7 +140,18 @@ class Action {
         $this->validation_schema = $schema;
     }
 
-    public function getValidationSchema() {
+    public function getValidationSchema(array $input_data = array()) {
+
+        // check if any variables in the schema path need to be replaced
+        if(strpos($this->validation_schema, '{') !== false){
+            $this->validation_schema = preg_replace_callback('/\{([0-9a-z_]+)\}/i', function($matches) use ($input_data) {
+                if(array_key_exists($matches[1], $input_data)){
+                    return $input_data[$matches[1]];
+                }
+                else return 'default';
+            }, $this->validation_schema);
+        }
+
         return $this->validation_schema;
     }
 

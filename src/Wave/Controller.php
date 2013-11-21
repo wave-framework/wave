@@ -99,7 +99,7 @@ class Controller {
             else if(!$action->checkRequiredLevel($request)){
                 throw new UnauthorizedException('You are not authorized to view this resource');
             }
-            else if($action->needsValidation() && !$controller->inputValid($action->getValidationSchema())){
+            else if($action->needsValidation() && !$controller->inputValid($action->getValidationSchema($data))){
                 return $controller->request();
             }
 

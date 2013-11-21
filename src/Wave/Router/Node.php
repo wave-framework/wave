@@ -37,18 +37,14 @@ class Node {
 				$remaining = substr($route, $segment_length + 1);
 		}
 		else {
-			$segment = preg_split(self::URL_SEGMENT_DELIMITER, $route, 2);
-			if(isset($segment[1])) $remaining = $segment[1];
-			$segment = $segment[0];
+			list($segment, $remaining) = preg_split(self::URL_SEGMENT_DELIMITER, $route, 2) + array(null, null);
 		}
-		
-		
 		
 		if(!isset($this->children[$segment])){
 			$this->children[$segment] = new Node();
 		}
 		
-		if(isset($remaining) && $remaining !== null){
+		if(isset($remaining) && strlen($remaining) > 0){
 			$this->children[$segment]->addChild($remaining, $action);
 		}
 		else
