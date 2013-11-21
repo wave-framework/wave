@@ -193,6 +193,14 @@ class Validator implements ArrayAccess {
         return $this->_cleaned;
     }
 
+    public function getInputData($key = null){
+        if($key === null)
+            return $this->_data;
+        elseif(isset($this->_data[$key]))
+            return $this->_data[$key];
+        else return null;
+    }
+
     private static function translateConstraintKeyToClass($key){
         return sprintf(self::CONSTRAINT_CLASS_MASK, str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
     }
