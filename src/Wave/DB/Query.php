@@ -376,7 +376,7 @@ class Query {
 				//otherwise change the parameters to matcht he num in the array and make it an 'IN' clause.
 				$condition = str_replace('?', '('.implode(',', array_fill(0, $num_params, '?')).')', $condition);
 				return str_replace(array('<>', '!=', '='), array('NOT IN', 'NOT IN', 'IN'), $condition);
-			} 
+			}
 		}
 
 		if($num_placeholders === 1){
@@ -650,22 +650,18 @@ class Query {
 							
 			//if not bothering to parse object
 			if(!$parse_objects){
-			
+				
 				$output = array();
-				foreach($this->class_aliases as $alias => $class_details){
-					$output[$alias] = array();
-                    if($this->manual_select){
-                        foreach($this->fields as $field){
-                            $field = str_replace("$alias.", '', $field);
-                            if(isset($this->_last_row[$field]))
-                                $output[$alias][$field] = $this->_last_row[$field];
-                        }
-                    }
-                    else {
-                        foreach($class_details['columns'] as $column => $column_alias)
-                            $output[$alias][$column] = $this->_last_row[$column_alias];
-                    }
+				foreach($this->fields as $key => $field){
+
+					if(!is_int($key))
+						$field = $key;
+					else
+						throw new \Wave\Exception('An associative array must be passed in to \Wave\DB\Query::from() when not parsing objects');
+						
+					$output[$field] = $this->_last_row[$field];
 				}
+
 				$this->_last_row = false;
 				return $output;
 			}
@@ -674,6 +670,11 @@ class Query {
 			//if there's no instance of the main class, create a new one.
 			if(!isset($object_instances[$this->from_alias]))
 				$object_instances[$this->from_alias] = $this->buildClassInstance($this->from_alias);
+			
+			if($object_instances[$this->from_alias] === null){
+				trigger_error('Insufficient data in SELECT to build object instance.');
+				return null;				
+			}
 			
 			//if there are joins, check that the current row still has the same $from_instance, if it doesn't, break.
 			//otherwise build the related objects and put them on it.
@@ -788,6 +789,9 @@ class Query {
      * @return string
      */
     private function resolveNamespace(&$class){
+	    
+	    if(strpos($class, '\\') === 0 && class_exists($class))
+	    	return $class;
 
         $class = trim($class, '\\');
         $namespace = $this->database->getNamespace();
