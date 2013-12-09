@@ -1,10 +1,21 @@
 {# <?php #}
-//{{ relation.Name }} 
-	public function set{{ relation.Name }}(&$obj, $create_relation = true){
+/**
+	 * {{ relation.Name }} - many-to-one
+	 *
+     * @param $obj {{ relation.ReferencedTable.getClassName(true) }} The {{ relation.Name }} to be added
+     * @param bool $create_relation whether to create the relation in the database
+	 *
+	 * @return void
+	**/
+	public function set{{ relation.Name }}({{ relation.ReferencedTable.getClassName(true) }} &$obj, $create_relation = true){
 		$this->_data['{{ relation.Name }}'] = &$obj;
 	}
 	
-	//{{ relation.Name }} 
+	/**
+	 * {{ relation.Name }} - many-to-one
+	 *
+	 * @return {{ relation.ReferencedTable.getClassName(true) }}
+	**/
 	public function get{{ relation.Name }}(){
 		
 		if(!isset($this->_data['{{ relation.Name }}'])){

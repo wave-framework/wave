@@ -1,11 +1,17 @@
 {# <?php #}
 
-//{{ relation.Name }} 
-	public function add{{ relation.Name|singularize }}(&$obj, $create_relation = true, array $join_data = array()){
+    /**
+     * {{ relation.Name }} - many-to-many
+     *
+     * @param $obj {{ relation.TargetRelation.ReferencedTable.getClassName(true) }} The {{ relation.Name }} to be added
+     * @param bool $create_relation whether to create the relation in the database
+     * @param array $join_data additional data to be saved when the relation is created, column => value array
+     *
+     * @return bool
+    **/
+	public function add{{ relation.Name|singularize }}({{ relation.TargetRelation.ReferencedTable.getClassName(true) }} &$obj, $create_relation = true, array $join_data = array()){
 	    if(!isset($this->_data['{{ relation.Name }}']))
 	        $this->_data['{{ relation.Name }}'] = array();
-
-		$this->_data['{{ relation.Name }}'][] = $obj; //temp reference removal until cache is completed
 
         //it's many to many so get the relation class
         if($create_relation){
@@ -20,10 +26,20 @@
 
             return $rc;
         }
+
+        $this->_data['{{ relation.Name }}'][] = $obj; //temp reference removal until cache is completed
+
         return true;
 	}
 
-	public function remove{{ relation.Name|singularize }}(&$obj, $remove_relation = true){
+    /**
+     * {{ relation.Name }}
+     *
+     * @param $obj {{ relation.TargetRelation.ReferencedTable.getClassName(true) }} The {{ relation.Name }} object to be removed
+     * @param bool $remove_relation actually remove the relation from the database
+     * @return bool
+    **/
+	public function remove{{ relation.Name|singularize }}({{ relation.TargetRelation.ReferencedTable.getClassName(true) }} &$obj, $remove_relation = true){
 
         if($remove_relation){
             $relation = Wave\DB::get('{{ relation.ReferencedTable.Database.getNamespace(false) }}')->from('{{ relation.ReferencedTable.ClassName }}', $from_alias)
@@ -42,7 +58,11 @@
         return false;
 	}
 
-	//{{ relation.Name }} 
+	/**
+	 * {{ relation.Name }}
+	 *
+	 * @return {{ relation.TargetRelation.ReferencedTable.getClassName(true) }}[]
+	**/
 	public function get{{ relation.Name }}(){
 		//down here can be a little bit messy with multiple column relations
 		if(!isset($this->_data['{{ relation.Name }}'])){

@@ -156,6 +156,11 @@ class Model {
 		return Wave\DB::delete($this);
 	}
 
+    public function _equals(Model $object){
+        return (get_class($this) === get_class($object)) &&
+            array_diff_assoc($this->_getIdentifyingData(), $object->_getIdentifyingData());
+    }
+
     /**
      * Add a joined object to the internal join cache.
      *

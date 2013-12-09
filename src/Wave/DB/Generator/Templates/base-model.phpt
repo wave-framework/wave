@@ -28,7 +28,11 @@ use Wave\DB;
 *
  * Relations defined by magic accessor methods
  {% for relation in table.Relations if relation.Type != constant('\\Wave\\DB\\Relation::RELATION_UNKNOWN') %}
-* @property \{{ relation.ReferencedTable.getClassName(true) }} ${{ relation.Name }}
+{% if relation.Type == constant('\\Wave\\DB\\Relation::ONE_TO_ONE') %}* @property {{ relation.ReferencedTable.getClassName(true) }} ${{ relation.Name }}
+{% elseif relation.Type == constant('\\Wave\\DB\\Relation::ONE_TO_MANY') %}* @property {{ relation.ReferencedTable.getClassName(true) }}[] ${{ relation.Name }}
+{% elseif relation.Type == constant('\\Wave\\DB\\Relation::MANY_TO_ONE') %}* @property {{ relation.ReferencedTable.getClassName(true) }} ${{ relation.Name }}
+{% elseif relation.Type == constant('\\Wave\\DB\\Relation::MANY_TO_MANY') %}* @property {{ relation.TargetRelation.ReferencedTable.getClassName(true) }}[] ${{ relation.Name }}
+{% endif %}
  {% endfor %}
 */
 abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
