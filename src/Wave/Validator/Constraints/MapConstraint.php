@@ -27,7 +27,7 @@ class MapConstraint extends AbstractConstraint implements CleanerInterface {
      */
     public function evaluate(){
 
-        $schema = array($this->property => $this->arguments);
+        $schema = array('fields' => array($this->property => $this->arguments));
         foreach($this->data as $i => $data){
             $input = array($this->property => $data);
             $instance = new Validator($input, $schema, $this->validator);

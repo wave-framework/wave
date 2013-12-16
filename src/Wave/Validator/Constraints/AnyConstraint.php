@@ -28,7 +28,7 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
 
         $input = array($this->property => $this->data);
         foreach($this->arguments as $constraint_group){
-            $schema = array($this->property => $constraint_group);
+            $schema = array('fields' => array($this->property => $constraint_group));
             $instance = new Validator($input, $schema);
 
             if($instance->execute()){

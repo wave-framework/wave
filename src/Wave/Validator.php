@@ -3,6 +3,7 @@
 namespace Wave;
 
 use ArrayAccess;
+use InvalidArgumentException;
 use Wave\Config;
 use Wave\Validator\CleanerInterface;
 use Wave\Validator\Exception\InvalidConstraintException;
@@ -33,24 +34,34 @@ class Validator implements ArrayAccess {
     /**
      * @param array $input The data to validate against
      * @param array $schema The schema to validate against
+     * @param Validator $parent_instance
      */
     public function __construct(array $input, array $schema, $parent_instance = null){
         $this->_data = $input;
-        $this->_schema = $schema;
+        $this->_schema = $schema['fields'];
+
+        if(array_key_exists('aliases', $schema)){
+            $this->aliases = $schema['aliases'];
+        }
 
         $this->parent_instance = $parent_instance;
     }
 
     public function execute(){
 
-        foreach($this->_schema as $field => $definition){
-            $this->unsetCleanedData($field);
+        foreach($this->_schema as $field_name => $definition){
+
+            $field_alias = $field_name;
+            if(!isset($this->_data[$field_name]) && isset($this->aliases[$field_name]))
+                $field_alias = $this->aliases[$field_name];
+
+            $this->setCleanedData($field_name, null);
 
             // manual check, if the field isn't in the data array throw an error
             // if it is a required field, otherwise just skip and continue validating the rest
-            if(!isset($this->_data[$field])
-                || (is_string($this->_data[$field]) && strlen($this->_data[$field]) <= 0)
-                || (is_array($this->_data[$field]) && empty($this->_data[$field]))){
+            if(!isset($this->_data[$field_alias])
+                || (is_string($this->_data[$field_alias]) && strlen($this->_data[$field_alias]) <= 0)
+                || (is_array($this->_data[$field_alias]) && empty($this->_data[$field_alias]))){
 
                 $is_required = !(isset($definition['required']) && is_bool($definition['required']) && !$definition['required']);
                 $message = 'This field is required';
@@ -67,8 +78,8 @@ class Validator implements ArrayAccess {
                 }
 
                 if($is_required){
-                    $this->addViolation($field, array(
-                        'field_name' => $field,
+                    $this->addViolation($field_alias, array(
+                        'field_name' => $field_alias,
                         'reason' => 'missing',
                         'message' => $message
                     ));
@@ -78,13 +89,13 @@ class Validator implements ArrayAccess {
                     continue;
             }
 
-            if(isset($this->_data[$field]))
-                $this->setCleanedData($field, $this->_data[$field]);
+            if(isset($this->_data[$field_alias]))
+                $this->setCleanedData($field_name, $this->_data[$field_alias]);
             else if(isset($definition['default'])){
                 if(is_callable($definition['default']))
-                    $this->setCleanedData($field, call_user_func($definition['default'], $this));
+                    $this->setCleanedData($field_name, call_user_func($definition['default'], $this));
                 else
-                    $this->setCleanedData($field, $definition['default']);
+                    $this->setCleanedData($field_name, $definition['default']);
             }
 
             foreach($definition as $constraint => $arguments){
@@ -94,18 +105,18 @@ class Validator implements ArrayAccess {
                     throw new InvalidConstraintException("Handler for '$constraint' does not exist");
 
                 /** @var $instance \Wave\Validator\Constraints\AbstractConstraint */
-                $instance = new $handler($field, $arguments, $this);
+                $instance = new $handler($field_name, $arguments, $this);
                 if(!$instance->evaluate()){
                     $violations = $instance->getViolationPayload();
                     if(!empty($violations))
-                        $this->addViolation($field, $violations);
+                        $this->addViolation($field_alias, $violations);
 
-                    $this->unsetCleanedData($field);
+                    $this->setCleanedData($field_name, null);
                     break;
                 }
 
                 if($instance instanceof CleanerInterface){
-                    $this->setCleanedData($field, $instance->getCleanedData());
+                    $this->setCleanedData($field_name, $instance->getCleanedData());
                 }
             }
         }
@@ -125,8 +136,12 @@ class Validator implements ArrayAccess {
      * @param string $field the name of the field with the violation
      * @return
      */
-    public function getViolation($field){
-        return isset($this->_violations[$field]) ? $this->_violations[$field] : null;
+    public function getViolation($field_name){
+        $field_alias = $field_name;
+        if(!isset($this->_violations[$field_name]) && isset($this->aliases[$field_name]))
+            $field_alias = $this->aliases[$field_name];
+
+        return isset($this->_violations[$field_alias]) ? $this->_violations[$field_alias] : null;
     }
 
     public function getViolations(){
@@ -139,9 +154,9 @@ class Validator implements ArrayAccess {
      *
      * @param bool $use_result
      *
-     * @throws Validator\Exception\ValidationException
+     * @throws \InvalidArgumentException
      * @throws Validator\Exception\InvalidInputException
-     *
+     * @throws Validator\Exception\ValidationException
      * @return array|bool|\Wave\Validator\Result
      */
     public static function validate($schema, array $input, $use_result = false){
@@ -153,7 +168,11 @@ class Validator implements ArrayAccess {
 
             if(is_file($schema_path) && is_readable($schema_path)){
                 $schema_data = include $schema_path;
-                self::$_schema_cache[$schema] = &$schema_data['fields'];
+
+                if(!array_key_exists('fields', $schema_data))
+                    throw new InvalidArgumentException("$schema must have a 'fields' definition");
+
+                self::$_schema_cache[$schema] = &$schema_data;
             }
             else {
                 throw new ValidationException("Could not load schema [$schema] from file ($schema_path)");
