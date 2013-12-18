@@ -22,10 +22,14 @@ class MinLengthConstraint extends AbstractLengthConstraint {
     }
 
     protected function getViolationMessage($context = 'This value'){
-        if($this->comparator === static::COMPARATOR_ARRAY)
+        if($this->message !== null)
+            return $this->message;
+        else if($this->comparator === static::COMPARATOR_ARRAY)
             return sprintf('%s must have at least %s members', $context, $this->limit);
         elseif($this->comparator === static::COMPARATOR_INT)
             return sprintf('%s must be greater than %s', $context, $this->limit);
+        elseif($this->comparator === static::COMPARATOR_DATETIME)
+            return sprintf('%s must be after %s', $context, $this->limit->format('c'));
         else
             return sprintf('%s must be at least %s characters', $context, $this->limit);
     }
