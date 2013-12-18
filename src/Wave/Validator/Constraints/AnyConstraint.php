@@ -15,6 +15,8 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
     private $cleaned = null;
     private $violations = array();
 
+    private $message = null;
+
     /**
      * @throws \InvalidArgumentException
      * @return bool
@@ -27,7 +29,13 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
             $this->arguments = array($this->arguments);
 
         $input = array($this->property => $this->data);
-        foreach($this->arguments as $constraint_group){
+        foreach($this->arguments as $key => $constraint_group){
+
+            if($key === 'message'){
+                $this->message = $constraint_group;
+                continue;
+            }
+
             $schema = array('fields' => array($this->property => $constraint_group));
             $instance = new Validator($input, $schema);
 
@@ -47,11 +55,17 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
     }
 
     public function getViolationPayload(){
-        return array(
+        $payload = array(
             'reason' => 'invalid',
-            'message' => 'This value does not match any of the following conditions',
-            'conditions' => $this->violations
         );
+        if($this->message !== null){
+            $payload['message'] = $this->message;
+        }
+        else {
+            $payload['message'] = 'This value does not match any of the following conditions';
+            $payload['conditions'] = $this->violations;
+        }
+        return $payload;
     }
 
     public function getCleanedData() {
