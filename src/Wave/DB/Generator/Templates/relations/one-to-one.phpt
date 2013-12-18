@@ -8,7 +8,7 @@
 	 *
 	 * @return void
 	**/
-	public function set{{ relation.Name }}(&$obj, $create_relation = true){
+	public function set{{ relation.Name }}(&$obj = null, $create_relation = true){
 		$this->_data['{{ relation.Name }}'] = &$obj;
 	}
 	
