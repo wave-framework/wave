@@ -15,6 +15,7 @@ class Request {
     const METHOD_PUT = 'PUT';
     const METHOD_DELETE = 'DELETE';
     const METHOD_PATCH = 'PATCH';
+    const METHOD_OPTIONS = 'OPTIONS';
 
     const METHOD_CLI = 'CLI';
 
@@ -128,6 +129,7 @@ class Request {
                     else
                         $parameters = $_POST;
                     break;
+                case static::METHOD_OPTIONS:
                 case static::METHOD_HEAD:
                 case static::METHOD_GET:
                 case static::METHOD_CLI:
