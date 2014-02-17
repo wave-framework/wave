@@ -298,7 +298,7 @@ class Request {
         if(!in_array($method, array(
             static::METHOD_HEAD, static::METHOD_GET, static::METHOD_POST,
             static::METHOD_PUT, static::METHOD_DELETE, static::METHOD_CLI,
-            static::METHOD_PATCH
+            static::METHOD_PATCH, static::METHOD_OPTIONS
         )))
             throw new InvalidArgumentException("Request method [$method] is not valid");
 
