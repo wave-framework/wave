@@ -10,13 +10,11 @@ class FloatDatatype extends AbstractDatatype implements CleanerInterface  {
 
         if(!is_scalar($this->input)) return false;
 
-        $this->input = strtr($this->input, ',', '');
-        return is_float($this->input) || (is_string($this->input) && strval(floatval($this->input) == $this->input));
-
+        return filter_var($this->input, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_THOUSAND);
 	}
 	
 	public function getCleanedData(){
-		return floatval($this->input);
+		return floatval(filter_var($this->input, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION));
 	}
 
     /**
