@@ -39,6 +39,7 @@ class Query {
 	private $offset;
 	private $limit;
 	private $paginate = false;
+    private $manual_select = false;
 	private $_statement;
 	private $_last_row = false;
 	private $_built = false;
@@ -650,17 +651,35 @@ class Query {
 							
 			//if not bothering to parse object
 			if(!$parse_objects){
-				
 				$output = array();
-				foreach($this->fields as $key => $field){
 
-					if(!is_int($key))
-						$field = $key;
-					else
-						throw new \Wave\Exception('An associative array must be passed in to \Wave\DB\Query::from() when not parsing objects');
-						
-					$output[$field] = $this->_last_row[$field];
-				}
+                // if it's a manual select (fields were manually specified) then just put the
+                // requested fields into the output directly, keyed by their aliases.
+                if($this->manual_select){
+                    if(isset($fields[0])){
+                        throw new Exception('An associative array must be passed in to \Wave\DB\Query::from() when not parsing objects');
+                    }
+                    foreach($this->fields as $alias => $field){
+                        if(isset($this->_last_row[$alias])){
+                            $key = $this->manual_select ? $alias : $field;
+                            $output[$key] = $this->_last_row[$alias];
+                        }
+                    }
+                }
+                // otherwise, get the original column names and unalias the resultset, including the
+                // joined rows, keyed by the aliases they were joined with
+                else {
+                    foreach($this->class_aliases[$this->from_alias]['columns'] as $column => $column_alias){
+                        $output[$column] = $this->_last_row[$column_alias];
+                    }
+
+                    foreach($this->class_aliases as $alias => $class_details){
+                        if($alias === $this->from_alias) continue;
+
+                        foreach($class_details['columns'] as $column => $column_alias)
+                            $output[$alias][$column] = $this->_last_row[$column_alias];
+                    }
+                }
 
 				$this->_last_row = false;
 				return $output;
