@@ -2,6 +2,7 @@
 
 namespace Wave;
 
+use ErrorException;
 use Wave\Http\Request;
 use Wave\Http\Response;
 use Wave\Router\Action;
@@ -29,16 +30,18 @@ class Exception extends \Exception {
 
             Exception::setRequest($router->getRequest());
         });
+	}
 
-	}
-	
-	public function __construct($message, $code = null){
-		if($code == null && is_numeric($message)){
-			$code = intval($message);
-			$message = $this->getInternalMessage($code);
-		}
-		parent::__construct($message, $code);
-	}
+    public static function registerError(){
+        set_error_handler(array('\\Wave\\Exception', 'handleError'));
+    }
+
+    public static function handleError($code, $message, $file = null, $line = 0){
+        if (error_reporting() == 0) {
+            return true;
+        }
+        throw new ErrorException($message, $code, $file, $line);
+    }
 	
 	public static function handle(\Exception $e, $send_response = true){
         try {
@@ -46,7 +49,9 @@ class Exception extends \Exception {
 
             $log_message = sprintf('%-4s %s', "({$e->getCode()})", $e->getMessage());
             // get the channel manually so the introspection works properly.
-            Log::getChannel('exception')->addRecord(Log::ERROR, $log_message);
+            Log::getChannel('exception')->addRecord(Log::ERROR, $log_message, array(
+                'exception' => $e
+            ));
 
             $request = static::$request;
             if($request === null)
@@ -68,7 +73,15 @@ class Exception extends \Exception {
             echo $_e->__toString();
         }
 	}
-		
+
+    public function __construct($message, $code = null){
+        if($code == null && is_numeric($message)){
+            $code = intval($message);
+            $message = $this->getInternalMessage($code);
+        }
+        parent::__construct($message, $code);
+    }
+
 	protected function getInternalMessage($type){
 	
 		switch($type){

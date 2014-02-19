@@ -22,7 +22,8 @@ use \Wave\Config,
 	
 
 class Log extends Logger {
-	
+
+    protected static $default_handlers = null;
 	private static $default_level = null;
 	private static $all_levels = array(
 		Logger::DEBUG,
@@ -68,6 +69,41 @@ class Log extends Logger {
 		return static::$default_level;
 	}
 
+    public static function getDefaultHandlers(){
+        if(static::$default_handlers === null){
+
+            $log_path = Config::get('wave')->path->logs;
+            $log_path .= Config::get('wave')->logger->file->file;
+            $log_dir = realpath(dirname($log_path));
+
+            if(!is_writable($log_dir)){
+                @mkdir($log_dir, 0770, true);
+            }
+
+            $stream_handler = new StreamHandler($log_path, static::getDefaultLevel());
+            $stream_handler->pushProcessor(new ExceptionIntrospectionProcessor());
+
+            static::pushDefaultHandler($stream_handler);
+
+            if(PHP_SAPI === 'cli'){
+                $cli_handler = new CliHandler(Config::get('wave')->logger->cli->level);
+                $cli_handler->setFormatter(new LineFormatter(CliHandler::LINE_FORMAT));
+                static::pushDefaultHandler($cli_handler);
+            }
+
+        }
+
+        return static::$default_handlers;
+    }
+
+    public static function pushDefaultHandler(AbstractHandler $handler){
+        if(static::$default_handlers === null){
+            static::$default_handlers = array();
+        }
+
+        array_unshift(static::$default_handlers, $handler);
+    }
+
     /**
      * Create a new channel with the specified Handler
      *
@@ -75,35 +111,16 @@ class Log extends Logger {
      * to the logfile specified in the `wave.php` configuration file.
      *
      * @param string $channel The name of the channel to return
-     * @param \Monolog\Handler\AbstractHandler $handler The handler to attach to the channel [optional]
+     * @param array $handlers Any handlers to attach to the channel [optional]
+     * @param bool $use_default_handlers
      *
      * @return \Monolog\Logger A new Logger instance
      */
-	public static function createChannel($channel, AbstractHandler $handler = null){
-        static::$channels[$channel] = new Logger($channel);
-		if($handler === null){
-			$log_path = Config::get('wave')->path->logs;
-			$log_path .= Config::get('wave')->logger->file->file;
-			$log_dir = realpath(dirname($log_path));
+	public static function createChannel($channel, array $handlers = array(), $use_default_handlers = true){
+        if($use_default_handlers)
+            $handlers += static::getDefaultHandlers();
 
-			if(!is_writable($log_dir)){
-				@mkdir($log_dir, 0770, true);
-			}
-			$handler = new StreamHandler($log_path, static::getDefaultLevel());
-			$handler->pushProcessor(new ExceptionIntrospectionProcessor());
-            static::$channels[$channel]->pushHandler($handler);
-
-            if(PHP_SAPI === 'cli'){
-                $cli_handler = new CliHandler(Config::get('wave')->logger->cli->level);
-                $cli_handler->setFormatter(new LineFormatter(CliHandler::LINE_FORMAT));
-
-                static::$channels[$channel]->pushHandler($cli_handler);
-            }
-		}
-		else{
-            static::$channels[$channel]->pushHandler($handler);
-		}
-		
+        static::$channels[$channel] = new Logger($channel, $handlers);
 		return static::$channels[$channel];
 	}
 
@@ -142,13 +159,10 @@ class Log extends Logger {
 	 *
 	 *	@return Bool Whether the message has been written
 	**/
-	public static function write($channel, $message, $level = Logger::INFO){
+	public static function write($channel, $message, $level = Logger::INFO, $context = array()){
 		$channel = static::getChannel($channel);
 
-		return $channel->addRecord($level, $message);
+		return $channel->addRecord($level, $message, $context);
 	}
 
 }
-
-
-?>
