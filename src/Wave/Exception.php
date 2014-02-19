@@ -40,7 +40,7 @@ class Exception extends \Exception {
         if (error_reporting() == 0) {
             return true;
         }
-        throw new ErrorException($message, $code, $file, $line);
+        throw new ErrorException($message, $code, 0, $file, $line);
     }
 	
 	public static function handle(\Exception $e, $send_response = true){
