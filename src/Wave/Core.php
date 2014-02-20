@@ -20,6 +20,11 @@ class Core {
         if(!isset($config['mode']))
             $config['mode'] = Config::get('deploy')->mode;
 
+        if(!isset($config['start_time']))
+            $config['start_time'] = microtime(true);
+
+        Debug::init($config['start_time']);
+
         self::$_MODE = $config['mode'];
         self::setErrorReporting($config['mode'] !== self::MODE_PRODUCTION);
 

@@ -13,14 +13,18 @@ class Debug {
 
 	public static function getInstance(){
 		if(self::$instance === null)
-			self::$instance = new self();
+            self::init();
 			
 		return self::$instance;
 	}
 	
-	public function __construct(){
-		$this->resetExecutionTime();
+	public function __construct($start_time = null){
+		$this->resetExecutionTime($start_time);
 	}
+
+    public static function init($start_time = null) {
+        self::$instance = new self($start_time);
+    }
 
     public function getMemoryUsage(){
         return round(memory_get_peak_usage()/pow(1024, 2), 2);
@@ -38,8 +42,11 @@ class Debug {
 		return round((microtime(true) - $this->execution_start)*1000, 0);
 	}
 
-    public function resetExecutionTime(){
-        $this->execution_start = microtime(true);
+    public function resetExecutionTime($reset_time = null){
+        if($reset_time === null)
+            $reset_time = microtime(true);
+
+        $this->execution_start = $reset_time;
     }
 
     public function getCheckpoints(){
