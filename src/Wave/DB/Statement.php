@@ -19,9 +19,7 @@ class Statement extends \PDOStatement {
 		$start = microtime(true);
 		parent::execute($input_parameters);
 		
-		if(in_array(\Wave\Core::$_MODE, array(\Wave\Core::MODE_DEVELOPMENT)))
-			\Wave\Debug::getInstance()->addQuery($time = microtime(true) - $start, $this);
-			
+		\Wave\Debug::getInstance()->addQuery($time = microtime(true) - $start, $this);
 	}
 	
 }

@@ -4,13 +4,19 @@ namespace Wave;
 
 class Debug {
 
+    private $config;
+
 	private $queries = array();
+    private $query_count = 0;
 	private $used_files = array();
 	private $execution_start;
     private $checkpoints = array();
 	
 	private static $instance = null;
 
+    /**
+     * @return \Wave\Debug
+     */
 	public static function getInstance(){
 		if(self::$instance === null)
             self::init();
@@ -18,12 +24,18 @@ class Debug {
 		return self::$instance;
 	}
 	
-	public function __construct($start_time = null){
-		$this->resetExecutionTime($start_time);
+	public function __construct(array $config){
+        $this->config = $config;
+		$this->resetExecutionTime($config['start_time']);
 	}
 
-    public static function init($start_time = null) {
-        self::$instance = new self($start_time);
+    public static function init(array $config = array()) {
+        $defaults = array(
+            'start_time' => microtime(true),
+            'log_queries' => Core::$_MODE !== Core::MODE_PRODUCTION
+        );
+
+        self::$instance = new self(array_merge($defaults, $config));
     }
 
     public function getMemoryUsage(){
@@ -84,18 +96,22 @@ class Debug {
 	}
 
 	public function addQuery($time, $statement){
-	
-		$sql = $statement->queryString;
-		$rows = $statement->rowCount();
-		$success = $statement->errorCode() == \PDO::ERR_NONE ? true : false;
-		$time = round($time * 1000, true);
 
-		$sql = str_replace(chr(0x0A), ' ', $sql);
-		$sql = str_replace('  ', ' ', $sql);
+        $this->query_count++;
 
-		$count = array_push($this->queries, array('success' => $success, 'time' => $time, 'sql' => $sql, 'rows' => $rows));
+        if($this->config['log_queries']){
+            $sql = $statement->queryString;
+            $rows = $statement->rowCount();
+            $success = $statement->errorCode() == \PDO::ERR_NONE ? true : false;
+            $time = round($time * 1000, true);
 
-        $this->addCheckpoint('query.' . $count);
+            $sql = str_replace(chr(0x0A), ' ', $sql);
+            $sql = str_replace('  ', ' ', $sql);
+
+            $this->query_count = array_push($this->queries, array('success' => $success, 'time' => $time, 'sql' => $sql, 'rows' => $rows));
+        }
+
+        $this->addCheckpoint('query.' . $this->query_count);
 	}
 
 
@@ -105,7 +121,7 @@ class Debug {
 
 
 	public function getNumberOfQueries(){
-		return count($this->queries);
+		return $this->query_count;
 	}
 	
 	/**
