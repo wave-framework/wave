@@ -8,7 +8,24 @@ use Wave\Http\Response;
 use Wave\Router\Action;
 
 class Exception extends \Exception {
-	
+
+    private static $levels = array(
+        E_WARNING           => Log::WARNING,
+        E_NOTICE            => Log::WARNING,
+        E_USER_ERROR        => Log::ERROR,
+        E_USER_WARNING      => Log::WARNING,
+        E_USER_NOTICE       => Log::WARNING,
+        E_STRICT            => Log::WARNING,
+        E_RECOVERABLE_ERROR => Log::ERROR,
+        E_DEPRECATED        => Log::WARNING,
+        E_USER_DEPRECATED   => Log::WARNING,
+        E_ERROR             => Log::ERROR,
+        E_CORE_ERROR        => Log::CRITICAL,
+        E_COMPILE_ERROR     => Log::CRITICAL,
+        E_PARSE             => Log::EMERGENCY,
+    );
+
+    private static $_reserved_memory = '';
 	private static $_controller = null;
 	public static $_response_method = null;
 
@@ -16,8 +33,9 @@ class Exception extends \Exception {
     private static $request;
     /** @var \Wave\Http\Response $response */
     private static $response;
-	
-	public static function register($controller){
+    private static $_error_reporting_types;
+
+    public static function register($controller){
 		if(!class_exists($controller) || !is_subclass_of($controller, '\\Wave\\Controller')){
 			throw new \Exception("Controller $controller must be an instance of \\Wave\\Controller");
 		}
@@ -32,15 +50,35 @@ class Exception extends \Exception {
         });
 	}
 
-    public static function registerError(){
+    public static function registerError($error_types = -1, $reserved_memory = 10){
         set_error_handler(array('\\Wave\\Exception', 'handleError'));
+        register_shutdown_function(array('\\Wave\\Exception', 'handleFatalError'));
+        self::$_error_reporting_types = $error_types;
+        self::$_reserved_memory = str_repeat('x', 1024 * $reserved_memory);
     }
 
     public static function handleError($code, $message, $file = null, $line = 0){
-        if (error_reporting() == 0) {
+        if (!(self::$_error_reporting_types & $code & error_reporting())) {
             return true;
         }
-        throw new ErrorException($message, $code, 0, $file, $line);
+
+        $e = new ErrorException($message, $code, $code, $file, $line);
+        self::handle($e, true);
+        return true;
+    }
+
+    public static function handleFatalError() {
+        if (null === $lastError = error_get_last()) {
+            return;
+        }
+
+        self::$_reserved_memory = null;
+
+        $errors = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
+
+        if ($lastError['type'] & $errors) {
+            self::handleError(@$lastError['type'], @$lastError['message'], @$lastError['file'], @$lastError['line']);
+        }
     }
 	
 	public static function handle(\Exception $e, $send_response = true){
@@ -49,7 +87,13 @@ class Exception extends \Exception {
 
             $log_message = sprintf('%-4s %s', "({$e->getCode()})", $e->getMessage());
             // get the channel manually so the introspection works properly.
-            Log::getChannel('exception')->addRecord(Log::ERROR, $log_message, array(
+
+            $level = Log::ERROR;
+            if($e instanceof ErrorException && isset(self::$levels[$e->getSeverity()])){
+                $level = self::$levels[$e->getSeverity()];
+            }
+
+            Log::getChannel('exception')->addRecord($level, $log_message, array(
                 'exception' => $e
             ));
 
