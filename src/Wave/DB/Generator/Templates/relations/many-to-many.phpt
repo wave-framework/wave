@@ -13,6 +13,8 @@
 	    if(!isset($this->_data['{{ relation.Name }}']))
 	        $this->_data['{{ relation.Name }}'] = array();
 
+        $rc = true;
+
         //it's many to many so get the relation class
         if($create_relation){
             $rc = new {{ relation.ReferencedTable.getClassName(true) }}();
@@ -23,13 +25,11 @@
             }
 
             $rc->save();
-
-            return $rc;
         }
 
         $this->_data['{{ relation.Name }}'][] = $obj; //temp reference removal until cache is completed
 
-        return true;
+        return $rc;
 	}
 
     /**
