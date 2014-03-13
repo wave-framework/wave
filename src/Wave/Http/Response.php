@@ -215,12 +215,20 @@ class Response {
         $this->content = $content;
     }
 
+    public function getContent(){
+        return $this->content;
+    }
+
     public function setStatusCode($code, $text = null) {
         $this->statusCode = (int)$code;
 
         if(null === $this->statusText = $text)
             $this->statusText = isset(self::$statusTexts[$code]) ? self::$statusTexts[$code] : '';
 
+    }
+
+    public function getStatusCode(){
+        return $this->statusCode;
     }
 
     /**
