@@ -8,13 +8,13 @@ use Wave\Utils\JSON;
 
 class JsonResponse extends Response {
 
-    private static $acceptable_types = array(
+    protected static $acceptable_types = array(
         'application/json',
         'text/javascript',
         'text/plain',
     );
 
-    private static $default_type = 'application/json';
+    protected static $default_type = 'application/json';
 
     /**
      * The json data for this response
