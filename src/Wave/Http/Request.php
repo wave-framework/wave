@@ -74,7 +74,8 @@ class Request {
                                 array $query = array(),
                                 array $parameters = array(),
                                 array $attributes = array(),
-                                array $server = array()){
+                                array $server = array(),
+                                array $cookies = array()){
 
         $this->setUrl($url);
         $this->setMethod($method);
@@ -84,6 +85,7 @@ class Request {
         $this->attributes = new ParameterBag($attributes);
         $this->server = new ServerBag($server);
         $this->headers = new HeaderBag($this->server->getHeaders());
+        $this->cookies = new ParameterBag($cookies);
 
     }
 
@@ -139,7 +141,7 @@ class Request {
             }
         }
 
-        return new static($url, $method, $_GET, $parameters, array(), $_SERVER);
+        return new static($url, $method, $_GET, $parameters, array(), $_SERVER, $_COOKIE);
     }
 
     /**

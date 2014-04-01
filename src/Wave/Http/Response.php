@@ -126,12 +126,19 @@ class Response {
      */
     public $headers;
 
+    /**
+     * Holds an array of cookies to be send in this response
+     * @var Cookie[] $cookies
+     */
+    public $cookies;
+
     protected $version;
 
 
-    public function __construct($content = '', $status = self::STATUS_OK, array $headers = array()){
+    public function __construct($content = '', $status = self::STATUS_OK, array $headers = array(), array $cookies = array()){
 
         $this->setHeaders(new HeaderBag($headers));
+        $this->setCookies($cookies);
         $this->setContent($content);
         $this->setStatusCode($status);
         $this->setProtocolVersion('1.0');
@@ -194,6 +201,16 @@ class Response {
             }
         }
 
+        foreach($this->cookies as $cookie){
+            setcookie($cookie->getName(),
+                      $cookie->getValue(),
+                      $cookie->getExpires(),
+                      $cookie->getPath(),
+                      $cookie->getDomain(),
+                      $cookie->isSecure(),
+                      $cookie->isHttpOnly());
+        }
+
         return $this;
     }
 
@@ -243,6 +260,14 @@ class Response {
      */
     public function setHeaders(HeaderBag $headers) {
         $this->headers = $headers;
+    }
+
+    public function setCookies(array $cookies){
+        $this->cookies = $cookies;
+    }
+
+    public function addCookie(Cookie $cookie){
+        $this->cookies[$cookie->getName()] = $cookie;
     }
 
     public function setProtocolVersion($version) {
