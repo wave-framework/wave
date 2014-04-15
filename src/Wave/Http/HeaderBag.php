@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * This class is based substantially off the class of the same name in the
+ * Symfony Http-Foundation package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that is distributed with the Symfony Http-Foundation component
+ */
 
 namespace Wave\Http;
 
