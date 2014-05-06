@@ -176,4 +176,28 @@ class HeaderBag implements \IteratorAggregate, \Countable
     public function count() {
         return count($this->headers);
     }
+
+    /**
+     * Returns the headers as a string.
+     *
+     * @return string The headers
+     */
+    public function __toString() {
+        if (!$this->headers) {
+            return '';
+        }
+
+        $max = max(array_map('strlen', array_keys($this->headers))) + 1;
+        $content = '';
+        ksort($this->headers);
+        foreach ($this->headers as $name => $values) {
+            $name = implode('-', array_map('ucfirst', explode('-', $name)));
+            foreach ($values as $value) {
+                $content .= sprintf("%-{$max}s %s\r\n", $name.':', $value);
+            }
+        }
+
+        return $content;
+    }
+
 }

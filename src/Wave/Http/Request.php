@@ -34,6 +34,8 @@ class Request {
     private $url;
     private $baseUrl;
     private $basePath;
+    private $content;
+
 
     private $method;
 
@@ -570,6 +572,31 @@ class Request {
      */
     public function setAction(Action $action) {
         $this->action = $action;
+    }
+
+    /**
+     * Returns the request as a string.
+     *
+     * @return string The request
+     */
+    public function __toString() {
+        return
+            sprintf('%s %s %s', $this->getMethod(), $this->getPathAndQueryString(), $this->server->get('SERVER_PROTOCOL'))."\r\n".
+            $this->headers."\r\n".
+            $this->getContent();
+    }
+
+    /**
+     * Returns the request body content.
+     *
+     * @return string The request body content.
+     */
+    public function getContent() {
+        if (null === $this->content) {
+            $this->content = file_get_contents('php://input');
+        }
+
+        return $this->content;
     }
 
     /*
