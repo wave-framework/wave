@@ -6,12 +6,14 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 
 class View {
-	
-	private $twig;
+
+    private $twig;
 	
 	private static $_filters = array();
 	private static $_globals = array();
-	
+    private static $_timezone;
+    private static $_date_format;
+
 	private static $instance = null;
 	
 	
@@ -20,7 +22,7 @@ class View {
 		$loader = new \Twig_Loader_Filesystem(Config::get('wave')->path->views);
 		
 		$conf = array('cache' => Config::get('wave')->view->cache);
-		if(Core::$_MODE == Core::MODE_DEVELOPMENT){
+		if(Core::$_MODE !== Core::MODE_PRODUCTION){
 			$conf['auto_reload'] = true;
 			$conf['debug'] = true;
 		}
@@ -42,7 +44,13 @@ class View {
 		$this->twig->addGlobal('_assets', Config::get('deploy')->assets);
 		$this->twig->addGlobal('_host', Config::get('deploy')->profiles->default->baseurl);
 		$this->twig->addGlobal('_mode', Core::$_MODE);
-		
+
+        if(self::$_timezone !== null)
+            $this->twig->getExtension('core')->setTimezone(self::$_timezone);
+
+        if(self::$_date_format !== null)
+            $this->twig->getExtension('core')->setDateFormat(self::$_date_format);
+
 		if(Config::get('deploy')->mode == Core::MODE_DEVELOPMENT || isset($_REQUEST['_wave_show_debugger']))
 			$this->twig->addGlobal('_debugger', Debug::getInstance());
 		
@@ -83,7 +91,17 @@ class View {
 		else self::$instance->twig->addGlobal($name, $value);
 		
 	}
-	
+
+    public static function setTimezone($timezone){
+        if(self::$instance == null) self::$_timezone = $timezone;
+        else self::$instance->twig->getExtension('core')->setTimezone($timezone);
+    }
+
+    public static function setDefaultDateFormat($format){
+        if(self::$instance == null) self::$_date_format = $format;
+        else self::$instance->twig->getExtension('core')->setDateFormat($format);
+    }
+
 	public static function generate(){
 
 		$cache_dir = Config::get('wave')->view->cache;
