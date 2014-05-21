@@ -27,8 +27,18 @@ class Connection extends PDO {
 		$this->driver_class = $driver_class;
 
         $options = array();
-        if(isset($config->driver_options))
-            $options = $config->driver_options->getArrayCopy();
+        if(isset($config->driver_options)){
+            // driver_options can be in two formats, either a key => value array (native)
+            // or an array of [ key, value ], used to preserve types (i.e. integers as keys)
+            if(isset($config->driver_options[0])){
+                foreach($config->driver_options as $option){
+                    list($key, $value) = $option;
+                    $options[$key] = $value;
+                }
+            }
+            else
+                $options = $config->driver_options->getArrayCopy();
+        }
 
 		parent::__construct($driver_class::constructDSN($config), $config->username, $config->password, $options);
 		
