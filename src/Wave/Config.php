@@ -7,8 +7,10 @@ use Wave\Config\Row;
 class Config {
 
 	private static $base_directory = null;
-		
-	private $_data = false;
+
+    private static $resolver = array('\\Wave\\Config', 'defaultResolver');
+
+    private $_data = false;
     
 	public static function init($base_path){
 		if(!is_readable($base_path)){
@@ -18,8 +20,10 @@ class Config {
 		self::$base_directory = $base_path;
 	}
 
-    public function __construct($config){
-    	$config_data = include ($config);
+    public function __construct($namespace){
+
+    	$config_data = call_user_func(self::$resolver, $namespace);
+
     	$this->_data = new Row($config_data);
     }
 
@@ -27,20 +31,25 @@ class Config {
     	return $this->_data->{$offset};
     }
     
-    public static function get($file){
+    public static function get($namespace){
 		static $configs;
-		if (!isset($configs[$file])){
-			//no special config - try to load file.
-			$file_path = self::$base_directory . "/$file.php";
-		
-			if(!is_readable($file_path))
-				throw new \Wave\Exception("Could not load configuration file $file. Looked in $file_path");
-				
-			$configs[$file] = new self($file_path);
+		if (!isset($configs[$namespace])){
+			$configs[$namespace] = new self($namespace);
 		}
-		return $configs[$file];
+		return $configs[$namespace];
 	}
-	
-}
 
-?>
+    public static function setResolver(callable $resolver){
+        self::$resolver = $resolver;
+    }
+
+    public static function defaultResolver($namespace){
+        $file_path = self::$base_directory . "/$namespace.php";
+
+        if(!is_readable($file_path))
+            throw new \Wave\Exception("Could not load configuration file $namespace. Looked in $file_path");
+
+        return include $file_path;
+    }
+
+}
