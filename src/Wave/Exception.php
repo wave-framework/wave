@@ -34,11 +34,13 @@ class Exception extends \Exception {
     /** @var \Wave\Http\Response $response */
     private static $response;
     private static $_error_reporting_types;
+    private static $working_dir;
 
     public static function register($controller){
 		if(!class_exists($controller) || !is_subclass_of($controller, '\\Wave\\Controller')){
 			throw new \Exception("Controller $controller must be an instance of \\Wave\\Controller");
 		}
+
 		self::$_controller = "$controller.execute";
 		set_exception_handler(array('\\Wave\\Exception', 'handle'));
 
@@ -51,6 +53,7 @@ class Exception extends \Exception {
 	}
 
     public static function registerError($error_types = -1, $reserved_memory = 10){
+        self::$working_dir = getcwd();
         set_error_handler(array('\\Wave\\Exception', 'handleError'));
         register_shutdown_function(array('\\Wave\\Exception', 'handleFatalError'));
         self::$_error_reporting_types = $error_types;
@@ -63,8 +66,7 @@ class Exception extends \Exception {
         }
 
         $e = new ErrorException($message, $code, $code, $file, $line);
-        self::handle($e, true);
-        return true;
+        return self::handle($e, true);
     }
 
     public static function handleFatalError() {
@@ -72,12 +74,15 @@ class Exception extends \Exception {
             return;
         }
 
+        chdir(self::$working_dir);
+
         self::$_reserved_memory = null;
 
         $errors = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
 
         if ($lastError['type'] & $errors) {
-            self::handleError(@$lastError['type'], @$lastError['message'], @$lastError['file'], @$lastError['line']);
+            $response = self::handleError(@$lastError['type'], @$lastError['message'], @$lastError['file'], @$lastError['line']);
+            $response->send();
         }
     }
 	
@@ -93,9 +98,7 @@ class Exception extends \Exception {
                 $level = self::$levels[$e->getSeverity()];
             }
 
-            Log::getChannel('exception')->addRecord($level, $log_message, array(
-                'exception' => $e
-            ));
+            Log::getChannel('exception')->addRecord($level, $log_message);
 
             $request = static::$request;
             if($request === null)
@@ -112,9 +115,21 @@ class Exception extends \Exception {
             return $response;
         }
         catch(\Exception $_e){
-            echo $e->__toString();
-            echo "\n\n\nAdditionally, the following exception occurred while trying to handle the error:\n\n";
-            echo $_e->__toString();
+            $response = new Response();
+            $response->setStatusCode(500);
+
+            if(Core::$_MODE === Core::MODE_PRODUCTION){
+                $response->setContent("Internal server error");
+            }
+            else {
+                $response->setContent(
+                    $e->__toString() .
+                    "\n\n\nAdditionally, the following exception occurred while trying to handle the error:\n\n" .
+                    $_e->__toString()
+                );
+            }
+
+            return $response;
         }
 	}
 
