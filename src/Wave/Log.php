@@ -76,7 +76,9 @@ class Log extends Logger {
 
             $log_path = Config::get('wave')->path->logs;
             $log_path .= Config::get('wave')->logger->file->file;
-            $log_dir = realpath(dirname($log_path));
+            $log_dir = dirname($log_path);
+
+
 
             if(!is_writable($log_dir)){
                 @mkdir($log_dir, 0770, true);
