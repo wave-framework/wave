@@ -72,6 +72,8 @@ class Log extends Logger {
     public static function getDefaultHandlers(){
         if(static::$default_handlers === null){
 
+            static::$default_handlers = array();
+
             $log_path = Config::get('wave')->path->logs;
             $log_path .= Config::get('wave')->logger->file->file;
             $log_dir = realpath(dirname($log_path));
