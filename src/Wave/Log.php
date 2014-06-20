@@ -98,7 +98,7 @@ class Log extends Logger {
 
     public static function pushDefaultHandler(AbstractHandler $handler){
         if(static::$default_handlers === null){
-            static::$default_handlers = array();
+            static::$default_handlers = self::getDefaultHandlers();
         }
 
         array_unshift(static::$default_handlers, $handler);
