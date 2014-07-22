@@ -656,7 +656,7 @@ class Query {
                 // if it's a manual select (fields were manually specified) then just put the
                 // requested fields into the output directly, keyed by their aliases.
                 if($this->manual_select){
-                    if(isset($fields[0])){
+                    if(isset($this->fields[0])){
                         throw new Exception('An associative array must be passed in to \Wave\DB\Query::from() when not parsing objects');
                     }
                     foreach($this->fields as $alias => $field){
