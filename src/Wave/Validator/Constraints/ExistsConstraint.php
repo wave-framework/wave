@@ -52,13 +52,4 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
         return sprintf($message, $context);
     }
 
-    public function getViolationPayload(){
-        return array_merge(
-            parent::getViolationPayload(),
-            array(
-                $this->type => $this->arguments
-            )
-        );
-    }
-
 }
