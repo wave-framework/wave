@@ -11,8 +11,8 @@ namespace Wave\DB;
 use \Wave;
 
 /**
- * @method \Wave\DB\Query and() and($condition, array $params = array())
- * @method \Wave\DB\Query or() or($condition, array $params = array())
+ * @method \Wave\DB\Query and() and($condition, mixed $params = array())
+ * @method \Wave\DB\Query or() or($condition, mixed $params = array())
  */
 class Query {
 	
@@ -278,7 +278,7 @@ class Query {
      *
      * @param string $condition The clause condition, should be formatted with a '?' character as placeholders
      *                          for any parameters.
-     * @param array  $params    The parameters to substitute in to the query in place of '?' characters in the condition
+     * @param mixed  $params    The parameters to substitute in to the query in place of '?' characters in the condition
      *
      * @return Query
      * @throws \Wave\Exception when called using the legacy version of the function
@@ -317,7 +317,7 @@ class Query {
      *
      * @param string  $condition The clause condition, should be formatted with a '?' character as placeholders
      *                           for any parameters.
-     * @param array   $params    The parameters to substitute into the query
+     * @param mixed   $params    The parameters to substitute into the query
      * @param string  $type      The type of condition to add (AND or OR)
      * @param bool    $create    Whether to create a new sub-clause or append this condition to the existing clause
      *
@@ -354,7 +354,7 @@ class Query {
      *    and the '=' is replaced with IN()
      *
      * @param string $condition The condition to parse.
-     * @param array  $params    The parameters array. This is passed by reference.
+     * @param mixed  $params    The parameters array. This is passed by reference.
      *
      * @return string the transformed condition
      */
