@@ -148,6 +148,13 @@ class Validator implements ArrayAccess {
         return $this->_violations;
     }
 
+    public function getSchemaKey($key){
+        if(array_key_exists($key, $this->_schema))
+            return $this->_schema[$key];
+
+        return null;
+    }
+
     /**
      * @param string $schema A schema file to load from the configured schema path
      * @param array $input
