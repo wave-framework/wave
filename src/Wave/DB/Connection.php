@@ -16,6 +16,9 @@ class Connection extends PDO {
 
     /** @var DriverInterface $driver_class */
 	private $driver_class;
+	
+	private $cache_enabled;
+	private $statement_cache = array();
 
     /**
      * @param \Wave\Config\Row $config
@@ -42,17 +45,29 @@ class Connection extends PDO {
 
 		parent::__construct($driver_class::constructDSN($config), $config->username, $config->password, $options);
 		
+		$this->cache_enabled = isset($config->enable_cache) && $config->enable_cache;
+		
 		//Override the default PDOStatement 
 		$this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('\\Wave\\DB\\Statement', array($this)));
 	
 	}
 	
-	/** for catching queries	
-	public function prepare($sql){
-		echo "$sql\n\n";
-		return parent::prepare($sql);
+	
+	public function prepare($sql, $options = array()){
+		
+		if(!$this->cache_enabled)
+			return parent::prepare($sql, $options);
+		
+		$hash = md5($sql);
+		
+		//double-check that sql is same if it is cached
+		if(!isset($this->statement_cache[$hash]) || $this->statement_cache[$hash]->queryString !== $sql){
+			$this->statement_cache[$hash] = parent::prepare($sql, $options);
+		}
+		
+		return $this->statement_cache[$hash];
 	}
-	**/
+	
 
     /**
      * @return DriverInterface

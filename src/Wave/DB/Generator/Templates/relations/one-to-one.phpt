@@ -10,6 +10,13 @@
 	**/
 	public function set{{ relation.Name }}(&$obj = null, $create_relation = true){
 		$this->_data['{{ relation.Name }}'] = &$obj;
+		
+		if($obj !== null && $create_relation){
+			if(!$obj->_isLoaded())
+				$obj->save();
+            {% for column in relation.ReferencedColumns %}$this->_data['{{ relation.LocalColumns[loop.index0].Name }}'] = $obj->{{ column.getName() }};
+            {% endfor %}
+		}
 	}
 	
 	/**
