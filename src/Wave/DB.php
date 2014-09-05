@@ -56,8 +56,7 @@ class DB {
 		$driver = $this->connection->getDriverClass();
 		$this->escape_character = $driver::getEscapeCharacter();
 
-		if(in_array(Core::$_MODE, array(Core::MODE_DEVELOPMENT, Core::MODE_TEST)))
-			$this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+    	$this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 	}
 
     /**
