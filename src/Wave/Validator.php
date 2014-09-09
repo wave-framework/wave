@@ -52,8 +52,14 @@ class Validator implements ArrayAccess {
         foreach($this->_schema as $field_name => $definition){
 
             $field_alias = $field_name;
-            if(!isset($this->_data[$field_name]) && isset($this->aliases[$field_name]))
-                $field_alias = $this->aliases[$field_name];
+            if(!isset($this->_data[$field_name]) && isset($this->aliases[$field_name])){
+                if(!is_array($this->aliases[$field_name]))
+                    $this->aliases[$field_name] = array($this->aliases[$field_name]);
+
+                foreach($this->aliases[$field_name] as $alias){
+                    if(isset($this->_data[$alias])){ $field_alias = $alias; break;}
+                }
+            }
 
             $this->setCleanedData($field_name, null);
 
@@ -138,8 +144,16 @@ class Validator implements ArrayAccess {
      */
     public function getViolation($field_name){
         $field_alias = $field_name;
-        if(!isset($this->_violations[$field_name]) && isset($this->aliases[$field_name]))
-            $field_alias = $this->aliases[$field_name];
+        if(!isset($this->_violations[$field_name]) && isset($this->aliases[$field_name])){
+            if(!is_array($this->aliases[$field_name]))
+                $this->aliases[$field_name] = array($this->aliases[$field_name]);
+
+            foreach($this->aliases[$field_name] as $alias){
+                if(isset($this->_violations[$alias])){
+                    return $this->_violations[$alias];
+                }
+            }
+        }
 
         return isset($this->_violations[$field_alias]) ? $this->_violations[$field_alias] : null;
     }
@@ -250,4 +264,5 @@ class Validator implements ArrayAccess {
     public function offsetUnset($offset) {
         throw new \BadMethodCallException("Unsetting validator input data is not supported");
     }
+
 }
