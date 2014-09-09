@@ -51,7 +51,8 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 			'default'	=> {{ column.Default|formatType }},
 			'data_type'	=> {{ column.DataType }},
 			'nullable'	=> {% if column.isNullable %}true{% else %}false{% endif %},
-			'serial'    => {% if column.isSerial %}true{% else %}false{% endif %}
+			'serial'    => {% if column.isSerial %}true{% else %}false{% endif %},
+			'metadata'  => array({% for key, value in column.Metadata %}{{key|export}} =>{{value|export}}{% if not loop.last %},{% endif %} {% endfor %})
 
 		){% if not loop.last %},{% endif %}
 		
