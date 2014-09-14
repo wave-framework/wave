@@ -3,7 +3,7 @@
     /**
      * {{ relation.Name }} - many-to-many
      *
-     * @param $obj {{ relation.TargetRelation.ReferencedTable.getClassName(true) }} The {{ relation.Name }} to be added
+     * @param $obj {{ relation.TargetRelation.ReferencedTable.getClassName(true) }} The {{ relation.TargetRelation.ReferencedTable.getClassName() }} to be added
      * @param bool $create_relation whether to create the relation in the database
      * @param array $join_data additional data to be saved when the relation is created, column => value array
      *
@@ -35,7 +35,7 @@
     /**
      * {{ relation.Name }}
      *
-     * @param $obj {{ relation.TargetRelation.ReferencedTable.getClassName(true) }} The {{ relation.Name }} object to be removed
+     * @param $obj {{ relation.TargetRelation.ReferencedTable.getClassName(true) }} The {{ relation.TargetRelation.ReferencedTable.getClassName() }} object to be removed
      * @param bool $remove_relation actually remove the relation from the database
      * @return bool
     **/

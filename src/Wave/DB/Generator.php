@@ -65,6 +65,7 @@ class Generator {
 		$loader = new Twig_Loader_Filesystem(__DIR__.DS.'Generator'.DS.'Templates');
 		self::$twig = new Twig_Environment($loader, array('autoescape' => false));
 		self::$twig->addFilter('addslashes', new \Twig_Filter_Function('addslashes'));
+        self::$twig->addFilter('export', new \Twig_Filter_Function(function($var){ return var_export($var, true); }));
 		self::$twig->addFilter('implode', new \Twig_Filter_Function('implode'));
 		self::$twig->addFilter('singularize', new \Twig_Filter_Function('\\Wave\\Inflector::singularize'));
         self::$twig->addFilter('formatType', new \Twig_Filter_Function('\\Wave\\DB\\Generator::formatTypeForSource'));

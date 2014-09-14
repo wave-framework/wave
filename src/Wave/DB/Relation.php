@@ -168,7 +168,13 @@ class Relation {
 					$name .= '_'.$ref_name;	
 				break;			
 			case self::MANY_TO_MANY:
-				$name = Wave\Inflector::pluralize($this->target_relation->getReferencedTable()->getName());
+                $columns = $this->target_relation->getLocalColumns();
+                $name = $columns[0]->getMetadata('relation_name');
+                if($name === null){
+                    $name = $this->target_relation->getReferencedTable()->getName();
+                }
+
+				$name = Wave\Inflector::pluralize($name);
 				break;
 		}
 		

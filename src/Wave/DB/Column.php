@@ -38,6 +38,8 @@ class Column {
 	private $extra;
     /** @var string $comment */
 	private $comment;
+    /** @var  array $metadata */
+    private $metadata = array();
 									
 	public function __construct(Table $table, $name, $nullable, $data_type, $default_value, $is_serial = false, $type_desc = '', $extra = '', $comment = ''){
 		
@@ -51,6 +53,7 @@ class Column {
 		$this->extra = $extra;
 		$this->comment = $comment;
 	
+        $this->parseMetadata($comment);
 	}
 
     /**
@@ -141,6 +144,20 @@ class Column {
 	}
 
     /**
+     * @param $key
+     * @return null
+     */
+    public function getMetadata($key = null){
+        if($key !== null){
+            if(array_key_exists($key, $this->metadata))
+                return $this->metadata[$key];
+            else
+                return null;
+        }
+        return $this->metadata;
+    }
+
+    /**
      * @return bool
      */
     public function isPrimaryKey(){
@@ -148,6 +165,14 @@ class Column {
 		
 		return $pk === null ? false : in_array($this, $pk->getColumns());
 	}
-	
+
+    private function parseMetadata($raw){
+
+        $parsed = json_decode($raw, true);
+        if(json_last_error() === JSON_ERROR_NONE && is_array($parsed)){
+            $this->metadata = $parsed;
+        }
+
+    }
 	
 }
