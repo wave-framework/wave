@@ -37,6 +37,9 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
             }
 
             $schema = array('fields' => array($this->property => $constraint_group));
+            if(!isset($schema['fields'][$this->property]['required']))
+                $schema['fields'][$this->property]['required'] = false;
+
             $instance = new Validator($input, $schema, $this->validator);
 
             if($instance->execute()){
