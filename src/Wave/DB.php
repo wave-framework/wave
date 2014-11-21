@@ -85,6 +85,26 @@ class DB {
 
 	}
 
+    public static function getConfigForNamespace($namespace){
+
+        $databases = Config::get('db')->databases;
+
+        if(!isset($databases[$namespace])){
+            throw new DBException("There is no database configuration for {$namespace}");
+        }
+
+        if(isset($databases[$namespace][Core::$_MODE]))
+            $mode = Core::$_MODE;
+        else
+            $mode = Core::MODE_PRODUCTION;
+
+        if(!isset($databases[$namespace][$mode])){
+            throw new DBException('There must be at least a PRODUCTION database defined');
+        }
+
+        return $databases[$namespace][$mode];
+    }
+
     /**
      * Returns an instance of a database
      * If no arguments are supplied, the default namespace and mode are selected.
@@ -105,23 +125,8 @@ class DB {
 		}
 
 		if(!isset(self::$instances[$namespace])){
-		
-			$databases = Config::get('db')->databases;
-
-			if(!isset($databases[$namespace])){
-				throw new DBException("There is no database configuration for {$namespace}");
-			}
-			
-			if(isset($databases[$namespace][\Wave\Core::$_MODE])) 
-				$mode = Core::$_MODE;
-			else
-				$mode = Core::MODE_PRODUCTION;
-		
-			if(!isset($databases[$namespace][$mode])){
-				throw new DBException('There must be at least a PRODUCTION database defined');
-			}
-			
-			self::$instances[$namespace] = self::init($namespace, $databases[$namespace][$mode], $namespace);
+			$config = self::getConfigForNamespace($namespace);
+			self::$instances[$namespace] = self::init($namespace, $config, $namespace);
 		}
 		
 		return self::$instances[$namespace];

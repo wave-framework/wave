@@ -39,7 +39,6 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 
 	//Table name
 	protected static $_database = '{{ table.Database.getNamespace(false) }}';
-	protected static $_schema_name = '{{ table.Database.Schema }}';
 	protected static $_table_name = '{{ table.Name }}';
 	
 	//Fields

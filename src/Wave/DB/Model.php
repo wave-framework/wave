@@ -8,6 +8,7 @@
 
 namespace Wave\DB;
 use Wave;
+use Wave\DB;
 
 class Model {
 
@@ -214,6 +215,10 @@ class Model {
      * @return string
      */
     public static function _getDatabaseName(){
+        if(!isset(static::$_schema_name)){
+            $config = DB::getConfigForNamespace(static::_getDatabaseNamespace());
+            static::$_schema_name = $config['database'];
+        }
 		return static::$_schema_name;
 	}
 
