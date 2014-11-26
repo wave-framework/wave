@@ -7,6 +7,7 @@
 **/
 
 namespace Wave\DB;
+
 use Wave;
 use Wave\DB;
 
@@ -76,10 +77,10 @@ class Model {
 
 	public function __construct($data = null, $is_loaded = false){
 
-        $connection = \Wave\DB::get(self::_getDatabaseNamespace());
+        $connection = DB::get(self::_getDatabaseNamespace());
 
 		foreach(self::_getFields() as $field){
-            $this->_data[$field] = isset($data[$field])
+            $this->_data[$field] = is_array($data) && array_key_exists($field, $data)
                                         ? $connection->valueFromSQL($data[$field], self::_getField($field))
                                         : self::getFieldDefault($field);
 		}
@@ -118,7 +119,7 @@ class Model {
      */
     public static function getFieldDefault($field_name){
 		$field = self::_getField($field_name);
-		return Wave\DB::get(self::_getDatabaseNamespace())->valueFromSQL($field['default'], $field);
+		return DB::get(self::_getDatabaseNamespace())->valueFromSQL($field['default'], $field);
 	}
 
     /**
@@ -129,7 +130,7 @@ class Model {
      */
     public static function loadByID(){
 		
-		$stmt = Wave\DB::get(self::_getDatabaseNamespace())->from(get_called_class());
+		$stmt = DB::get(self::_getDatabaseNamespace())->from(get_called_class());
 		
 		foreach(self::_getIdentifyingColumns() as $index => $column)
 			$stmt->where("$column = ?", func_get_arg($index));
@@ -145,7 +146,7 @@ class Model {
      * @return bool
      */
     public function save($save_relations = true){
-		return Wave\DB::save($this, $save_relations);
+		return DB::save($this, $save_relations);
 	}
 
     /**
@@ -154,7 +155,7 @@ class Model {
      * @return bool
      */
     public function delete(){
-		return Wave\DB::delete($this);
+		return DB::delete($this);
 	}
 
     public function _equals(Model $object){
