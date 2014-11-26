@@ -393,7 +393,7 @@ class Request {
      * @return string
      */
     public function getPathAndQueryString(){
-        return $this->getPath() . $this->getQueryString();
+        return $this->getPath() . '?' . $this->getQueryString();
     }
 
     /**
