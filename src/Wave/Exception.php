@@ -81,8 +81,7 @@ class Exception extends \Exception {
         $errors = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
 
         if ($lastError['type'] & $errors) {
-            $response = self::handleError(@$lastError['type'], @$lastError['message'], @$lastError['file'], @$lastError['line']);
-            $response->send();
+            self::handleError(@$lastError['type'], @$lastError['message'], @$lastError['file'], @$lastError['line']);
         }
     }
 	
@@ -111,8 +110,9 @@ class Exception extends \Exception {
     		$response = Controller::invoke($action, $request, array('exception' => $e));
             $response->prepare($request);
 
-            if($send_response)
+            if($send_response) {
                 $response->send();
+            }
 
             return $response;
         }
