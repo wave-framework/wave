@@ -80,7 +80,7 @@ class Model {
         $connection = DB::get(self::_getDatabaseNamespace());
 
 		foreach(self::_getFields() as $field){
-            $this->_data[$field] = is_array($data) && array_key_exists($field, $data)
+            $this->_data[$field] = $data !== null && array_key_exists($field, $data)
                                         ? $connection->valueFromSQL($data[$field], self::_getField($field))
                                         : self::getFieldDefault($field);
 		}
