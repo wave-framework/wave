@@ -98,7 +98,9 @@ class Exception extends \Exception {
                 $level = self::$levels[$e->getSeverity()];
             }
 
-            Log::getChannel('exception')->addRecord($level, $log_message);
+            Log::getChannel('exception')->addRecord($level, $log_message, array(
+                'exception' => $e
+            ));
 
             $request = static::$request;
             if($request === null)
