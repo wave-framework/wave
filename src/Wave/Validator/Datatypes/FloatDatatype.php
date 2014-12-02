@@ -10,7 +10,7 @@ class FloatDatatype extends AbstractDatatype implements CleanerInterface  {
 
         if(!is_scalar($this->input)) return false;
 
-        return filter_var($this->input, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_THOUSAND);
+        return false !== filter_var($this->input, FILTER_VALIDATE_FLOAT, FILTER_FLAG_ALLOW_THOUSAND);
 	}
 	
 	public function getCleanedData(){
