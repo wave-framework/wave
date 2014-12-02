@@ -4,9 +4,16 @@ namespace Wave\Validator\Datatypes;
 
 class EmailDatatype extends AbstractDatatype {
 
+    private $cleaned;
+
 	public function __invoke(){
-		return preg_match('/^([_a-z0-9-]+)((\+|\.)[_a-z0-9-]+)*@([a-z0-9-]+)(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/i', $this->input) > 0;
+        $this->cleaned = trim($this->input);
+		return filter_var($this->cleaned, FILTER_VALIDATE_EMAIL);
 	}
+
+    public function getCleanedData(){
+        return $this->cleaned;
+    }
 
     /**
      * @return string a type to use in the violation message
