@@ -23,8 +23,8 @@ class Generator {
      * Generate the base models (and any model stubs if they don't exist) based on the schema
      * from the database
      */
-    public static function generate(){
-		
+    public static function generate(&$orphans = null){
+
 		self::initTwig();
 		$databases = Wave\DB::getAll();
 		
@@ -32,17 +32,22 @@ class Generator {
 										
 			self::createModelDirectory($database);
 			$tables = $database->getTables($database);
-						
+
+            $existing_files = glob(self::getModelPath($database).'*.php');
+
 			foreach($tables as $table){
 				$base_file = self::getBaseModelPath($database).$table->getClassName().'.php';
 				file_put_contents($base_file, self::renderTemplate('base-model', array('table' => $table)));
-				
+
 				$stub_file = self::getModelPath($database).$table->getClassName().'.php';
-				if(!file_exists($stub_file))
+                if(!file_exists($stub_file))
 					file_put_contents($stub_file, self::renderTemplate('stub-model', array('table' => $table)));
-				
+
+                $current_files[] = $stub_file;
 			}
-			
+
+            $orphans = array_diff($existing_files, $current_files);
+
 		}
 	}
 
@@ -124,5 +129,3 @@ class Generator {
     }
 
 }
-
-?>
