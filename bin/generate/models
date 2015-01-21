@@ -5,8 +5,13 @@ use \Wave;
 
 require_once dirname(__FILE__) . '/../cli-tools.php';
 
-echo "Regenerating Models... ";
-Wave\DB\Generator::generate();
+echo "Regenerating Models... \n";
+
+Wave\DB\Generator::generate($orphan_files);
+foreach($orphan_files as $file){
+    printf("File has been orphaned during model generation [%s]\n", $file);
+}
+
 echo " done\n";
 
 if(defined('VERBOSE') && VERBOSE){
