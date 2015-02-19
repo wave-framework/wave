@@ -1,19 +1,18 @@
 <?php
 
 namespace Wave\Annotation;
-use Wave;
 
-class RequiresLevel extends Wave\Annotation {
+
+use Wave\Annotation;
+use Wave\Router\Action;
+
+class RequiresLevel extends ArrayArguments {
 	
 	const DEFAULT_KEYWORD = 'default';
 	
-	public function isFor() {
-		return Wave\Annotation::FOR_METHOD;
-	}
-
 	public function validate($class) {
 		$this->minimumParameterCount(1);
-		$this->validOnSubclassesOf($class,	Wave\Annotation::CLASS_CONTROLLER);
+		$this->validOnSubclassesOf($class,	Annotation::CLASS_CONTROLLER);
 	}
 
 	public function build(){
@@ -25,11 +24,8 @@ class RequiresLevel extends Wave\Annotation {
 		$this->methods = $this->parameters;	
 	}
 
-	public function apply(Wave\Router\Action &$action){
+	public function apply(Action &$action){
 		return $action->setRequiresLevel($this->methods, $this->inherit);
 	}
 
 }
-
-
-?>

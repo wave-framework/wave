@@ -4,6 +4,7 @@ namespace Wave\Router;
 
 
 
+use Wave\Annotation;
 use Wave\Auth;
 use Wave\Config;
 use Wave\Exception;
@@ -19,7 +20,8 @@ class Action {
 	private $baseroutes = array(); // a URL to prepend to relative routes in this route
 	
 	private $routes = array();
-	
+	private $annotations = array();
+
 	private $target_action;
 	private $requires_level = array();
 	private $response_methods = array();
@@ -72,6 +74,7 @@ class Action {
             }
         }
 	}
+
 	public function getRoutes() { return $this->routes; }
 	
 	public function hasRoutes(){ return isset($this->routes[0]); }
@@ -159,6 +162,35 @@ class Action {
         return $this->validation_schema !== null;
     }
 
+    public function addAnnotation(Annotation $annotation) {
+        if(!array_key_exists($annotation->getKey(), $this->annotations))
+            $this->annotations[$annotation->getKey()] = array();
+
+        $this->annotations[$annotation->getKey()][] = $annotation;
+        $annotation->apply($this);
+    }
+
+    /**
+     * @return Annotation[]
+     */
+    public function getAnnotations(){
+        return $this->annotations;
+    }
+
+    /**
+     * @param $key
+     * @return Annotation|null
+     */
+    public function getAnnotation($key){
+        if(isset($this->annotations[$key]))
+            return $this->annotations[$key];
+        else
+            return null;
+    }
+
+    public function hasAnnotation($key) {
+        return isset($this->annotations[$key]);
+    }
 
 }
 

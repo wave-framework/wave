@@ -31,7 +31,7 @@ class Generator {
 			$base_route = new Action();
 			// set the route defaults from the Controller annotations (if any)
 			foreach($controller['class']['annotations'] as $annotation){
-				$annotation->apply($base_route);
+                $base_route->addAnnotation($annotation);
 			}
 			
 			foreach($controller['methods'] as $method){
@@ -39,7 +39,7 @@ class Generator {
 				
 				if($method['visibility'] == Wave\Reflector::VISIBILITY_PUBLIC){
 					foreach($method['annotations'] as $annotation)
-						$annotation->apply($route);
+                        $route->addAnnotation($annotation);
 				}
 				
 				$route->setAction($controller['class']['name'] . '.' . $method['name']);

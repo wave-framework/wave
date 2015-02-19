@@ -2,43 +2,72 @@
 
 namespace Wave;
 
-abstract class Annotation {
+use Wave\Annotation\InvalidAnnotationException;
+
+class Annotation {
 	
 	const FOR_CLASS = 'class';
 	
 	const CLASS_CONTROLLER = '\\Wave\\Controller';
 	const CLASS_MODEL = '\\Wave\\Model';
-	
-    protected $parameters = array();
+
+    protected $key;
+    protected $value;
+    protected $from_class;
+
+    protected static $handlers = array(
+        'baseroute' => '\\Wave\\Annotation\\BaseRoute',
+        'baseurl' => '\\Wave\\Annotation\\BaseURL',
+        'requireslevel' => '\\Wave\\Annotation\\RequiresLevel',
+        'respondswith' => '\\Wave\\Annotation\\RespondsWith',
+        'route' => '\\Wave\\Annotation\\Route',
+        'validate' => '\\Wave\\Annotation\\Validate',
+    );
+
+    public static function factory($key, $value, $from_class = null){
+
+        $class = __CLASS__;
+        if(isset(self::$handlers[$key])){
+            $class = self::$handlers[$key];
+        }
+
+        return new $class($key, $value, $from_class);
+    }
 
 	public static function parse($block, $originating_class){
-		preg_match_all('%(?:\s|\*)*~(\S+)[^\n\r\S]*(?:(.*?)(?:\*/)|(.*))%', $block, $result, PREG_PATTERN_ORDER);
-		
-		$annotations = $result[1];
-		if(isset($result[2][0]) && $result[2][0] != '') {
+
+        if(empty($block)) return array();
+
+        $block = self::sanitizeDocBlock($block);
+
+        $annotations = array();
+        $pattern = '/(?<=(?:\@|\~))([a-zA-Z\_\-\\\][a-zA-Z0-9\_\-\.\\\]*)(((?!\s(?:\@|\~)).)*)/s';
+        preg_match_all($pattern, $block, $found);
+        foreach ($found[2] as $key => $value) {
+            $type = strtolower($found[1][$key]);
+            $value = trim($value);
+            $annotations[] = self::factory($type, $value, $originating_class);
+        }
+
+        return $annotations;
+
+		//preg_match_all('%(?:\s|\*)*~(\S+)[^\n\r\S]*(?:(.*?)(?:\*/)|(.*))%', $block, $result, PREG_PATTERN_ORDER);
+
+
+		//$annotations = $result[1];
+		//if(isset($result[2][0]) && $result[2][0] != '') {
             // this is the value when the close comment block '*/' is at the end of the annotation
-			$values = $result[2];
-		} else {
+		//	$values = $result[2];
+		//} else {
             // this is the value when the comment block ends on a new line
-			$values = $result[3];
-		}
+		//	$values = $result[3];
+		//}
+        /*
 		$returns = array();
 		if(empty($result[1])) return array();
 		foreach($annotations as $key => $annotation) {
 
-            $arguments = array();
-            foreach(explode(',', $values[$key]) as $argument){
-                // attempt to explode the argument into a key:value
-                list($k, $value) = explode(':', $argument) + array(null, null);
-                // no value means it was just a plain argument, so just clean it and insert as normal
-                $k = trim($k, ' \'"');
-                if($value === null){
-                    $arguments[] = $k;
-                }
-                else {
-                    $arguments[$k] = trim($value, ' \'"');
-                }
-            }
+            $annotation = new
 
 			$annotationClass = 'Wave\\Annotation\\' . $annotation;
 			if(class_exists($annotationClass, true)) {
@@ -55,86 +84,51 @@ abstract class Annotation {
 			} else {
 				throw new \Wave\Exception('Unknown annotation: "' . $annotation . '"',0);
 			}
-			
+
 			$returns[] = $annotation;
 		}
-		
+
 		return $returns;
+		*/
 	}
 
-	public function init($parameters) {
-		$this->parameters = array_change_key_case($parameters, CASE_LOWER);
-		return $this;
+    /**
+     * Remove comment notation (/ and *) from a raw docblock
+     *
+     * @param $docblock
+     * @return mixed
+     */
+    protected static function sanitizeDocBlock($docblock){
+        return preg_replace('/^(\s*\*\s{0,1}\/?)|(\/\*{1,2})/m', '', $docblock);
+    }
+
+	public function __construct($key, $value, $from_class = null) {
+        $this->key = $key;
+        $this->value = $value;
+        $this->from_class = $from_class;
 	}
 
-	public function build() {}
-	abstract public function apply(Router\Action &$action);
+	public function apply(Router\Action &$action){}
 
-	protected function acceptedKeys($keys) {
-		foreach($this->parameters as $key => $value) {
-			if (is_string($key) && !in_array($key, $keys)) {
-				$this->errors[] = "Invalid parameter: \"$key\".";
-			}
-		}
-	}
-	
-	protected function requiredKeys($keys) {
-		foreach($keys as $key) {
-			if(!array_key_exists($key, $this->parameters)) {
-				$this->errors[] = get_class($this) . " requires a '$key' parameter.";
-			}
-		}
-	}
-	
-	protected function acceptedKeylessValues($values) {
-		foreach($this->parameters as $key => $value) {
-			if(!is_string($key) && !in_array($value, $values)) {
-				$this->errors[] = "Unknown parameter: \"$value\".";
-			}
-		}
-	}
-	
-	protected function acceptedIndexedValues($index, $values, $optional = true) {
-		if($optional && !isset($this->parameters[$index])) return;
+    /**
+     * @return mixed
+     */
+    public function getKey() {
+        return $this->key;
+    }
 
-		if(!in_array($this->parameters[$index],$values)) {
-			$this->errors[] = "Parameter $index is set to \"" . $this->parameters[$index] . "\". Valid values: " . implode(', ', $values) . '.';
-		}
+    /**
+     * @return mixed
+     */
+    public function getValue() {
+        return $this->value;
+    }
+
+    protected function validOnSubclassesOf($annotatedClass, $baseClass) {
+		if( $annotatedClass != $baseClass && !is_subclass_of($annotatedClass, $baseClass) )
+			throw new InvalidAnnotationException(get_class($this) . " is only valid on objects of type {$baseClass}.");
+
 	}
-	
-	protected function acceptsNoKeylessValues() {
-		$this->acceptedKeylessValues(array());
-	}
-	
-	protected function acceptsNoKeyedValues() {
-		$this->acceptedKeys(array());
-	}
-	
-	protected function validOnSubclassesOf($annotatedClass, $baseClass) {
-		if( $annotatedClass != $baseClass && !is_subclass_of($annotatedClass, $baseClass) ) {
-			$this->errors[] = get_class($this) . " is only valid on objects of type $baseClass.";
-		}
-	}
-	
-	protected function minimumParameterCount($count) {
-		if( ! (count($this->parameters) >= $count) ) {
-			$this->errors[] = get_class($this) . " takes at least $count parameters.";
-		}
-	}
-	
-	protected function maximumParameterCount($count) {
-		if( ! (count($this->parameters) <= $count) ) {
-			$this->errors[] = get_class($this) . " takes at most $count parameters.";
-		}
-	}
-	
-	protected function exactParameterCount($count) {
-		if ( count($this->parameters) != $count ) {
-			$this->errors[] = get_class($this) . " requires exactly $count parameters.";
-		}
-	}
+
 
 }
-
-
-?>
