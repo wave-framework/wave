@@ -7,7 +7,7 @@ use Wave\Http\Response;
 class ForbiddenException extends HttpException {
 
 
-    protected function getStatusCode(){
+    protected function getStatusCode() {
         return Response::STATUS_FORBIDDEN;
     }
 }

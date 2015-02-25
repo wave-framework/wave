@@ -4,4 +4,5 @@ namespace Wave\DB;
 
 use Wave;
 
-class Exception extends Wave\Exception {}
+class Exception extends Wave\Exception {
+}

@@ -6,28 +6,28 @@ class Debug {
 
     private $config;
 
-	private $queries = array();
+    private $queries = array();
     private $query_count = 0;
-	private $used_files = array();
-	private $execution_start;
+    private $used_files = array();
+    private $execution_start;
     private $checkpoints = array();
-	
-	private static $instance = null;
+
+    private static $instance = null;
 
     /**
      * @return \Wave\Debug
      */
-	public static function getInstance(){
-		if(self::$instance === null)
+    public static function getInstance() {
+        if(self::$instance === null)
             self::init();
-			
-		return self::$instance;
-	}
-	
-	public function __construct(array $config){
+
+        return self::$instance;
+    }
+
+    public function __construct(array $config) {
         $this->config = $config;
-		$this->resetExecutionTime($config['start_time']);
-	}
+        $this->resetExecutionTime($config['start_time']);
+    }
 
     public static function init(array $config = array()) {
         $defaults = array(
@@ -38,34 +38,34 @@ class Debug {
         self::$instance = new self(array_merge($defaults, $config));
     }
 
-    public function getMemoryUsage(){
-        return round(memory_get_peak_usage()/pow(1024, 2), 2);
+    public function getMemoryUsage() {
+        return round(memory_get_peak_usage() / pow(1024, 2), 2);
     }
 
-	public function getCurrentMemoryUsage(){
-		return round(memory_get_usage()/pow(1024, 2), 2);
-	}
+    public function getCurrentMemoryUsage() {
+        return round(memory_get_usage() / pow(1024, 2), 2);
+    }
 
-	/**
-	 * Returns the time in miliseconds since the initation of the object. Used to track program execution time.
-	 * @return int
-	 */
-	public function getExecutionTime(){
-		return round((microtime(true) - $this->execution_start)*1000, 0);
-	}
+    /**
+     * Returns the time in miliseconds since the initation of the object. Used to track program execution time.
+     * @return int
+     */
+    public function getExecutionTime() {
+        return round((microtime(true) - $this->execution_start) * 1000, 0);
+    }
 
-    public function resetExecutionTime($reset_time = null){
+    public function resetExecutionTime($reset_time = null) {
         if($reset_time === null)
             $reset_time = microtime(true);
 
         $this->execution_start = $reset_time;
     }
 
-    public function getCheckpoints(){
+    public function getCheckpoints() {
         return $this->checkpoints;
     }
 
-    public function addCheckpoint($name){
+    public function addCheckpoint($name) {
         $this->checkpoints[] = array(
             'name' => $name,
             'time' => $this->getExecutionTime(),
@@ -73,33 +73,33 @@ class Debug {
         );
     }
 
-	/**
-	 * Adds the details of a used file in to an array
-	 * @return
-	 * @param object $filename
-	 * @param object $caller[optional]
-	 */
-	public function addUsedFile($filename, $caller = null){
-		$this->used_files[] = array('filename' => $filename, 'caller' => $caller);
-	}
+    /**
+     * Adds the details of a used file in to an array
+     * @return
+     * @param object $filename
+     * @param object $caller [optional]
+     */
+    public function addUsedFile($filename, $caller = null) {
+        $this->used_files[] = array('filename' => $filename, 'caller' => $caller);
+    }
 
-	/**
-	 * Returns all files used in the process
-	 * @return
-	 */
-	public function getUsedFiles(){
-		$out = array();
-		foreach(get_included_files() as $i => $file){
-			$out[] = array('number' => $i+1, 'filename' => str_replace(SYS_ROOT, '', $file));
-		}
-		return $out;
-	}
+    /**
+     * Returns all files used in the process
+     * @return
+     */
+    public function getUsedFiles() {
+        $out = array();
+        foreach(get_included_files() as $i => $file) {
+            $out[] = array('number' => $i + 1, 'filename' => str_replace(SYS_ROOT, '', $file));
+        }
+        return $out;
+    }
 
-	public function addQuery($time, $statement){
+    public function addQuery($time, $statement) {
 
         $this->query_count++;
 
-        if($this->config['log_queries']){
+        if($this->config['log_queries']) {
             $sql = $statement->queryString;
             $rows = $statement->rowCount();
             $success = $statement->errorCode() == \PDO::ERR_NONE ? true : false;
@@ -112,117 +112,141 @@ class Debug {
         }
 
         $this->addCheckpoint('query.' . $this->query_count);
-	}
+    }
 
 
-	public function getNumberOfFiles(){
-		return count(get_included_files());
-	}
+    public function getNumberOfFiles() {
+        return count(get_included_files());
+    }
 
 
-	public function getNumberOfQueries(){
-		return $this->query_count;
-	}
-	
-	/**
-	 * Returns the queris involved in the render, sets a colour for bad ones
-	 */
-	public function getQueries(){
+    public function getNumberOfQueries() {
+        return $this->query_count;
+    }
 
-		$out = array();
-		for($i=0; $i < count($this->queries); $i++){
+    /**
+     * Returns the queris involved in the render, sets a colour for bad ones
+     */
+    public function getQueries() {
 
-			$colour = $this->queries[$i]['success'] ? "green" : "red";
-			$sql = $this->queries[$i]['sql'];
-			$rows = $this->queries[$i]['rows'] . ' row' . ($this->queries[$i]['rows'] == 1 ? '' : 's') ;
-			$time = $this->queries[$i]['time'].' ms';
+        $out = array();
+        for($i = 0; $i < count($this->queries); $i++) {
 
-			$out[] = array('colour' => $colour, 'number' => $i+1, 'sql' => addslashes($sql), 'time' => $time, 'rows' => $rows);
-		}
+            $colour = $this->queries[$i]['success'] ? "green" : "red";
+            $sql = $this->queries[$i]['sql'];
+            $rows = $this->queries[$i]['rows'] . ' row' . ($this->queries[$i]['rows'] == 1 ? '' : 's');
+            $time = $this->queries[$i]['time'] . ' ms';
 
-		return $out;
+            $out[] = array('colour' => $colour, 'number' => $i + 1, 'sql' => addslashes($sql), 'time' => $time, 'rows' => $rows);
+        }
 
-	}
-	
-	public function render(){
+        return $out;
+
+    }
+
+    public function render() {
         Hook::triggerAction('debugger.render', array(&$this));
-		?>
-		<!--DEBUG PANEL-->
-		<style type="text/css"><?php echo self::getCSS(); ?></style>
-		<div id="_wave_debugpanel">
-	        <div id="_wave_debugclosetrigger" class="item" style="margin-top:-1px;border-right:none;"><div id="_wave_debugclose"> x </div></div>
-	        <div class="item"><div class="_wave_debugicon" id="_wave_debugclock"></div><div class="itemlabel"><?php echo $this->getExecutionTime(); ?>ms</div></div>
-	        <div class="item"><div class="_wave_debugicon" id="_wave_debugmemory"></div><div class="itemlabel"><?php echo $this->getMemoryUsage(); ?>mb</div></div>
-	        <div class="item"><div class="_wave_debugicon" id="_wave_debugdb"></div><div class="itemlabel"><?php echo $this->getNumberOfQueries(); ?></div></div>
-	        <div class="item"><div class="_wave_debugicon" id="_wave_debugfiles"></div><div class="itemlabel"><?php echo $this->getNumberOfFiles(); ?></div></div>
-	        <div style="margin-bottom:-8px; visibility:hidden;" id="_wave_debugitemdetails"></div>
-		</div>
-		
-		<script type="text/javascript">
-		//      <![CDATA[
-		(function(){
-	        var details=[];
-	        var oldrow;
-	        var contents;
-	        
-	        details['_wave_debugdb'] = "<?php foreach($this->getQueries() as $query): ?><div class=\"itemrow query\" style=\"color:<?php echo $query['colour']; ?>;\">[:<?php echo $query['number']; ?>]  <?php echo $query['sql']; ?><span class=\"r\">     (<?php echo $query['time']; ?>, <?php echo $query['rows']; ?>)</span></div><?php endforeach; ?>";
-	        
-	        details['_wave_debugfiles'] = '<?php foreach($this->getUsedFiles() as $file): ?><div class="itemrow">[<?php echo $file['number']; ?>]  \'<?php echo $file['filename']; ?>\'</div><?php endforeach; ?>';
+        ?>
+        <!--DEBUG PANEL-->
+        <style type="text/css"><?php echo self::getCSS(); ?></style>
+        <div id="_wave_debugpanel">
+            <div id="_wave_debugclosetrigger" class="item" style="margin-top:-1px;border-right:none;">
+                <div id="_wave_debugclose"> x</div>
+            </div>
+            <div class="item">
+                <div class="_wave_debugicon" id="_wave_debugclock"></div>
+                <div class="itemlabel"><?php echo $this->getExecutionTime(); ?>ms</div>
+            </div>
+            <div class="item">
+                <div class="_wave_debugicon" id="_wave_debugmemory"></div>
+                <div class="itemlabel"><?php echo $this->getMemoryUsage(); ?>mb</div>
+            </div>
+            <div class="item">
+                <div class="_wave_debugicon" id="_wave_debugdb"></div>
+                <div class="itemlabel"><?php echo $this->getNumberOfQueries(); ?></div>
+            </div>
+            <div class="item">
+                <div class="_wave_debugicon" id="_wave_debugfiles"></div>
+                <div class="itemlabel"><?php echo $this->getNumberOfFiles(); ?></div>
+            </div>
+            <div style="margin-bottom:-8px; visibility:hidden;" id="_wave_debugitemdetails"></div>
+        </div>
 
-            details['_wave_debugcp'] = '<?php foreach($this->getCheckpoints() as $checkpoint): ?><div class="itemrow"><?php echo str_pad($checkpoint['name'], 30, ' '); ?> => <?php echo str_pad($checkpoint['memory'] . 'mb', 7, ' '); ?> | <?php echo str_pad($checkpoint['time'] . 'ms', 7, ' '); ?></div><?php endforeach; ?>';
+        <script type="text/javascript">
+            //      <![CDATA[
+            (function () {
+                var details = [];
+                var oldrow;
+                var contents;
 
-            bind();
-	        
-	        function showDetails(row_id){
-	                var itemdetails = document.getElementById("_wave_debugitemdetails");
-	                if(itemdetails.style.height == "auto" && oldrow == row_id){
-	                        itemdetails.style.height = "0px";
-	                        itemdetails.style.marginBottom = "-8px";
-	                        itemdetails.style.visibility = "hidden";
-	                        itemdetails.innerHTML = "";             
-	                } else {
-	                        itemdetails.style.height = "auto";
-	                        itemdetails.style.marginBottom = "0px";
-	                        itemdetails.style.visibility = "visible";
-	                        itemdetails.innerHTML = details[row_id];
-	                        oldrow = row_id
-	                }
-	        }
-	        function hide(){
-	                var bar = document.getElementById("_wave_debugpanel");
-	                contents = bar.innerHTML;
-	                bar.innerHTML = "<div id=\"_wave_debugclosetrigger\" class=\"item\" style=\"margin-top:-1px;border-right:none;\"><div id=\"_wave_debugclose\"> + </div></div>";
-	                document.getElementById('_wave_debugclosetrigger').onclick = show;
-	        }
-	        function show(){
-	                var bar = document.getElementById("_wave_debugpanel");
-	                bar.innerHTML = contents;
-	                bind();
-	        }
-	        
-	        function bind(){
-	        	var e_db = document.getElementById('_wave_debugdb'),
-		        	e_fi = document.getElementById('_wave_debugfiles'),
-                    e_ti = document.getElementById('_wave_debugclock'),
-                    e_me = document.getElementById('_wave_debugmemory');
-		        e_db.onclick = function() { showDetails(e_db.id); };
-		        e_fi.onclick = function() { showDetails(e_fi.id); };
-                e_ti.onclick = function() { showDetails('_wave_debugcp'); };
-                e_me.onclick = function() { showDetails('_wave_debugcp'); };
-		        
-		        document.getElementById('_wave_debugclosetrigger').onclick = hide;
-	        }
-	        
-		})();
-		//      ]]>
-		</script>
-		<!--END DEBUG PANEL-->				
-		<?php
-	}
-	
-	public static function getCSS(){
-		
-		return <<<CSS
+                details['_wave_debugdb'] = "<?php foreach($this->getQueries() as $query): ?><div class=\"itemrow query\" style=\"color:<?php echo $query['colour']; ?>;\">[:<?php echo $query['number']; ?>]  <?php echo $query['sql']; ?><span class=\"r\">     (<?php echo $query['time']; ?>, <?php echo $query['rows']; ?>)</span></div><?php endforeach; ?>";
+
+                details['_wave_debugfiles'] = '<?php foreach($this->getUsedFiles() as $file): ?><div class="itemrow">[<?php echo $file['number']; ?>]  \'<?php echo $file['filename']; ?>\'</div><?php endforeach; ?>';
+
+                details['_wave_debugcp'] = '<?php foreach($this->getCheckpoints() as $checkpoint): ?><div class="itemrow"><?php echo str_pad($checkpoint['name'], 30, ' '); ?> => <?php echo str_pad($checkpoint['memory'] . 'mb', 7, ' '); ?> | <?php echo str_pad($checkpoint['time'] . 'ms', 7, ' '); ?></div><?php endforeach; ?>';
+
+                bind();
+
+                function showDetails(row_id) {
+                    var itemdetails = document.getElementById("_wave_debugitemdetails");
+                    if (itemdetails.style.height == "auto" && oldrow == row_id) {
+                        itemdetails.style.height = "0px";
+                        itemdetails.style.marginBottom = "-8px";
+                        itemdetails.style.visibility = "hidden";
+                        itemdetails.innerHTML = "";
+                    } else {
+                        itemdetails.style.height = "auto";
+                        itemdetails.style.marginBottom = "0px";
+                        itemdetails.style.visibility = "visible";
+                        itemdetails.innerHTML = details[row_id];
+                        oldrow = row_id
+                    }
+                }
+
+                function hide() {
+                    var bar = document.getElementById("_wave_debugpanel");
+                    contents = bar.innerHTML;
+                    bar.innerHTML = "<div id=\"_wave_debugclosetrigger\" class=\"item\" style=\"margin-top:-1px;border-right:none;\"><div id=\"_wave_debugclose\"> + </div></div>";
+                    document.getElementById('_wave_debugclosetrigger').onclick = show;
+                }
+
+                function show() {
+                    var bar = document.getElementById("_wave_debugpanel");
+                    bar.innerHTML = contents;
+                    bind();
+                }
+
+                function bind() {
+                    var e_db = document.getElementById('_wave_debugdb'),
+                        e_fi = document.getElementById('_wave_debugfiles'),
+                        e_ti = document.getElementById('_wave_debugclock'),
+                        e_me = document.getElementById('_wave_debugmemory');
+                    e_db.onclick = function () {
+                        showDetails(e_db.id);
+                    };
+                    e_fi.onclick = function () {
+                        showDetails(e_fi.id);
+                    };
+                    e_ti.onclick = function () {
+                        showDetails('_wave_debugcp');
+                    };
+                    e_me.onclick = function () {
+                        showDetails('_wave_debugcp');
+                    };
+
+                    document.getElementById('_wave_debugclosetrigger').onclick = hide;
+                }
+
+            })();
+            //      ]]>
+        </script>
+        <!--END DEBUG PANEL-->
+    <?php
+    }
+
+    public static function getCSS() {
+
+        return <<<CSS
 #_wave_debugmemory{background-position: 0px -48px;}
 #_wave_debugfiles{background-position: 0px -32px;}
 #_wave_debugclock{background-position: 0px -16px;}
@@ -244,6 +268,6 @@ div#_wave_debugclose:hover{cursor: pointer; background-color: #CCCCCC;}
 
 CSS;
 
-	}
-	
+    }
+
 }

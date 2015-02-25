@@ -6,12 +6,12 @@ class UrlDatatype extends AbstractDatatype {
 
     private $cleaned;
 
-	public function __invoke(){
+    public function __invoke() {
         $this->cleaned = trim($this->input);
-		return filter_var($this->cleaned, FILTER_VALIDATE_URL);
-	}
+        return filter_var($this->cleaned, FILTER_VALIDATE_URL);
+    }
 
-    public function getCleanedData(){
+    public function getCleanedData() {
         return $this->cleaned;
     }
 

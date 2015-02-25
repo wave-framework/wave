@@ -8,7 +8,7 @@ use Wave\Validator;
 
 class RenameConstraint extends AbstractConstraint {
 
-    public function __construct($property, $arguments, Validator &$validator){
+    public function __construct($property, $arguments, Validator &$validator) {
         if(!is_string($arguments))
             throw new \InvalidArgumentException('The argument passed to [rename] must be a string');
 
@@ -18,12 +18,11 @@ class RenameConstraint extends AbstractConstraint {
     /**
      * @return bool
      */
-    public function evaluate(){
+    public function evaluate() {
         $this->validator->setCleanedData($this->arguments, $this->data);
         $this->validator->unsetCleanedData($this->property, true);
         return true;
     }
-
 
 
 }

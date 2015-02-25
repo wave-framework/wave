@@ -3,13 +3,12 @@
 namespace Wave\Validator\Constraints;
 
 use DateTime;
-use Wave\Validator\Constraints\AbstractConstraint,
-    Wave\Validator;
+use Wave\Validator;
 
 abstract class AbstractLengthConstraint extends AbstractConstraint {
 
-    const COMPARATOR_ARRAY  = 'array';
-    const COMPARATOR_INT    = 'int';
+    const COMPARATOR_ARRAY = 'array';
+    const COMPARATOR_INT = 'int';
     const COMPARATOR_STRING = 'string';
     const COMPARATOR_DATETIME = 'datetime';
 
@@ -18,26 +17,25 @@ abstract class AbstractLengthConstraint extends AbstractConstraint {
     protected $count = null;
     protected $message = null;
 
-    public function __construct($property, $arguments, Validator $validator){
+    public function __construct($property, $arguments, Validator $validator) {
         parent::__construct($property, $arguments, $validator);
 
-        if(is_array($arguments)){
+        if(is_array($arguments)) {
             $this->limit = isset($arguments['limit'])
-                                ? $arguments['limit']
-                                : null;
+                ? $arguments['limit']
+                : null;
 
             $comparators = array(self::COMPARATOR_ARRAY, self::COMPARATOR_INT, self::COMPARATOR_STRING, self::COMPARATOR_DATETIME);
             $this->comparator = isset($arguments['comparator']) && in_array($arguments['comparator'], $comparators)
-                                ? $arguments['comparator']
-                                : null;
+                ? $arguments['comparator']
+                : null;
 
             $this->message = isset($arguments['message']) ? $arguments['message'] : null;
-        }
-        else {
+        } else {
             $this->limit = $arguments;
         }
 
-        if($this->comparator === null){
+        if($this->comparator === null) {
             if(is_array($this->data))
                 $this->count = self::COMPARATOR_ARRAY;
             elseif(is_numeric($this->data))
@@ -48,7 +46,7 @@ abstract class AbstractLengthConstraint extends AbstractConstraint {
                 $this->comparator = self::COMPARATOR_DATETIME;
         }
 
-        switch($this->comparator){
+        switch($this->comparator) {
             case self::COMPARATOR_ARRAY:
                 $this->count = count($this->data);
                 break;

@@ -15,7 +15,7 @@ class EqualsConstraint extends AbstractConstraint {
         return $this->data === $this->arguments;
     }
 
-    protected function getViolationMessage($context = 'This value'){
+    protected function getViolationMessage($context = 'This value') {
         return sprintf("%s does not equal %s", $context, $this->arguments);
     }
 

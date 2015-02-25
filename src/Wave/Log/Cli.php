@@ -2,14 +2,14 @@
 
 namespace Wave\Log;
 
-use \Wave\Log,
-    \Monolog\Handler\AbstractHandler,
-    \Monolog\Formatter\LineFormatter;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\AbstractHandler;
+use Wave\Log;
 
 class Cli extends Log {
 
 
-    public static function createChannel($channel, AbstractHandler $handler = null){
+    public static function createChannel($channel, AbstractHandler $handler = null) {
 
         $cli_handler = new CliHandler();
         $cli_handler->setFormatter(new LineFormatter(CliHandler::LINE_FORMAT));

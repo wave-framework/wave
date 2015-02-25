@@ -5,4 +5,7 @@ namespace Wave\Config;
 
 use Exception;
 
-class UnknownConfigOptionException extends Exception {};
+class UnknownConfigOptionException extends Exception {
+}
+
+;
