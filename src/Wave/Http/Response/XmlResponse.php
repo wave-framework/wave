@@ -10,7 +10,7 @@ class XmlResponse extends Response {
 
     private $data;
 
-    public function prepare(Request $request){
+    public function prepare(Request $request) {
         parent::prepare($request);
 
         $this->headers->set('Cache-Control', 'no-cache, must-revalidate');
@@ -21,8 +21,8 @@ class XmlResponse extends Response {
         return $this;
     }
 
-    public function setContent($data, $convert = true){
-        if($convert){
+    public function setContent($data, $convert = true) {
+        if($convert) {
             $this->data = $data;
             $data = XML::encode($data);
         }

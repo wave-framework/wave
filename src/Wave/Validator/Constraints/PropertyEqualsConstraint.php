@@ -2,13 +2,13 @@
 
 namespace Wave\Validator\Constraints;
 
-use \Wave\Validator,
-    \Wave\Validator\Exception;
+use Wave\Validator;
+use Wave\Validator\Exception;
 
 class PropertyEqualsConstraint extends AbstractConstraint {
 
 
-    public function __construct($property, $arguments, Validator &$validator){
+    public function __construct($property, $arguments, Validator &$validator) {
         if(!is_array($arguments) || !isset($arguments['property']) || !isset($arguments['value']))
             throw new \InvalidArgumentException("[property_equals] constraint must have a property and value declared");
 
@@ -31,7 +31,7 @@ class PropertyEqualsConstraint extends AbstractConstraint {
         return isset($this->data->$property) && $this->data->$property === $this->arguments['value'];
     }
 
-    protected function getViolationMessage($context = 'This value'){
+    protected function getViolationMessage($context = 'This value') {
         return sprintf($this->arguments['message'], $context);
     }
 

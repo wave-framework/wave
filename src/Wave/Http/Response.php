@@ -15,20 +15,20 @@ use Wave\Hook;
 
 class Response {
 
-    const STATUS_OK 			= 200;
-    const STATUS_CREATED 		= 201;
-    const STATUS_ACCEPTED		= 202;
+    const STATUS_OK = 200;
+    const STATUS_CREATED = 201;
+    const STATUS_ACCEPTED = 202;
     const STATUS_MOVED_PERMANENTLY = 301;
-    const STATUS_FOUND          = 302;
-    const STATUS_NOT_MODIFIED 	= 304;
+    const STATUS_FOUND = 302;
+    const STATUS_NOT_MODIFIED = 304;
     const STATUS_MOVED_TEMPORARILY = 307;
-    const STATUS_BAD_REQUEST 	= 400;
-    const STATUS_UNAUTHORISED 	= 401;
-    const STATUS_FORBIDDEN		= 403;
-    const STATUS_NOT_FOUND		= 404;
+    const STATUS_BAD_REQUEST = 400;
+    const STATUS_UNAUTHORISED = 401;
+    const STATUS_FORBIDDEN = 403;
+    const STATUS_NOT_FOUND = 404;
     const STATUS_NOT_ACCEPTABLE = 406;
-    const STATUS_SERVER_ERROR	= 500;
-    const STATUS_NOT_IMPLEMENTED= 501;
+    const STATUS_SERVER_ERROR = 500;
+    const STATUS_NOT_IMPLEMENTED = 501;
 
     const FORMAT_HTML = 'html';
     const FORMAT_JSON = 'json';
@@ -39,10 +39,10 @@ class Response {
 
     private static $formats = array(
         'plain' => '\\Wave\\Http\\Response\\TextResponse',
-        'html'  => '\\Wave\\Http\\Response\\HtmlResponse',
-        'json'  => '\\Wave\\Http\\Response\\JsonResponse',
-        'xml'   => '\\Wave\\Http\\Response\\XmlResponse',
-        'dialog'=> '\\Wave\\Http\\Response\\JsonResponse',
+        'html' => '\\Wave\\Http\\Response\\HtmlResponse',
+        'json' => '\\Wave\\Http\\Response\\JsonResponse',
+        'xml' => '\\Wave\\Http\\Response\\XmlResponse',
+        'dialog' => '\\Wave\\Http\\Response\\JsonResponse',
     );
 
     public static $statusTexts = array(
@@ -142,7 +142,7 @@ class Response {
     protected $version;
 
 
-    public function __construct($content = '', $status = self::STATUS_OK, array $headers = array(), array $cookies = array()){
+    public function __construct($content = '', $status = self::STATUS_OK, array $headers = array(), array $cookies = array()) {
 
         $this->setHeaders(new HeaderBag($headers));
         $this->setCookies($cookies);
@@ -153,36 +153,36 @@ class Response {
     }
 
 
-    public function prepare(Request $request){
+    public function prepare(Request $request) {
 
-        if ('HTTP/1.0' != $request->server->get('SERVER_PROTOCOL')) {
+        if('HTTP/1.0' != $request->server->get('SERVER_PROTOCOL')) {
             $this->setProtocolVersion('1.1');
         }
 
         return $this;
     }
 
-    public function send(){
+    public function send() {
         Hook::triggerAction('response.before_send', array(&$this));
         $this->sendHeaders();
         $this->sendContent();
 
-        if (function_exists('fastcgi_finish_request')) {
+        if(function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
-        } elseif ('cli' !== PHP_SAPI) {
+        } elseif('cli' !== PHP_SAPI) {
             // ob_get_level() never returns 0 on some Windows configurations, so if
             // the level is the same two times in a row, the loop should be stopped.
             $previous = null;
             $obStatus = ob_get_status(1);
-            while (($level = ob_get_level()) > 0 && $level !== $previous) {
+            while(($level = ob_get_level()) > 0 && $level !== $previous) {
                 $previous = $level;
-                if ($obStatus[$level - 1]) {
-                    if (version_compare(PHP_VERSION, '5.4', '>=')) {
-                        if (isset($obStatus[$level - 1]['flags']) && ($obStatus[$level - 1]['flags'] & PHP_OUTPUT_HANDLER_REMOVABLE)) {
+                if($obStatus[$level - 1]) {
+                    if(version_compare(PHP_VERSION, '5.4', '>=')) {
+                        if(isset($obStatus[$level - 1]['flags']) && ($obStatus[$level - 1]['flags'] & PHP_OUTPUT_HANDLER_REMOVABLE)) {
                             ob_end_flush();
                         }
                     } else {
-                        if (isset($obStatus[$level - 1]['del']) && $obStatus[$level - 1]['del']) {
+                        if(isset($obStatus[$level - 1]['del']) && $obStatus[$level - 1]['del']) {
                             ob_end_flush();
                         }
                     }
@@ -196,32 +196,36 @@ class Response {
     }
 
     public function sendHeaders() {
-        if (headers_sent()) { return $this; }
+        if(headers_sent()) {
+            return $this;
+        }
 
         // status
         header(sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText));
 
         // headers
-        foreach ($this->headers->all() as $name => $values) {
-            foreach ($values as $value) {
-                header($name.': '.$value, false);
+        foreach($this->headers->all() as $name => $values) {
+            foreach($values as $value) {
+                header($name . ': ' . $value, false);
             }
         }
 
-        foreach($this->cookies as $cookie){
-            setcookie($cookie->getName(),
-                      $cookie->getValue(),
-                      $cookie->getExpires(),
-                      $cookie->getPath(),
-                      $cookie->getDomain(),
-                      $cookie->isSecure(),
-                      $cookie->isHttpOnly());
+        foreach($this->cookies as $cookie) {
+            setcookie(
+                $cookie->getName(),
+                $cookie->getValue(),
+                $cookie->getExpires(),
+                $cookie->getPath(),
+                $cookie->getDomain(),
+                $cookie->isSecure(),
+                $cookie->isHttpOnly()
+            );
         }
 
         return $this;
     }
 
-    public function sendContent(){
+    public function sendContent() {
 
         echo $this->content;
 
@@ -229,7 +233,7 @@ class Response {
     }
 
     public static function getMessageForCode($_status) {
-        if(array_key_exists($_status, static::$statusTexts)){
+        if(array_key_exists($_status, static::$statusTexts)) {
             return static::$statusTexts[$_status];
         }
         return '';
@@ -239,19 +243,19 @@ class Response {
         $this->content = $content;
     }
 
-    public function getContent(){
+    public function getContent() {
         return $this->content;
     }
 
     public function setStatusCode($code, $text = null) {
-        $this->statusCode = (int)$code;
+        $this->statusCode = (int) $code;
 
         if(null === $this->statusText = $text)
             $this->statusText = isset(self::$statusTexts[$code]) ? self::$statusTexts[$code] : '';
 
     }
 
-    public function getStatusCode(){
+    public function getStatusCode() {
         return $this->statusCode;
     }
 
@@ -269,11 +273,11 @@ class Response {
         $this->headers = $headers;
     }
 
-    public function setCookies(array $cookies){
+    public function setCookies(array $cookies) {
         $this->cookies = $cookies;
     }
 
-    public function addCookie(Cookie $cookie){
+    public function addCookie(Cookie $cookie) {
         $this->cookies[$cookie->getName()] = $cookie;
     }
 
@@ -281,7 +285,7 @@ class Response {
         $this->version = $version;
     }
 
-    public function getProtocolVersion(){
+    public function getProtocolVersion() {
         return $this->version;
     }
 
@@ -298,8 +302,8 @@ class Response {
      */
     public function __toString() {
         return
-            sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText)."\r\n".
-            $this->headers."\r\n".
+            sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText) . "\r\n" .
+            $this->headers . "\r\n" .
             $this->getContent();
     }
 

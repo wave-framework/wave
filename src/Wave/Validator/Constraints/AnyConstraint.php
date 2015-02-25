@@ -3,9 +3,9 @@
 
 namespace Wave\Validator\Constraints;
 
-use \Wave\Validator,
-    \Wave\Validator\Exception,
-    \Wave\Validator\CleanerInterface;
+use Wave\Validator;
+use Wave\Validator\CleanerInterface;
+use Wave\Validator\Exception;
 
 /**
  * Reads an array of sub-constraints and returns true if any one of them returns true.
@@ -21,7 +21,7 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
      * @throws \InvalidArgumentException
      * @return bool
      */
-    public function evaluate(){
+    public function evaluate() {
 
         if(!is_array($this->arguments))
             throw new \InvalidArgumentException("[any] constraint requires an array argument");
@@ -29,9 +29,9 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
             $this->arguments = array($this->arguments);
 
         $input = array($this->property => $this->data);
-        foreach($this->arguments as $key => $constraint_group){
+        foreach($this->arguments as $key => $constraint_group) {
 
-            if($key === 'message'){
+            if($key === 'message') {
                 $this->message = $constraint_group;
                 continue;
             }
@@ -42,12 +42,11 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
 
             $instance = new Validator($input, $schema, $this->validator);
 
-            if($instance->execute()){
+            if($instance->execute()) {
                 $cleaned = $instance->getCleanedData();
                 $this->cleaned = $cleaned[$this->property];
                 return true;
-            }
-            else {
+            } else {
                 $violations = $instance->getViolations();
                 $messages = array_intersect_key($violations[$this->property], array_flip(array('reason', 'message')));
                 if(!empty($messages))
@@ -57,14 +56,13 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
         return empty($this->violations);
     }
 
-    public function getViolationPayload(){
+    public function getViolationPayload() {
         $payload = array(
             'reason' => 'invalid',
         );
-        if($this->message !== null){
+        if($this->message !== null) {
             $payload['message'] = $this->message;
-        }
-        else {
+        } else {
             $payload['message'] = 'This value does not match any of the following conditions';
             $payload['conditions'] = $this->violations;
         }

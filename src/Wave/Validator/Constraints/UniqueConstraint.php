@@ -14,22 +14,22 @@ class UniqueConstraint extends ExistsConstraint implements CleanerInterface {
     /**
      * @return bool
      */
-    public function evaluate(){
+    public function evaluate() {
         return !parent::evaluate();
     }
 
-    public function getCleanedData(){
+    public function getCleanedData() {
         return $this->data;
     }
 
     /**
      * @return string
      */
-    protected function getViolationKey(){
+    protected function getViolationKey() {
         return static::ERROR_NOT_UNIQUE;
     }
 
-    protected function getViolationMessage($context = 'This value'){
+    protected function getViolationMessage($context = 'This value') {
         $message = isset($this->message) ? $this->message : '%s is not unique';
         return sprintf($message, $context);
     }

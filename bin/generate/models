@@ -1,39 +1,39 @@
 #!/usr/bin/env php
 <?php
 
-use \Wave;
+use Wave;
 
 require_once dirname(__FILE__) . '/../cli-tools.php';
 
 echo "Regenerating Models... \n";
 
 Wave\DB\Generator::generate($orphan_files);
-foreach($orphan_files as $file){
+foreach($orphan_files as $file) {
     printf("File has been orphaned during model generation [%s]\n", $file);
 }
 
 echo " done\n";
 
-if(defined('VERBOSE') && VERBOSE){
-	echo "\nResult: \n";
-	
-	$databases = Wave\DB::getAllDatabases();
-					
-	foreach($databases as $database){
-		$driver_class = $database->getConnection()->getDriverClass();
-			
-		$tables = $driver_class::getTables($database);
-		$columns = $driver_class::getColumns($database);
-		$keys = $driver_class::getColumnKeys($database);
-		
-		echo "  Alias:  ".$database->getNamespace(). "\n";
-		echo "  Driver: ".$driver_class."\n";
-		echo "  Tables (".count($tables)."): \n";
-		printf("    %-40s %-10s %s \n", "Name", "Engine", "Comments");
-		echo "    ".str_repeat('-', 120)."\n";
-		foreach ($tables as $table){
-			printf("    %-40s %-10s %s \n", $table['table_name'], $table['table_engine'], $table['table_comment']);
-		}
-	}
-	echo "\n\n";
+if(defined('VERBOSE') && VERBOSE) {
+    echo "\nResult: \n";
+
+    $databases = Wave\DB::getAllDatabases();
+
+    foreach($databases as $database) {
+        $driver_class = $database->getConnection()->getDriverClass();
+
+        $tables = $driver_class::getTables($database);
+        $columns = $driver_class::getColumns($database);
+        $keys = $driver_class::getColumnKeys($database);
+
+        echo "  Alias:  " . $database->getNamespace() . "\n";
+        echo "  Driver: " . $driver_class . "\n";
+        echo "  Tables (" . count($tables) . "): \n";
+        printf("    %-40s %-10s %s \n", "Name", "Engine", "Comments");
+        echo "    " . str_repeat('-', 120) . "\n";
+        foreach($tables as $table) {
+            printf("    %-40s %-10s %s \n", $table['table_name'], $table['table_engine'], $table['table_comment']);
+        }
+    }
+    echo "\n\n";
 }

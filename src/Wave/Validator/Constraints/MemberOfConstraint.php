@@ -10,22 +10,22 @@ class MemberOfConstraint extends AbstractConstraint {
     /**
      * @return bool
      */
-    public function evaluate(){
+    public function evaluate() {
         return in_array($this->data, $this->arguments, true);
     }
 
     /**
      * @return string
      */
-    protected function getViolationKey(){
+    protected function getViolationKey() {
         return static::ERROR_NOT_MEMBER;
     }
 
-    protected function getViolationMessage($context = 'This value'){
+    protected function getViolationMessage($context = 'This value') {
         return sprintf('%s is not a valid choice', $context);
     }
 
-    public function getViolationPayload(){
+    public function getViolationPayload() {
         return array_merge(
             parent::getViolationPayload(),
             array(

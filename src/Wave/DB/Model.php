@@ -1,10 +1,10 @@
 <?php
 
 /**
- *	Base model, common functionality
+ *    Base model, common functionality
  *
- *	@author Michael michael@calcin.ai
-**/
+ * @author Michael michael@calcin.ai
+ **/
 
 namespace Wave\DB;
 
@@ -44,20 +44,20 @@ class Model {
      *
      * @var array $_data
      */
-	protected $_data	= array();
+    protected $_data = array();
 
     /**
      * A list of properties that have been written to since
      * this object was loaded from the data source
      * @var array $_dirty
      */
-	protected $_dirty	= array();
+    protected $_dirty = array();
 
     /**
      * Flags if this model has been loaded from the data source or not
      * @var bool
      */
-    protected $_loaded	= false;
+    protected $_loaded = false;
 
     /**
      * An associative array of arrays of joined objects when this model
@@ -75,20 +75,20 @@ class Model {
     protected $_joined_aliases = array();
 
 
-	public function __construct($data = null, $is_loaded = false){
+    public function __construct($data = null, $is_loaded = false) {
 
         $connection = DB::get(self::_getDatabaseNamespace());
 
-		foreach(self::_getFields() as $field){
+        foreach(self::_getFields() as $field) {
             $this->_data[$field] = $data !== null && array_key_exists($field, $data)
-                                        ? $connection->valueFromSQL($data[$field], self::_getField($field))
-                                        : self::getFieldDefault($field);
-		}
+                ? $connection->valueFromSQL($data[$field], self::_getField($field))
+                : self::getFieldDefault($field);
+        }
 
         if($is_loaded)
             $this->_setLoaded();
 
-	}
+    }
 
     /**
      * Makes a new instance of a model from an array of data, returns either
@@ -98,17 +98,17 @@ class Model {
      *
      * @return null|Model
      */
-    public static function createFromArray(array $data){
-		
-		foreach(self::_getIdentifyingColumns() as $required_column){
-			if(!isset($data[$required_column]) || $data[$required_column] === ''){
+    public static function createFromArray(array $data) {
+
+        foreach(self::_getIdentifyingColumns() as $required_column) {
+            if(!isset($data[$required_column]) || $data[$required_column] === '') {
                 return null;
             }
-		}
-				
-		return new static($data);
-	
-	}
+        }
+
+        return new static($data);
+
+    }
 
     /**
      * Gets the default casted value for a field
@@ -117,10 +117,10 @@ class Model {
      *
      * @return mixed
      */
-    public static function getFieldDefault($field_name){
-		$field = self::_getField($field_name);
-		return DB::get(self::_getDatabaseNamespace())->valueFromSQL($field['default'], $field);
-	}
+    public static function getFieldDefault($field_name) {
+        $field = self::_getField($field_name);
+        return DB::get(self::_getDatabaseNamespace())->valueFromSQL($field['default'], $field);
+    }
 
     /**
      * Generic loadById method that returns a single Model instance loaded from the data source
@@ -128,15 +128,15 @@ class Model {
      *
      * @return Model
      */
-    public static function loadByID(){
-		
-		$stmt = DB::get(self::_getDatabaseNamespace())->from(get_called_class());
-		
-		foreach(self::_getIdentifyingColumns() as $index => $column)
-			$stmt->where("$column = ?", func_get_arg($index));
-			
-		return $stmt->fetchRow();	
-	}
+    public static function loadByID() {
+
+        $stmt = DB::get(self::_getDatabaseNamespace())->from(get_called_class());
+
+        foreach(self::_getIdentifyingColumns() as $index => $column)
+            $stmt->where("$column = ?", func_get_arg($index));
+
+        return $stmt->fetchRow();
+    }
 
     /**
      * Save the current model instance to the database
@@ -145,22 +145,22 @@ class Model {
      *
      * @return bool
      */
-    public function save($save_relations = true){
-		return DB::save($this, $save_relations);
-	}
+    public function save($save_relations = true) {
+        return DB::save($this, $save_relations);
+    }
 
     /**
      * Delete the current model instance from the database
      *
      * @return bool
      */
-    public function delete(){
-		return DB::delete($this);
-	}
+    public function delete() {
+        return DB::delete($this);
+    }
 
-    public function _equals(Model $object){
+    public function _equals(Model $object) {
         return (get_class($this) === get_class($object)) &&
-            array_diff_assoc($this->_getIdentifyingData(), $object->_getIdentifyingData());
+        array_diff_assoc($this->_getIdentifyingData(), $object->_getIdentifyingData());
     }
 
     /**
@@ -170,13 +170,13 @@ class Model {
      * @param $alias
      * @param $resolved_class
      */
-    public function addJoinedObject(Model &$object, $alias, $resolved_class){
+    public function addJoinedObject(Model &$object, $alias, $resolved_class) {
         $this->_joined_aliases[$resolved_class][] = $alias;
         if(!isset($this->_joined_objects[$alias]))
             $this->_joined_objects[$alias] = array();
 
         $this->_joined_objects[$alias][] = $object;
-	}
+    }
 
     /**
      * Convenience method that returns a primary key for the current object
@@ -187,73 +187,73 @@ class Model {
      *
      * @return mixed
      */
-    public function getid(){
-		return $this->_data[self::_getTableName().'_id'];
-	}
+    public function getid() {
+        return $this->_data[self::_getTableName() . '_id'];
+    }
 
     /**
      * @return array
      */
-    public function _getData(){
-		return $this->_data;
-	}
+    public function _getData() {
+        return $this->_data;
+    }
 
     /**
      * @return array
      */
-    public function _getDirty(){
-		return array_intersect_key($this->_data, $this->_dirty);
-	}
+    public function _getDirty() {
+        return array_intersect_key($this->_data, $this->_dirty);
+    }
 
     /**
      * @return string
      */
-    public static function _getTableName(){
-		return static::$_table_name;
-	}
+    public static function _getTableName() {
+        return static::$_table_name;
+    }
 
     /**
      * @return string
      */
-    public static function _getDatabaseName(){
-        if(!isset(static::$_schema_name)){
+    public static function _getDatabaseName() {
+        if(!isset(static::$_schema_name)) {
             $config = DB::getConfigForNamespace(static::_getDatabaseNamespace());
             static::$_schema_name = $config['database'];
         }
-		return static::$_schema_name;
-	}
+        return static::$_schema_name;
+    }
 
     /**
      * @return string
      */
-    public static function _getDatabaseNamespace(){
-		return static::$_database;
-	}
+    public static function _getDatabaseNamespace() {
+        return static::$_database;
+    }
 
     /**
      * @param bool $field_data
      *
      * @return array
      */
-    public static function _getFields($field_data = false){
-		return $field_data ? static::$_fields : array_keys(static::$_fields);
-	}
+    public static function _getFields($field_data = false) {
+        return $field_data ? static::$_fields : array_keys(static::$_fields);
+    }
 
     /**
      * @param $field_name
      *
      * @return mixed
      */
-    public static function _getField($field_name){
-		return static::$_fields[$field_name];
-	}
+    public static function _getField($field_name) {
+        return static::$_fields[$field_name];
+    }
 
     /**
      * @return mixed
      */
-    public static function _getRelations(){
-		return static::$_relations;
-	}
+    public static function _getRelations() {
+        return static::$_relations;
+    }
 
     /**
      * Returns relation metadata
@@ -262,28 +262,28 @@ class Model {
      * @return mixed
      * @throws \Wave\Exception
      */
-    public static function _getRelation($relation_name){
-		
-		if(!self::isRelation($relation_name))
-			throw new Wave\Exception(sprintf('Invalid relation: [%s]', $relation_name));
-			
-		return static::$_relations[$relation_name];
-	}
+    public static function _getRelation($relation_name) {
+
+        if(!self::isRelation($relation_name))
+            throw new Wave\Exception(sprintf('Invalid relation: [%s]', $relation_name));
+
+        return static::$_relations[$relation_name];
+    }
 
     /**
      * @param $relation_name
      *
      * @return bool
      */
-    public static function isRelation($relation_name){
-		
-		return isset(static::$_relations[$relation_name]);
-	}
+    public static function isRelation($relation_name) {
+
+        return isset(static::$_relations[$relation_name]);
+    }
 
     /**
      * @return array
      */
-    public function _getJoinedObjects(){
+    public function _getJoinedObjects() {
         return $this->_joined_objects;
     }
 
@@ -294,10 +294,10 @@ class Model {
      *
      * @return array
      */
-    public function _getJoinedObjectsForClass($class){
+    public function _getJoinedObjectsForClass($class) {
         $objects = array();
-        if(isset($this->_joined_aliases[$class])){
-            foreach($this->_joined_aliases[$class] as $alias){
+        if(isset($this->_joined_aliases[$class])) {
+            foreach($this->_joined_aliases[$class] as $alias) {
                 $objects = array_merge($objects, $this->_joined_objects[$alias]);
             }
         }
@@ -312,46 +312,46 @@ class Model {
      *
      * @return bool
      */
-    public function _setLoaded($loaded = true){
-		//at this point it won't be dirty.
-		$this->_dirty = array();
-		return $this->_loaded = $loaded;
-	}
+    public function _setLoaded($loaded = true) {
+        //at this point it won't be dirty.
+        $this->_dirty = array();
+        return $this->_loaded = $loaded;
+    }
 
     /**
      * @return bool
      */
-    public function _isLoaded(){
-		return $this->_loaded;
-	}
+    public function _isLoaded() {
+        return $this->_loaded;
+    }
 
     /**
      * @return bool
      */
-    public function _isDirty(){
-		return count($this->_dirty) !== 0;
-	}
+    public function _isDirty() {
+        return count($this->_dirty) !== 0;
+    }
 
     /**
      * @return null|array
      */
-    public static function _getPrimaryKey(){
-		foreach(static::$_constraints as $constraint)
-			if($constraint['type'] === Constraint::TYPE_PRIMARY)
-				return $constraint['fields'];
+    public static function _getPrimaryKey() {
+        foreach(static::$_constraints as $constraint)
+            if($constraint['type'] === Constraint::TYPE_PRIMARY)
+                return $constraint['fields'];
 
-		return null;
-	}
+        return null;
+    }
 
     /**
      * Attempts to provide data that uniquely identifies this modal instance.
      *
      * @return array
      */
-    public function _getIdentifyingData(){
-		$columns = self::_getIdentifyingColumns();
-		return array_intersect_key($this->_data, array_flip($columns));
-	}
+    public function _getIdentifyingData() {
+        $columns = self::_getIdentifyingColumns();
+        return array_intersect_key($this->_data, array_flip($columns));
+    }
 
     /**
      * Attempts to provide the columns that uniquely identify this modal instance.
@@ -362,21 +362,21 @@ class Model {
      *
      * @return array
      */
-    public static function _getIdentifyingColumns(){
-		//first PK
-		foreach(static::$_constraints as $constraint){
-			if($constraint['type'] === Constraint::TYPE_PRIMARY)
-				return $constraint['fields'];
-			elseif($constraint['type'] === Constraint::TYPE_UNIQUE)
-				$unique = $constraint['fields'];
-		}
-		//then unique if no return for primary
-		if(isset($unique))
-			return $unique;
-		
-		//then all (if no keys are set for some reason) @todo - throw apropriate error
-		return self::_getFields();
-	}
+    public static function _getIdentifyingColumns() {
+        //first PK
+        foreach(static::$_constraints as $constraint) {
+            if($constraint['type'] === Constraint::TYPE_PRIMARY)
+                return $constraint['fields'];
+            elseif($constraint['type'] === Constraint::TYPE_UNIQUE)
+                $unique = $constraint['fields'];
+        }
+        //then unique if no return for primary
+        if(isset($unique))
+            return $unique;
+
+        //then all (if no keys are set for some reason) @todo - throw apropriate error
+        return self::_getFields();
+    }
 
     /**
      * Returns all the data for this model as an array. Differs from the _getData
@@ -385,9 +385,9 @@ class Model {
      *
      * @return array
      */
-    public function _toArray(){
+    public function _toArray() {
         $data = array();
-        foreach(static::_getFields(false) as $field){
+        foreach(static::_getFields(false) as $field) {
             $getter = self::_getGetter($field);
             $data[$field] = $this->$getter();
         }
@@ -403,20 +403,20 @@ class Model {
      *
      * @return mixed
      */
-    public function __set($property, $data){
-		
-		$setter = self::_getSetter($property);
-		if(method_exists($this, $setter)){
-			if($this->$property === $data)
-				return $data;
-			
-			$this->_dirty[$property] = true;
-			return $this->$setter($data);
-		} 
-			
-		return $this->$property = $data;
-	
-	}
+    public function __set($property, $data) {
+
+        $setter = self::_getSetter($property);
+        if(method_exists($this, $setter)) {
+            if($this->$property === $data)
+                return $data;
+
+            $this->_dirty[$property] = true;
+            return $this->$setter($data);
+        }
+
+        return $this->$property = $data;
+
+    }
 
     /**
      * Provides a property based interface to the get<property> function
@@ -425,17 +425,17 @@ class Model {
      *
      * @return mixed
      */
-    public function __get($property){
-		$getter = self::_getGetter($property);
-		if(!method_exists($this, $getter)){
-			$stack = debug_backtrace(false);
-			$stack = array_shift($stack);
-			trigger_error('Notice: Undefined property '. get_called_class() . '::' . $property . ' in ' . $stack['file'] . ' on line ' . $stack['line'] . " (via by Wave\DB_Model::__get())\n");
-		}else {
-			return $this->$getter();
-		}
-				
-	}
+    public function __get($property) {
+        $getter = self::_getGetter($property);
+        if(!method_exists($this, $getter)) {
+            $stack = debug_backtrace(false);
+            $stack = array_shift($stack);
+            trigger_error('Notice: Undefined property ' . get_called_class() . '::' . $property . ' in ' . $stack['file'] . ' on line ' . $stack['line'] . " (via by Wave\DB_Model::__get())\n");
+        } else {
+            return $this->$getter();
+        }
+
+    }
 
     /**
      * Check if there is a getter for the given property
@@ -444,9 +444,9 @@ class Model {
      *
      * @return bool
      */
-    public function __isset($property){
-		return method_exists($this, self::_getGetter($property));
-	}
+    public function __isset($property) {
+        return method_exists($this, self::_getGetter($property));
+    }
 
     /**
      * Returns the function representing the setter for the given property
@@ -454,9 +454,9 @@ class Model {
      *
      * @return string
      */
-    private static function _getSetter($property){
-		return 'set' . $property;
-	}
+    private static function _getSetter($property) {
+        return 'set' . $property;
+    }
 
     /**
      * Returns the function representing the getter for the given property
@@ -464,9 +464,9 @@ class Model {
      *
      * @return string
      */
-	private static function _getGetter($property){
-		return 'get' . $property;
-	}
-	
-	
+    private static function _getGetter($property) {
+        return 'get' . $property;
+    }
+
+
 }

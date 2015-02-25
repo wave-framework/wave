@@ -3,7 +3,7 @@
 namespace Wave;
 
 abstract class Storage {
-	
+
 
 }
 

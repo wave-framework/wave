@@ -3,9 +3,9 @@
 
 namespace Wave\Validator\Constraints;
 
-use Wave\Validator,
-    Wave\Validator\Exception,
-    Wave\Validator\CleanerInterface;
+use Wave\Validator;
+use Wave\Validator\CleanerInterface;
+use Wave\Validator\Exception;
 
 /**
  * Reads an array of sub-constraints and returns true if any one of them returns true.
@@ -15,7 +15,7 @@ class MapConstraint extends AbstractConstraint implements CleanerInterface {
     private $cleaned = array();
     private $violations = array();
 
-    public function __construct($property, $arguments, &$validator){
+    public function __construct($property, $arguments, &$validator) {
         parent::__construct($property, $arguments, $validator);
 
         if(!is_array($this->data))
@@ -25,18 +25,17 @@ class MapConstraint extends AbstractConstraint implements CleanerInterface {
     /**
      * @return bool
      */
-    public function evaluate(){
+    public function evaluate() {
 
         $schema = array('fields' => array($this->property => $this->arguments));
-        foreach($this->data as $i => $data){
+        foreach($this->data as $i => $data) {
             $input = array($this->property => $data);
             $instance = new Validator($input, $schema, $this->validator);
 
-            if($instance->execute(true)){
+            if($instance->execute(true)) {
                 $cleaned = $instance->getCleanedData();
                 $this->cleaned[$i] = $cleaned[$this->property];
-            }
-            else {
+            } else {
                 $violations = $instance->getViolations();
                 $this->violations = $violations[$this->property];
                 return false;
@@ -47,7 +46,7 @@ class MapConstraint extends AbstractConstraint implements CleanerInterface {
 
     }
 
-    public function getViolationPayload(){
+    public function getViolationPayload() {
         return $this->violations;
     }
 

@@ -2,8 +2,8 @@
 
 namespace Wave\Validator\Constraints;
 
-use Wave\Validator;
 use DateTime;
+use Wave\Validator;
 use Wave\Validator\CleanerInterface;
 
 class DateConstraint extends AbstractConstraint implements CleanerInterface {
@@ -11,7 +11,7 @@ class DateConstraint extends AbstractConstraint implements CleanerInterface {
     private $format = null;
     private $datetime;
 
-    public function __construct($property, $arguments, Validator $validator){
+    public function __construct($property, $arguments, Validator $validator) {
         parent::__construct($property, $arguments, $validator);
 
         if($arguments !== '*')
@@ -37,20 +37,20 @@ class DateConstraint extends AbstractConstraint implements CleanerInterface {
             if(!($this->datetime instanceof DateTime)) return false;
             return true;
 
-        } catch (\Exception $e) {
+        } catch(\Exception $e) {
             return false;
         }
 
     }
 
-    protected function getViolationMessage($context = 'This date'){
+    protected function getViolationMessage($context = 'This date') {
         if($this->format === null)
             return sprintf('%s is not in a recognised date format', $context);
         else
             return sprintf('%s is not in the required format (%s)', $context, $this->format);
     }
 
-    public function getCleanedData(){
+    public function getCleanedData() {
         return $this->datetime;
     }
 }

@@ -1,9 +1,9 @@
 <?php
 
 /**
- *	MySQL Driver
+ *    MySQL Driver
  *
- *	@author Patrick patrick@hindmar.sh
+ * @author Patrick patrick@hindmar.sh
  **/
 
 namespace Wave\DB\Driver;
@@ -18,20 +18,20 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
     static $_column_cache;
     static $_relation_cache;
 
-    public static function constructDSN(Row $config){
+    public static function constructDSN(Row $config) {
 
         return "pgsql:host={$config->host};port={$config->port};dbname={$config->database}";
     }
 
-    public static function getDriverName(){
+    public static function getDriverName() {
         return 'pgsql';
     }
 
-    public static function getEscapeCharacter(){
+    public static function getEscapeCharacter() {
         return '"';
     }
 
-    public static function getTables(DB $database){
+    public static function getTables(DB $database) {
 
         $table_sql = 'SELECT "table_name", "table_type" FROM "information_schema"."tables" WHERE "table_schema" = ?';
 
@@ -39,7 +39,7 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
         $table_stmt->execute(array($database->getSchema()));
 
         $tables = array();
-        while($table_row = $table_stmt->fetch()){
+        while($table_row = $table_stmt->fetch()) {
 
             $table = new DB\Table($database, $table_row['table_name']);
 
@@ -51,16 +51,16 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
     }
 
 
-    public static function getColumns(DB\Table $table){
+    public static function getColumns(DB\Table $table) {
 
         //using namespace for the table identifier as there might be same name DBs on different servers
         $namespace = $table->getDatabase()->getNamespace();
 
-        if(!isset(self::$_column_cache[$namespace])){
+        if(!isset(self::$_column_cache[$namespace])) {
 
             self::$_column_cache[$namespace] = array();
 
-            $column_sql = 'SELECT "table_name", "column_name", "column_default", "is_nullable", "data_type" '.
+            $column_sql = 'SELECT "table_name", "column_name", "column_default", "is_nullable", "data_type" ' .
                 'FROM "information_schema"."columns" WHERE "table_schema" = ? ORDER BY ordinal_position';
 
             $column_stmt = $table->getDatabase()->getConnection()->prepare($column_sql);
@@ -73,12 +73,13 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
 
         $columns = array();
         //may not be any columns
-        if(isset(self::$_column_cache[$namespace][$table->getName()])){
-            foreach(self::$_column_cache[$namespace][$table->getName()] as $cached_row){
+        if(isset(self::$_column_cache[$namespace][$table->getName()])) {
+            foreach(self::$_column_cache[$namespace][$table->getName()] as $cached_row) {
 
                 list($default_value, $is_serial) = self::translateSQLDefault($cached_row['column_default']);
 
-                $column = new DB\Column($table,
+                $column = new DB\Column(
+                    $table,
                     $cached_row['column_name'],
                     self::translateSQLNullable($cached_row['is_nullable']),
                     self::translateSQLDataType($cached_row['data_type']),
@@ -94,7 +95,7 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
 
     }
 
-    public static function getRelations(DB\Table $table){
+    public static function getRelations(DB\Table $table) {
 
         //using namespace for the table identifier as there might be same name DBs on different servers
         $namespace = $table->getDatabase()->getNamespace();
@@ -103,12 +104,12 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
 
         $relations = array();
         //may not be any constraints
-        if($relation_cache !== null){
-            foreach($relation_cache as $cached_row){
+        if($relation_cache !== null) {
+            foreach($relation_cache as $cached_row) {
 
                 //--- check both ends of the relation can be built.
                 $local_db = DB::getByConfig(array('database' => $cached_row['table_catalog'], 'schema' => $cached_row['table_schema']));
-                if($local_db === null){
+                if($local_db === null) {
                     Log::write('pgsql_driver', sprintf('Database [%s] is not referenced in the configuration - skipping building relations.', $cached_row['table_catalog']), Log::WARNING);
                     continue;
                 }
@@ -119,7 +120,7 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
                     continue;
 
                 $referenced_db = DB::getByConfig(array('database' => $cached_row['referenced_table_catalog'], 'schema' => $cached_row['referenced_table_schema']));
-                if($referenced_db === null){
+                if($referenced_db === null) {
                     Log::write('pgsql_driver', sprintf('Database [%s] is not referenced in the configuration - skipping building relations.', $cached_row['referenced_table_schema']), Log::WARNING);
                     continue;
                 }
@@ -140,18 +141,18 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
 
     }
 
-    public static function getConstraints(DB\Table $table){
+    public static function getConstraints(DB\Table $table) {
 
         $constraints = array();
 
         if(null === $relation_cache = self::_getRelationCache($table))
             return $constraints;
 
-        foreach($relation_cache as $relation){
+        foreach($relation_cache as $relation) {
 
             $column = $table->getDatabase()->getColumn($relation['table_name'], $relation['column_name']);
 
-            if(!isset($constraints[$relation['constraint_name']])){
+            if(!isset($constraints[$relation['constraint_name']])) {
                 $constraints[$relation['constraint_name']] = new DB\Constraint($column, self::translateSQLConstraintType($relation['constraint_type']), $relation['constraint_name']);
             } else {
                 $idx = $constraints[$relation['constraint_name']];
@@ -161,11 +162,11 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
         return $constraints;
     }
 
-    private static function _getRelationCache(DB\Table $table){
+    private static function _getRelationCache(DB\Table $table) {
 
         $namespace = $table->getDatabase()->getNamespace();
 
-        if(!isset(self::$_relation_cache[$namespace])){
+        if(!isset(self::$_relation_cache[$namespace])) {
 
             self::$_relation_cache[$namespace] = array();
 
@@ -191,7 +192,7 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
             $relations_stmt = $table->getDatabase()->getConnection()->prepare($relations_sql);
             $relations_stmt->execute(array('schema' => $table->getDatabase()->getSchema()));
 
-            while($relations_row = $relations_stmt->fetch()){
+            while($relations_row = $relations_stmt->fetch()) {
                 self::$_relation_cache[$namespace][$relations_row['table_name']][] = $relations_row;
                 //Relations added for both directions, flag the one that's reversed.
                 $relations_row['reverse'] = true;
@@ -203,9 +204,9 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
 
     }
 
-    public static function translateSQLDataType($type){
+    public static function translateSQLDataType($type) {
 
-        switch($type){
+        switch($type) {
 
             case 'text':
             case 'char':
@@ -257,9 +258,9 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
     }
 
 
-    public static function translateSQLConstraintType($type){
+    public static function translateSQLConstraintType($type) {
 
-        switch($type){
+        switch($type) {
             case 'PRIMARY KEY':
                 return DB\Constraint::TYPE_PRIMARY;
             case 'UNIQUE':
@@ -272,9 +273,9 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
     }
 
 
-    public static function translateSQLNullable($nullable){
+    public static function translateSQLNullable($nullable) {
 
-        switch($nullable){
+        switch($nullable) {
             case 'NO':
                 return false;
             case 'YES':
@@ -288,22 +289,18 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
 
         $is_serial = false;
         $type = self::translateSQLDataType($original_type);
-        if(strtolower($value) === 'null'){
+        if(strtolower($value) === 'null') {
             $value = null;
-        }
-        else if(strpos($value, 'nextval(') === 0){
-            $value = null; $is_serial = true;
-        }
-        else if(DB\Column::TYPE_FLOAT == $type){
+        } else if(strpos($value, 'nextval(') === 0) {
+            $value = null;
+            $is_serial = true;
+        } else if(DB\Column::TYPE_FLOAT == $type) {
             $value = (float) $value;
-        }
-        else if(DB\Column::TYPE_INT === $type){
+        } else if(DB\Column::TYPE_INT === $type) {
             $value = (int) $value;
-        }
-        else if('now()' === $value){
+        } else if('now()' === $value) {
             $value = 'CURRENT_TIMESTAMP';
-        }
-        else {
+        } else {
             // just trim any quotes and make it a string (catches enums/custom types)
             $value = trim($value, '\'');
         }

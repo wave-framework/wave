@@ -9,7 +9,7 @@ class RedirectResponse extends Response {
 
     private $target;
 
-    public function __construct($url, $status = self::STATUS_FOUND, array $headers = array()){
+    public function __construct($url, $status = self::STATUS_FOUND, array $headers = array()) {
         parent::__construct('', $status, $headers);
 
         $this->setTarget($url);
@@ -23,7 +23,8 @@ class RedirectResponse extends Response {
         $this->target = $target;
 
         $this->setContent(
-            sprintf('<!DOCTYPE html>
+            sprintf(
+                '<!DOCTYPE html>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -34,7 +35,9 @@ class RedirectResponse extends Response {
     <body>
         Redirecting to <a href="%1$s">%1$s</a>.
     </body>
-</html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8')));
+</html>', htmlspecialchars($target, ENT_QUOTES, 'UTF-8')
+            )
+        );
 
         $this->headers->set('Location', $target);
     }

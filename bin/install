@@ -14,78 +14,77 @@ if(read("Do you want to initialise the DB connection [y/N]", '?') == 'y') set_db
 if(read("Do you want to test the DB connection [y/N]", '?') == 'y') test_db_connection();
 
 
+function set_db_credentials() {
+    info("\nFirst, enter the credentials for connecting to the primary database database.");
 
+    $host = read("Enter the database host");
+    $user = read("Enter the db username");
+    $pass = read("Enter the db password");
+    $name = read("Enter the name of the database");
 
+    echo "The namespace is the 'container' for the models derived from this database,\n";
+    echo "typically it's just the name of the project or the database schema.\n";
+    echo "It should start with a capital letter and be only alphanumeric, (e.g. App)\n";
 
-function set_db_credentials(){
-	info("\nFirst, enter the credentials for connecting to the primary database database.");
+    $namespace = read("Enter the namespace for the primary database");
 
-	$host = read("Enter the database host");
-	$user = read("Enter the db username");
-	$pass = read("Enter the db password");
-	$name = read("Enter the name of the database");
+    info(sprintf("Namespace: %s\nDB Host:   %s\nDB User:   %s\nDB Passwd: %s\nDB Name:   %s", $namespace, $host, $user, $pass, $name));
 
-	echo "The namespace is the 'container' for the models derived from this database,\n";
-	echo "typically it's just the name of the project or the database schema.\n";
-	echo "It should start with a capital letter and be only alphanumeric, (e.g. App)\n";
+    if(read("Is this information correct [y/N]", "?") != "y") return set_db_credentials();
 
-	$namespace = read("Enter the namespace for the primary database");
+    $config = file_get_contents(SYS_ROOT . 'config/db.php');
+    $config = str_replace(
+        array('%MODEL_NS%', '%DB_HOST%', '%DB_USER%', '%DB_PASS%', '%DB_NAME%'),
+        array($namespace, $host, $user, $pass, $name), $config
+    );
 
-	info(sprintf("Namespace: %s\nDB Host:   %s\nDB User:   %s\nDB Passwd: %s\nDB Name:   %s", $namespace, $host, $user, $pass, $name));
+    file_put_contents(SYS_ROOT . 'config/db.php', $config);
 
-	if(read("Is this information correct [y/N]", "?") != "y") return set_db_credentials();
+    info("Set credentials in database configuration file: " . SYS_ROOT . 'config/db.php');
 
-	$config = file_get_contents(SYS_ROOT . 'config/db.php');
-	$config = str_replace(
-		array('%MODEL_NS%', '%DB_HOST%', '%DB_USER%', '%DB_PASS%', '%DB_NAME%'),
-		array($namespace, $host, $user, $pass, $name), $config);
-
-	file_put_contents(SYS_ROOT . 'config/db.php', $config);
-
-	info("Set credentials in database configuration file: " . SYS_ROOT . 'config/db.php');
-
-	info("Connecting to database...");
+    info("Connecting to database...");
 
 }
 
-function test_db_connection(){
-	try {
-		$result = \Wave\DB::get()->basicQuery('SELECT 1 as result');
-		if(isset($result[0], $result[0]['result']) && $result[0]['result'] === '1')
-			return info('Connected to database successfully');
-		else {
-			error('Connected to the database, but the result was not expected', false);
-			return error(print_r($result, true));
-		}
-	}
-	catch (Exception $e) {
-		error("Could not connect to database.", false);
-		error($e->getMessage());
-	}
+function test_db_connection() {
+    try {
+        $result = \Wave\DB::get()->basicQuery('SELECT 1 as result');
+        if(isset($result[0], $result[0]['result']) && $result[0]['result'] === '1')
+            return info('Connected to database successfully');
+        else {
+            error('Connected to the database, but the result was not expected', false);
+            return error(print_r($result, true));
+        }
+    } catch(Exception $e) {
+        error("Could not connect to database.", false);
+        error($e->getMessage());
+    }
 }
 
 
-function read($prompt = null, $delim = ':'){
-	if($prompt !== null){
-		echo "{$prompt}{$delim}\n";
-	}
-	if(function_exists('readline')) return readline();
-	else {
-		$fr = fopen("php://stdin","r");
-		$input = fgets($fr,128);
-		$input = rtrim($input);
-		fclose ($fr);
-		return $input;
-	}
+function read($prompt = null, $delim = ':') {
+    if($prompt !== null) {
+        echo "{$prompt}{$delim}\n";
+    }
+    if(function_exists('readline')) return readline();
+    else {
+        $fr = fopen("php://stdin", "r");
+        $input = fgets($fr, 128);
+        $input = rtrim($input);
+        fclose($fr);
+        return $input;
+    }
 }
 
-function info($message){
-	echo "\033[1;37m$message\033[0m\n";
+function info($message) {
+    echo "\033[1;37m$message\033[0m\n";
 }
-function warn($message){
-	echo "\033[1;34m$message\033[0m\n";
+
+function warn($message) {
+    echo "\033[1;34m$message\033[0m\n";
 }
-function error($message, $terminiate = true){
-	echo "\033[0;31m$message\033[0m\n";
-	if($terminiate) exit(1);
+
+function error($message, $terminiate = true) {
+    echo "\033[0;31m$message\033[0m\n";
+    if($terminiate) exit(1);
 }

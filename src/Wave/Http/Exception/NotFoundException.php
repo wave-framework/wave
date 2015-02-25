@@ -6,7 +6,7 @@ use Wave\Http\Response;
 
 class NotFoundException extends HttpException {
 
-    protected function getStatusCode(){
+    protected function getStatusCode() {
         return Response::STATUS_NOT_FOUND;
     }
 }

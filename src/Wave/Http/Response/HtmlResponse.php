@@ -8,7 +8,7 @@ use Wave\Http\Response;
 class HtmlResponse extends Response {
 
 
-    public function prepare(Request $request){
+    public function prepare(Request $request) {
         parent::prepare($request);
 
         $this->headers->set('Content-Type', 'text/html; charset=utf8');

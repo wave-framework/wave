@@ -10,18 +10,18 @@ class MinLengthConstraint extends AbstractLengthConstraint {
     /**
      * @return bool
      */
-    public function evaluate(){
+    public function evaluate() {
         return $this->count >= $this->limit;
     }
 
     /**
      * @return string
      */
-    protected function getViolationKey(){
+    protected function getViolationKey() {
         return static::ERROR_TOO_SHORT;
     }
 
-    protected function getViolationMessage($context = 'This value'){
+    protected function getViolationMessage($context = 'This value') {
         if($this->message !== null)
             return $this->message;
         else if($this->comparator === static::COMPARATOR_ARRAY)
@@ -34,7 +34,7 @@ class MinLengthConstraint extends AbstractLengthConstraint {
             return sprintf('%s must be at least %s characters', $context, $this->limit);
     }
 
-    public function getViolationPayload(){
+    public function getViolationPayload() {
         return array_merge(
             parent::getViolationPayload(),
             array(

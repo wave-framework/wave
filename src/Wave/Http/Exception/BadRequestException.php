@@ -7,7 +7,7 @@ use Wave\Http\Response;
 
 class BadRequestException extends HttpException {
 
-    protected function getStatusCode(){
+    protected function getStatusCode() {
         return Response::STATUS_BAD_REQUEST;
     }
 

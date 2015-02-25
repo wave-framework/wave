@@ -1,8 +1,9 @@
 <?php
 
 namespace Wave\Annotation;
-use \Wave,
-    \Wave\Router\Action;
+
+use Wave;
+use Wave\Router\Action;
 
 class Validate extends Wave\Annotation {
 
@@ -17,11 +18,11 @@ class Validate extends Wave\Annotation {
         $this->validOnSubclassesOf($class, Wave\Annotation::CLASS_CONTROLLER);
     }
 
-    public function build(){
+    public function build() {
         $this->schema = $this->parameters[0];
     }
 
-    public function apply(Action &$action){
+    public function apply(Action &$action) {
         $action->setValidationSchema($this->schema);
         return true;
     }

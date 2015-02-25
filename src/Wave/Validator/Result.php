@@ -12,21 +12,21 @@ class Result extends ArrayObject {
     private $violations;
     private $validator;
 
-    public function __construct(array $cleaned, array $errors = array(), Validator $validator = null){
+    public function __construct(array $cleaned, array $errors = array(), Validator $validator = null) {
         parent::__construct($cleaned);
         $this->violations = $errors;
         $this->validator = $validator;
     }
 
-    public function isValid(){
+    public function isValid() {
         return empty($this->violations);
     }
 
-    public function getViolations(){
+    public function getViolations() {
         return $this->violations;
     }
 
-    public function getCleanedData(){
+    public function getCleanedData() {
         return $this->getArrayCopy();
     }
 

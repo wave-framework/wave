@@ -3,4 +3,7 @@
 
 namespace Wave\Validator\Exception;
 
-class InvalidConstraintException extends ValidationException {};
+class InvalidConstraintException extends ValidationException {
+}
+
+;

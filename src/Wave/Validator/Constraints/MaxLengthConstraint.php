@@ -10,18 +10,18 @@ class MaxLengthConstraint extends AbstractLengthConstraint {
     /**
      * @return bool
      */
-    public function evaluate(){
+    public function evaluate() {
         return $this->count <= $this->limit;
     }
 
     /**
      * @return string
      */
-    protected function getViolationKey(){
+    protected function getViolationKey() {
         return static::ERROR_TOO_LONG;
     }
 
-    protected function getViolationMessage($context = 'This value'){
+    protected function getViolationMessage($context = 'This value') {
         if($this->message !== null)
             return $this->message;
         else if($this->comparator === static::COMPARATOR_ARRAY)
@@ -34,7 +34,7 @@ class MaxLengthConstraint extends AbstractLengthConstraint {
             return sprintf('%s must have no more than %s characters', $context, $this->limit);
     }
 
-    public function getViolationPayload(){
+    public function getViolationPayload() {
         return array_merge(
             parent::getViolationPayload(),
             array(

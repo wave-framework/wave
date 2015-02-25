@@ -7,24 +7,24 @@ echo "Regenerating Routes... ";
 \Wave\Router\Generator::generate();
 echo " done\n";
 
-if(defined('VERBOSE') && VERBOSE){
-	echo "\nResult: \n";
-	
-	$reflector = new \Wave\Reflector(\Wave\Config::get('wave')->path->controllers);				
-	$reflected_options = $reflector->execute();
-	$all_routes = \Wave\Router\Generator::buildRoutes($reflected_options);	
-			
-	// do some sorting based on the url to make display pretty
-	foreach($all_routes as $dom => $routes){
-		echo "  Base Route: ".$dom. "\n\n";
-		printf("    %-70s %-20s %s \n", "Method", "Respondswith", "  URL");
-		echo "    ".str_repeat('-', 120)."\n";
-		foreach($routes as $route){
-			foreach($route->getRoutes() as $url){
-				printf("    %-70s %-20s | %s \n", $route->getAction(), implode(', ', $route->getRespondsWith()), $url);
-			}
-		}
-	}
-	
-	echo "\n\n";
+if(defined('VERBOSE') && VERBOSE) {
+    echo "\nResult: \n";
+
+    $reflector = new \Wave\Reflector(\Wave\Config::get('wave')->path->controllers);
+    $reflected_options = $reflector->execute();
+    $all_routes = \Wave\Router\Generator::buildRoutes($reflected_options);
+
+    // do some sorting based on the url to make display pretty
+    foreach($all_routes as $dom => $routes) {
+        echo "  Base Route: " . $dom . "\n\n";
+        printf("    %-70s %-20s %s \n", "Method", "Respondswith", "  URL");
+        echo "    " . str_repeat('-', 120) . "\n";
+        foreach($routes as $route) {
+            foreach($route->getRoutes() as $url) {
+                printf("    %-70s %-20s | %s \n", $route->getAction(), implode(', ', $route->getRespondsWith()), $url);
+            }
+        }
+    }
+
+    echo "\n\n";
 }

@@ -12,13 +12,13 @@ class DependsOnConstraint extends AbstractConstraint {
     /**
      * @return bool
      */
-    public function evaluate(){
+    public function evaluate() {
         if(!is_array($this->arguments)) $this->arguments = array($this->arguments);
-        foreach($this->arguments as $field){
+        foreach($this->arguments as $field) {
             if($this->validator->getSchemaKey($field) === null)
                 throw new InvalidArgumentException("Can't depend_on '{$field}' since it doesn't exist in schema");
 
-            if(!$this->validator->offsetExists($field) || $this->validator->getViolation($field) !== null){
+            if(!$this->validator->offsetExists($field) || $this->validator->getViolation($field) !== null) {
                 return false;
             }
 
@@ -26,7 +26,7 @@ class DependsOnConstraint extends AbstractConstraint {
         return true;
     }
 
-    public function getViolationPayload(){
+    public function getViolationPayload() {
         return array();
     }
 

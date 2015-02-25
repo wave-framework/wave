@@ -14,7 +14,7 @@ class InstanceOfConstraint extends AbstractConstraint {
         return $this->data instanceof $this->arguments;
     }
 
-    protected function getViolationMessage($context = 'This value'){
+    protected function getViolationMessage($context = 'This value') {
         return sprintf("%s is not a valid %s object", $context, $this->arguments);
     }
 
