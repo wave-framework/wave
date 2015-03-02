@@ -664,7 +664,7 @@ class Model {
                         $query->where(sprintf('%s.`%s` = ?', $from_alias, $relation_data['target_relation']['local_columns'][$position]), $object->{$related_column});
                     }
 
-                    if($rc = $query->fetchRow(1,1))
+                    if($rc = $query->fetchRow())
                         return $rc->delete();
 
                     break;
