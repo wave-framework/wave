@@ -610,7 +610,9 @@ class Model {
                     $this->_data[$relation_name] = array();
                     while($row = $query->fetchRow()){
                         $target = $row->$target_relation;
-                        $this->_data[$relation_name][$target->_getFingerprint()] = $target;
+                        //If you have a m2m in the DB without the related row?
+                        if($target !== null)
+                            $this->_data[$relation_name][$target->_getFingerprint()] = $target;
                     }
                     break;
 
