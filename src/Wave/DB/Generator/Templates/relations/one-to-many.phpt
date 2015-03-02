@@ -20,7 +20,7 @@
      * @return bool
     **/
     public function remove{{ relation.Name|singularize }}({{ relation.ReferencedTable.getClassName(true) }} $obj, $delete_object = true){
-        return $this->_removeRelationObject('{{ relation.Name }}', $obj, $remove_relation);
+        return $this->_removeRelationObject('{{ relation.Name }}', $obj, $delete_object);
     }
 	
 	/**
