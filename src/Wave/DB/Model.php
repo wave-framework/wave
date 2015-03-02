@@ -637,7 +637,7 @@ class Model {
      */
     public function _removeRelationObject($relation_name, Model $object, $remove_relation = true){
 
-        unset($this->_data[$object->_getFingerprint()]);
+        unset($this->_data[$relation_name][$object->_getFingerprint()]);
 
         if($remove_relation) {
             $relation_data = $this->_getRelation($relation_name);
