@@ -51,7 +51,8 @@ class Auth {
                 self::$_auth_problems['secondary'][$key] = array(
                     'value' => $auth_object->$key,
                     'reason' => self::FAILURE_BAD_CREDENTIAL,
-                    'match' => $value);
+                    'match' => $value
+                );
                 $_is_valid = false;
             }
 

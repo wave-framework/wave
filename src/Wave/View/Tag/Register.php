@@ -48,7 +48,14 @@ class Register extends \Twig_TokenParser {
 class RegisterNode extends \Twig_Node {
 
     public function __construct($type, $file, $extras, $priority, $line, $tag = null) {
-        parent::__construct(array(), array('type' => $type, 'file' => $file, 'extras' => $extras, 'priority' => $priority), $line, $tag);
+        parent::__construct(
+            array(), array(
+                'type' => $type,
+                'file' => $file,
+                'extras' => $extras,
+                'priority' => $priority
+            ), $line, $tag
+        );
     }
 
     public function compile(\Twig_Compiler $compiler) {

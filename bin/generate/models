@@ -1,8 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-use Wave;
-
 require_once dirname(__FILE__) . '/../cli-tools.php';
 
 echo "Regenerating Models... \n";

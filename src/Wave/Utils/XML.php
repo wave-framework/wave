@@ -92,7 +92,10 @@ class XML {
                         $current[$tag][] = $result;
                     //This section will make the value an array if multiple tags with the same name appear together
                     else
-                        $current[$tag] = array($current[$tag], $result);//This will combine the existing item and the new item together to make an array
+                        $current[$tag] = array(
+                            $current[$tag],
+                            $result
+                        );//This will combine the existing item and the new item together to make an array
 
                     $current = &$current[$tag][count($current[$tag]) - 1];
                 }

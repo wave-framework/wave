@@ -14,8 +14,13 @@ abstract class Method {
     const CREATE = 'CREATE';
 
     static $ALL = array(
-        self::ANY, self::POST, self::GET,
-        self::PUT, self::CLI, self::DELETE, self::UPDATE,
+        self::ANY,
+        self::POST,
+        self::GET,
+        self::PUT,
+        self::CLI,
+        self::DELETE,
+        self::UPDATE,
         self::CREATE
     );
 
