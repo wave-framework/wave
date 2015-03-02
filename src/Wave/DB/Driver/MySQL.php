@@ -134,6 +134,10 @@ class MySQL extends AbstractDriver implements DriverInterface {
                     continue;
                 }
                 $referenced_column = $referenced_db->getColumn($cached_row['REFERENCED_TABLE_NAME'], $cached_row['REFERENCED_COLUMN_NAME']);
+                if($referenced_column === null) {
+                    Wave\Log::write('mysql_driver', sprintf('Column [%s] is not referenced in the configuration - skipping building relations.', $cached_row['REFERENCED_COLUMN_NAME']), Wave\Log::WARNING);
+                    continue;
+                }
                 //-----
 
                 if($cached_row['REFERENCED_TABLE_SCHEMA'] != $cached_row['TABLE_SCHEMA']) {
