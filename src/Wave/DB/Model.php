@@ -608,8 +608,10 @@ class Model {
                     $query->with($target_relation); //I can put this here!
                     //Relation on the 'with' will always be -to-one
                     $this->_data[$relation_name] = array();
-                    while($row = $query->fetchRow())
-                        $this->_data[$relation_name][$row->_getFingerprint()] = $row->$target_relation;
+                    while($row = $query->fetchRow()){
+                        $target = $row->$target_relation;
+                        $this->_data[$relation_name][$target->_getFingerprint()] = $target;
+                    }
                     break;
 
                 case Relation::ONE_TO_MANY:
