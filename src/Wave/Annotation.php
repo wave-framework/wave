@@ -99,7 +99,7 @@ class Annotation {
      * @return mixed
      */
     protected static function sanitizeDocBlock($docblock){
-        return preg_replace('/^(\s*\*\s{0,1}\/?)|(\/\*{1,2})/m', '', $docblock);
+        return preg_replace('/^(\s*\*+\s{0,1}\/?)|(\/\*{1,2})/m', '', $docblock);
     }
 
 	public function __construct($key, $value, $from_class = null) {
