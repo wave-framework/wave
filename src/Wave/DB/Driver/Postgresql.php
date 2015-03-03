@@ -108,7 +108,12 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
             foreach($relation_cache as $cached_row) {
 
                 //--- check both ends of the relation can be built.
-                $local_db = DB::getByConfig(array('database' => $cached_row['table_catalog'], 'schema' => $cached_row['table_schema']));
+                $local_db = DB::getByConfig(
+                    array(
+                        'database' => $cached_row['table_catalog'],
+                        'schema' => $cached_row['table_schema']
+                    )
+                );
                 if($local_db === null) {
                     Log::write('pgsql_driver', sprintf('Database [%s] is not referenced in the configuration - skipping building relations.', $cached_row['table_catalog']), Log::WARNING);
                     continue;
@@ -119,7 +124,12 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
                 if($cached_row['referenced_table_schema'] === null)
                     continue;
 
-                $referenced_db = DB::getByConfig(array('database' => $cached_row['referenced_table_catalog'], 'schema' => $cached_row['referenced_table_schema']));
+                $referenced_db = DB::getByConfig(
+                    array(
+                        'database' => $cached_row['referenced_table_catalog'],
+                        'schema' => $cached_row['referenced_table_schema']
+                    )
+                );
                 if($referenced_db === null) {
                     Log::write('pgsql_driver', sprintf('Database [%s] is not referenced in the configuration - skipping building relations.', $cached_row['referenced_table_schema']), Log::WARNING);
                     continue;

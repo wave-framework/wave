@@ -94,7 +94,7 @@ class Query {
     /**
      * Return the specified relation objects with the primary object
      *
-     * @param string $relation The class name of the relation to join to the primary object
+     * @param string $relation The class name of the relation to join to the primary object.
      * @param string|null $alias [optional] Provide a custom alias to use for the joined object, or null to have one
      *                               generated. This property is passed by reference so it can be used to get a
      *                               handle on the generated alias.
@@ -156,8 +156,10 @@ class Query {
         }
 
         //this needs recording so the object can be added as a relation, not a join
-        $this->with[$alias] = array('relation_type' => $relation_data['relation_type'],
-            'relation_name' => Wave\Inflector::singularize($relation));
+        $this->with[$alias] = array(
+            'relation_type' => $relation_data['relation_type'],
+            'relation_name' => Wave\Inflector::singularize($relation)
+        );
 
         return $this;
 
@@ -220,11 +222,13 @@ class Query {
         else
             $this->aliasClass($class, $alias);
 
-        $this->joins[] = array('type' => $type,
+        $this->joins[] = array(
+            'type' => $type,
             'class' => $class,
             'table_alias' => $alias,
             'target_alias' => &$target_alias, //for many to many, this won't be known till the target table is joined
-            'condition' => '');
+            'condition' => ''
+        );
 
         return $this;
     }
@@ -344,9 +348,11 @@ class Query {
             return;
 
         if($create) {
-            $this->where[] = array('type' => $type,
+            $this->where[] = array(
+                'type' => $type,
                 'condition' => $condition,
-                'params' => array());
+                'params' => array()
+            );
         } else {
             if($current_index-- === 0)
                 throw new Wave\Exception('Wave\DB\Query::and and ::or may only be used following a where.');
@@ -372,7 +378,7 @@ class Query {
      */
     public static function parseWhereCondition($condition, &$params) {
 
-        if(stripos($condition, ' AND ') !== false || stripos($condition, ' OR ') !== false)
+        if((stripos($condition, ' AND ') !== false && stripos($condition, 'BETWEEN') === false) || stripos($condition, ' OR ') !== false)
             trigger_error('You should be using ->or() or ->and() to add multiple criteria to a where clause.');
 
         $num_placeholders = substr_count($condition, '?');
@@ -394,7 +400,14 @@ class Query {
 
         if($num_placeholders === 1) {
             if($params === null)
-                $condition = str_replace(array('<>', '!=', '=', '?'), array('IS NOT', 'IS NOT', 'IS', 'NULL'), $condition);
+                $condition = str_replace(
+                    array('<>', '!=', '=', '?'), array(
+                        'IS NOT',
+                        'IS NOT',
+                        'IS',
+                        'NULL'
+                    ), $condition
+                );
             else if(!is_array($params))
                 $params = array($params);
         }
@@ -408,13 +421,13 @@ class Query {
     */
 
     /*
-    *	CLAUSE CONCATINATION OPERATORS
+    *	CLAUSE CONCATENATION OPERATORS
     */
 
     /**
      * Add a condition to the current subclause using OR between the conditions. This is an alias function
      * because or is a reserved word and cannot be used to declare a method (but can be used at runtime).
-     * The equivilent function (without the prefixing underscore) is defined via magic methods).
+     * The equivalent function (without the prefixing underscore) is defined via magic methods).
      */
     public function _or($condition, $params = array()) {
         switch($this->_last_clause) {
@@ -584,7 +597,10 @@ class Query {
         }
 
         $this->_params = array_map(
-            array($this->database->getConnection()->getDriverClass(), 'valueToSQL'), $this->_params
+            array(
+                $this->database->getConnection()->getDriverClass(),
+                'valueToSQL'
+            ), $this->_params
         );
 
         $this->_built = true;
@@ -806,8 +822,6 @@ class Query {
         $statement = $this->database->getConnection()->prepare($sql);
         $statement->execute();
 
-        self::$query_count++;
-
         $rslt = $statement->fetch(Connection::FETCH_ASSOC);
 
         return $rslt['row_count'];
@@ -863,8 +877,10 @@ class Query {
         if($alias === null)
             $alias = $this->getAlias();
 
-        $this->class_aliases[$alias] = array('class' => $class,
-            'columns' => array());
+        $this->class_aliases[$alias] = array(
+            'class' => $class,
+            'columns' => array()
+        );
 
         return $alias;
     }
@@ -909,8 +925,10 @@ class Query {
         list($class_alias, $column) = explode('.', $column_alias);
         $column = $this->unescape($column);
 
-        return array('column' => $column,
-            'class_alias' => $class_alias);
+        return array(
+            'column' => $column,
+            'class_alias' => $class_alias
+        );
     }
 
 

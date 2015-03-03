@@ -310,9 +310,14 @@ class Request {
         $method = strtoupper($method);
         if(!in_array(
             $method, array(
-                static::METHOD_HEAD, static::METHOD_GET, static::METHOD_POST,
-                static::METHOD_PUT, static::METHOD_DELETE, static::METHOD_CLI,
-                static::METHOD_PATCH, static::METHOD_OPTIONS
+                static::METHOD_HEAD,
+                static::METHOD_GET,
+                static::METHOD_POST,
+                static::METHOD_PUT,
+                static::METHOD_DELETE,
+                static::METHOD_CLI,
+                static::METHOD_PATCH,
+                static::METHOD_OPTIONS
             )
         )
         )

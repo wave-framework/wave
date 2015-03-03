@@ -25,7 +25,12 @@ abstract class AbstractLengthConstraint extends AbstractConstraint {
                 ? $arguments['limit']
                 : null;
 
-            $comparators = array(self::COMPARATOR_ARRAY, self::COMPARATOR_INT, self::COMPARATOR_STRING, self::COMPARATOR_DATETIME);
+            $comparators = array(
+                self::COMPARATOR_ARRAY,
+                self::COMPARATOR_INT,
+                self::COMPARATOR_STRING,
+                self::COMPARATOR_DATETIME
+            );
             $this->comparator = isset($arguments['comparator']) && in_array($arguments['comparator'], $comparators)
                 ? $arguments['comparator']
                 : null;

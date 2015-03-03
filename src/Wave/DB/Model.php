@@ -70,9 +70,17 @@ class Model {
 
     /**
      * A map of the joined aliases to their namespaced class names
+     *
      * @var array
      */
     protected $_joined_aliases = array();
+
+    /**
+     * The parent object for chained loading.  Useful for getting the m2m relation object.
+     *
+     * @var Model
+     */
+    protected $_parent_object = null;
 
 
     public function __construct($data = null, $is_loaded = false) {
@@ -257,6 +265,8 @@ class Model {
 
     /**
      * Returns relation metadata
+     * If searching by a key that gets autocorrected, it'll be updated.
+     *
      * @param $relation_name
      *
      * @return mixed
@@ -264,20 +274,26 @@ class Model {
      */
     public static function _getRelation($relation_name) {
 
-        if(!self::isRelation($relation_name))
-            throw new Wave\Exception(sprintf('Invalid relation: [%s]', $relation_name));
+        if(isset(static::$_relations[$relation_name])){
+            return static::$_relations[$relation_name];
+        }
 
-        return static::$_relations[$relation_name];
+        throw new Wave\Exception(sprintf('Invalid relation: [%s]', $relation_name));
     }
 
     /**
-     * @param $relation_name
+     * Finds the relations on a given class by class name, returns the first relation that matches.
      *
-     * @return bool
+     * @param $class_name
+     * @return null|string
      */
-    public static function isRelation($relation_name) {
-
-        return isset(static::$_relations[$relation_name]);
+    public static function _findRelationName($class_name){
+        foreach(static::$_relations as $rel_name => $relation){
+            if($relation['related_class'] === $class_name){
+                return $rel_name;
+            }
+        }
+        return null;
     }
 
     /**
@@ -374,9 +390,18 @@ class Model {
         if(isset($unique))
             return $unique;
 
-        //then all (if no keys are set for some reason) @todo - throw apropriate error
+        //then all (if no keys are set for some reason) @todo - throw appropriate error
         return self::_getFields();
     }
+
+
+    /**
+     * Generates a string hash of the object based on 'identifying data' returned from the above methods.
+     */
+    public function _getFingerprint(){
+        return sha1(implode('::', $this->_getIdentifyingData()));
+    }
+
 
     /**
      * Returns all the data for this model as an array. Differs from the _getData
@@ -430,7 +455,7 @@ class Model {
         if(!method_exists($this, $getter)) {
             $stack = debug_backtrace(false);
             $stack = array_shift($stack);
-            trigger_error('Notice: Undefined property ' . get_called_class() . '::' . $property . ' in ' . $stack['file'] . ' on line ' . $stack['line'] . " (via by Wave\DB_Model::__get())\n");
+            trigger_error('Notice: Undefined property ' . get_called_class() . '::' . $property . ' in ' . $stack['file'] . ' on line ' . $stack['line'] . " (via by Wave\\DB_Model::__get())\n");
         } else {
             return $this->$getter();
         }
@@ -466,6 +491,199 @@ class Model {
      */
     private static function _getGetter($property) {
         return 'get' . $property;
+    }
+
+    /**
+     * @return Model
+     */
+    public function _getParentObject() {
+        return $this->_parent_object;
+    }
+
+    /**
+     * @param Model $parent_object
+     */
+    public function _setParentObject(Model $parent_object) {
+        $this->_parent_object = $parent_object;
+    }
+
+
+    /**
+     * *-to-one
+     *
+     * @param $relation_name
+     * @param Model $object
+     *
+     */
+    protected function _setRelationObject($relation_name, Model $object, $create_relation) {
+
+        $this->_data[$relation_name] = $object;
+        $object->_setParentObject($this);
+
+        if($object !== null && $create_relation) {
+            if(!$object->_isLoaded())
+                $object->save();
+
+            $relation_data = $this->_getRelation($relation_name);
+
+            foreach($relation_data['local_columns'] as $position => $local_column)
+                $this->_data[$local_column] = $object->{$relation_data['related_columns'][$position]};
+        }
+
+    }
+
+    /**
+     * *-to-many
+     *
+     * @param $relation_name
+     * @param Model $object
+     * @param $create_relation
+     * @throws Wave\Exception
+     */
+    protected function _addRelationObject($relation_name, Model $object, $create_relation = true, $join_data = array()) {
+
+        $this->_data[$relation_name][$object->_getFingerprint()] = $object;
+
+        $relation_data = $this->_getRelation($relation_name);
+
+        if($object !== null && $create_relation) {
+            if(!$object->_isLoaded())
+                $object->save();
+
+            switch($relation_data['relation_type']) {
+                case Relation::MANY_TO_MANY:
+                    $related_class_name = $relation_data['related_class'];
+
+                    $rc = new $related_class_name();
+                    foreach($relation_data['target_relation']['local_columns'] as $position => $local_column)
+                        $rc->{$local_column} = $object->{$relation_data['target_relation']['related_columns'][$position]};
+                    foreach($join_data as $key => $value)
+                        $rc->{$key} = $value;
+
+                    $object->_setParentObject($rc);
+                    //Deliberate non-break here so the -many logic flows on with $object reassigned.
+                    $object = $rc;
+                case Relation::ONE_TO_MANY:
+                    foreach($relation_data['local_columns'] as $position => $local_column)
+                        $object->{$relation_data['related_columns'][$position]} = $this->_data[$local_column];
+
+                    $object->_setParentObject($this);
+                    break;
+
+            }
+            $object->save();
+        }
+    }
+
+
+    /**
+     * Unfortunately this function is a plural when it sometimes returns a singular.
+     * I couldn't justify duplicating the function.
+     *
+     * @param $relation_name
+     * @return null
+     * @throws Wave\Exception
+     */
+    protected function _getRelationObjects($relation_name) {
+
+        $relation_data = $this->_getRelation($relation_name);
+
+        if(!isset($this->_data[$relation_name])) {
+
+            $related_class = $relation_data['related_class'];
+            $query = Wave\DB::get($related_class::_getDatabaseNamespace())->from($related_class, $from_alias);
+
+            //Add in all of the related columns
+            foreach($relation_data['local_columns'] as $position => $local_column) {
+                //At this point, may as well return as there aren't null-relations
+                if($this->_data[$local_column] === null)
+                    return null;
+
+                $query->where(sprintf('%s.`%s` = ?', $from_alias, $relation_data['related_columns'][$position]), $this->_data[$local_column]);
+            }
+
+            switch($relation_data['relation_type']){
+                case Relation::MANY_TO_MANY:
+                    $target_relation = $related_class::_findRelationName($relation_data['target_relation']['related_class']);
+                    $query->with($target_relation); //I can put this here!
+                    //Relation on the 'with' will always be -to-one
+                    $this->_data[$relation_name] = array();
+                    while($row = $query->fetchRow()){
+                        $target = $row->$target_relation;
+                        //If you have a m2m in the DB without the related row?
+                        if($target !== null)
+                            $this->_data[$relation_name][$target->_getFingerprint()] = $target;
+                    }
+                    break;
+
+                case Relation::ONE_TO_MANY:
+                    $this->_data[$relation_name] = $query->fetchAll();
+                    break;
+
+                case Relation::MANY_TO_ONE:
+                case Relation::ONE_TO_ONE:
+                    $this->_data[$relation_name] = $query->fetchRow();
+            }
+
+        }
+
+        return $this->_data[$relation_name];
+    }
+
+
+    /**
+     * @param $relation_name
+     * @param Model $object
+     * @param bool $remove_relation
+     * @return bool
+     * @throws Exception
+     * @throws Wave\Exception
+     */
+    public function _removeRelationObject($relation_name, Model $object, $remove_relation = true){
+
+        unset($this->_data[$relation_name][$object->_getFingerprint()]);
+
+        if($remove_relation) {
+            $relation_data = $this->_getRelation($relation_name);
+
+            switch($relation_data['relation_type']){
+                case Relation::MANY_TO_MANY:
+                    $related_class = $relation_data['related_class'];
+                    $query = Wave\DB::get($related_class::_getDatabaseNamespace())->from($related_class, $from_alias);
+
+                    //Add in all of the related columns
+                    foreach($relation_data['local_columns'] as $position => $local_column) {
+                        //At this point, may as well return as there aren't null-relations
+                        if($this->_data[$local_column] === null)
+                            return false;
+
+                        $query->where(sprintf('%s.`%s` = ?', $from_alias, $relation_data['related_columns'][$position]), $this->_data[$local_column]);
+                    }
+
+                    //Add in all of the related columns
+                    foreach($relation_data['target_relation']['related_columns'] as $position => $related_column) {
+                        //At this point, may as well return as there aren't null-relations
+                        if($object->{$related_column} === null)
+                            return false;
+
+                        $query->where(sprintf('%s.`%s` = ?', $from_alias, $relation_data['target_relation']['local_columns'][$position]), $object->{$related_column});
+                    }
+
+                    if($rc = $query->fetchRow())
+                        return $rc->delete();
+
+                    break;
+
+                case Relation::ONE_TO_MANY:
+                    foreach($relation_data['related_columns'] as $position => $related_column)
+                        $object->{$related_column} = null;
+
+                    return $object->save();
+
+                    break;
+            }
+
+        }
     }
 
 

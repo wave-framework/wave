@@ -108,7 +108,14 @@ class Debug {
             $sql = str_replace(chr(0x0A), ' ', $sql);
             $sql = str_replace('  ', ' ', $sql);
 
-            $this->query_count = array_push($this->queries, array('success' => $success, 'time' => $time, 'sql' => $sql, 'rows' => $rows));
+            $this->query_count = array_push(
+                $this->queries, array(
+                    'success' => $success,
+                    'time' => $time,
+                    'sql' => $sql,
+                    'rows' => $rows
+                )
+            );
         }
 
         $this->addCheckpoint('query.' . $this->query_count);
@@ -137,7 +144,13 @@ class Debug {
             $rows = $this->queries[$i]['rows'] . ' row' . ($this->queries[$i]['rows'] == 1 ? '' : 's');
             $time = $this->queries[$i]['time'] . ' ms';
 
-            $out[] = array('colour' => $colour, 'number' => $i + 1, 'sql' => addslashes($sql), 'time' => $time, 'rows' => $rows);
+            $out[] = array(
+                'colour' => $colour,
+                'number' => $i + 1,
+                'sql' => addslashes($sql),
+                'time' => $time,
+                'rows' => $rows
+            );
         }
 
         return $out;
