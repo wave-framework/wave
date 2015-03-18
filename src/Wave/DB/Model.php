@@ -547,11 +547,12 @@ class Model {
         $relation_data = $this->_getRelation($relation_name);
 
         if($object !== null && $create_relation) {
-            if(!$object->_isLoaded())
-                $object->save();
 
             switch($relation_data['relation_type']) {
                 case Relation::MANY_TO_MANY:
+                    if(!$object->_isLoaded())
+                        $object->save();
+
                     $related_class_name = $relation_data['related_class'];
 
                     $rc = new $related_class_name();
@@ -591,7 +592,8 @@ class Model {
         if(!isset($this->_data[$relation_name])) {
 
             $related_class = $relation_data['related_class'];
-            $query = Wave\DB::get($related_class::_getDatabaseNamespace())->from($related_class, $from_alias);
+            $db = Wave\DB::get($related_class::_getDatabaseNamespace());
+            $query = $db->from($related_class, $from_alias);
 
             //Add in all of the related columns
             foreach($relation_data['local_columns'] as $position => $local_column) {
@@ -599,7 +601,7 @@ class Model {
                 if($this->_data[$local_column] === null)
                     return null;
 
-                $query->where(sprintf('%s.`%s` = ?', $from_alias, $relation_data['related_columns'][$position]), $this->_data[$local_column]);
+                $query->where(sprintf('%s.%s = ?', $from_alias, $db->escape($relation_data['related_columns'][$position])), $this->_data[$local_column]);
             }
 
             switch($relation_data['relation_type']){
@@ -649,7 +651,8 @@ class Model {
             switch($relation_data['relation_type']){
                 case Relation::MANY_TO_MANY:
                     $related_class = $relation_data['related_class'];
-                    $query = Wave\DB::get($related_class::_getDatabaseNamespace())->from($related_class, $from_alias);
+                    $db = Wave\DB::get($related_class::_getDatabaseNamespace());
+                    $query = $db->from($related_class, $from_alias);
 
                     //Add in all of the related columns
                     foreach($relation_data['local_columns'] as $position => $local_column) {
@@ -657,7 +660,7 @@ class Model {
                         if($this->_data[$local_column] === null)
                             return false;
 
-                        $query->where(sprintf('%s.`%s` = ?', $from_alias, $relation_data['related_columns'][$position]), $this->_data[$local_column]);
+                        $query->where(sprintf('%s.%s = ?', $from_alias, $db->escape($relation_data['related_columns'][$position])), $this->_data[$local_column]);
                     }
 
                     //Add in all of the related columns
@@ -666,7 +669,7 @@ class Model {
                         if($object->{$related_column} === null)
                             return false;
 
-                        $query->where(sprintf('%s.`%s` = ?', $from_alias, $relation_data['target_relation']['local_columns'][$position]), $object->{$related_column});
+                        $query->where(sprintf('%s.%s = ?', $from_alias, $db->escape($relation_data['target_relation']['local_columns'][$position])), $object->{$related_column});
                     }
 
                     if($rc = $query->fetchRow())
