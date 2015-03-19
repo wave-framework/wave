@@ -542,7 +542,7 @@ class Model {
      */
     protected function _addRelationObject($relation_name, Model $object, $create_relation = true, $join_data = array()) {
 
-        $this->_data[$relation_name][$object->_getFingerprint()] = $object;
+        $this->_data[$relation_name][] = $object;
 
         $relation_data = $this->_getRelation($relation_name);
 
@@ -614,7 +614,7 @@ class Model {
                         $target = $row->$target_relation;
                         //If you have a m2m in the DB without the related row?
                         if($target !== null)
-                            $this->_data[$relation_name][$target->_getFingerprint()] = $target;
+                            $this->_data[$relation_name][] = $target;
                     }
                     break;
 
@@ -643,7 +643,17 @@ class Model {
      */
     public function _removeRelationObject($relation_name, Model $object, $remove_relation = true){
 
-        unset($this->_data[$relation_name][$object->_getFingerprint()]);
+
+        if(isset($this->_data[$relation_name])) {
+            foreach($this->_data[$relation_name] as $key => $relation){
+                if($relation->_getFingerprint() === $object->_getFingerprint()){
+                    //Unset
+                    unset($this->_data[$relation_name][$key]);
+                    //Renumber (so it doesn't accidentally map later down the track).
+                    $this->_data[$relation_name] = array_values($this->_data[$relation_name]);
+                }
+            }
+        }
 
         if($remove_relation) {
             $relation_data = $this->_getRelation($relation_name);
