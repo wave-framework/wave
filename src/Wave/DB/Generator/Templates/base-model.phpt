@@ -99,7 +99,8 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 	
 	public function set{{ column.Name }}($value){
 		$this->_data['{{ column.Name }}'] = $value;
-		return $this;
+        $this->_dirty['{{ column.Name }}'] = true;
+        return $this;
 	}
 	{% endfor %}
 	

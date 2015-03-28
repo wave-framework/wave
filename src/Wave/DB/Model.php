@@ -435,7 +435,6 @@ class Model {
             if($this->$property === $data)
                 return $data;
 
-            $this->_dirty[$property] = true;
             return $this->$setter($data);
         }
 
@@ -526,8 +525,10 @@ class Model {
 
             $relation_data = $this->_getRelation($relation_name);
 
-            foreach($relation_data['local_columns'] as $position => $local_column)
-                $this->_data[$local_column] = $object->{$relation_data['related_columns'][$position]};
+            foreach($relation_data['local_columns'] as $position => $local_column){
+                $setter = self::_getSetter($local_column);
+                $this->$setter($object->{$relation_data['related_columns'][$position]});
+            }
         }
 
     }
