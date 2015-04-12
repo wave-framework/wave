@@ -191,15 +191,15 @@ class Controller {
         View::registerGlobal('_identity', $this->_identity);
     }
 
-    final protected function respond() {
+    protected function respond() {
         return $this->_invoke('respond');
     }
 
-    final protected function request() {
+    protected function request() {
         return $this->_invoke('request');
     }
 
-    final private function _invoke($type) {
+    private function _invoke($type) {
         // if this controller is running under a sub request then just return the computed response array
         if($this->_invoke_method === self::INVOKE_SUB_REQUEST) {
             if($type === 'request')
