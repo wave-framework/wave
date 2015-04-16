@@ -2,32 +2,25 @@
 
 namespace Wave\Annotation;
 
-use Wave;
+use Wave\Annotation;
 use Wave\Router\Action;
 
-class Validate extends Wave\Annotation {
+class Validate extends ArrayArguments {
 
     private $schema;
 
-    public function isFor() {
-        return Wave\Annotation::FOR_METHOD;
-    }
-
     public function validate($class) {
         $this->exactParameterCount(1);
-        $this->validOnSubclassesOf($class, Wave\Annotation::CLASS_CONTROLLER);
+        $this->validOnSubclassesOf($class, Annotation::CLASS_CONTROLLER);
     }
 
-    public function build() {
+    public function build(){
         $this->schema = $this->parameters[0];
     }
 
-    public function apply(Action &$action) {
+    public function apply(Action &$action){
         $action->setValidationSchema($this->schema);
-        return true;
     }
 
 }
 
-
-?>

@@ -188,6 +188,23 @@ class Validator implements ArrayAccess {
      */
     public static function validate($schema, array $input, $use_result = false) {
 
+        $instance = new self($input, self::getSchema($schema));
+        $result = $instance->execute();
+
+        if($use_result || $result){
+            return new Result($instance->getCleanedData(), $instance->getViolations());
+        }
+        else if(self::$use_exceptions) {
+            throw new InvalidInputException($instance->getViolations());
+        }
+        else {
+            trigger_error('Deprecated use of validator. Validator::validate() will return a Wave\\Validator\\Result object soon', E_USER_DEPRECATED);
+            return $result ? $instance->getCleanedData() : false;
+        }
+
+    }
+
+    public static function getSchema($schema){
         if(!array_key_exists($schema, self::$_schema_cache)) {
             $schema_name = strtr($schema, '_', DIRECTORY_SEPARATOR);
             $schema_file = sprintf(Config::get('wave')->schemas->file_format, $schema_name);
@@ -205,17 +222,7 @@ class Validator implements ArrayAccess {
             }
         }
 
-        $instance = new self($input, self::$_schema_cache[$schema]);
-        $result = $instance->execute();
-
-        if($use_result || $result) {
-            return new Result($instance->getCleanedData(), $instance->getViolations());
-        } else if(self::$use_exceptions) {
-            throw new InvalidInputException($instance->getViolations());
-        } else {
-            trigger_error('Deprecated use of validator. Validator::validate() will return a Wave\\Validator\\Result object soon', E_USER_DEPRECATED);
-            return $result ? $instance->getCleanedData() : false;
-        }
+        return self::$_schema_cache[$schema];
 
     }
 

@@ -2,27 +2,22 @@
 
 namespace Wave\Annotation;
 
-use Wave;
 
-class BaseURL extends Wave\Annotation {
+use Wave\Annotation;
+use Wave\Router\Action;
 
-    const DEFAULT_KEYWORD = 'default';
+class BaseURL extends ArrayArguments {
+	
+	const DEFAULT_KEYWORD = 'default';
 
-    public function isFor() {
-        return Wave\Annotation::FOR_METHOD;
-    }
+	public function validate($class) {
+		$this->minimumParameterCount(1);
+		$this->maximumParameterCount(1);
+		$this->validOnSubclassesOf($class,	Annotation::CLASS_CONTROLLER);
+	}
 
-    public function validate($class) {
-        $this->minimumParameterCount(1);
-        $this->maximumParameterCount(1);
-        $this->validOnSubclassesOf($class, Wave\Annotation::CLASS_CONTROLLER);
-    }
-
-    public function apply(Wave\Router\Action &$action) {
-        $action->setProfile($this->parameters[0]);
-    }
+	public function apply(Action &$action) {
+		$action->setProfile($this->parameters[0]);
+	}
 
 }
-
-
-?>
