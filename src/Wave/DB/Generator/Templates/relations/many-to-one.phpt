@@ -17,6 +17,6 @@
 	 *
 	 * @return {{ relation.ReferencedTable.getClassName(true) }}
 	**/
-	public function get{{ relation.Name }}(){
-		return $this->_getRelationObjects('{{ relation.Name }}');
+	public function get{{ relation.Name }}($query_transform_callback = null){
+		return $this->_getRelationObjects('{{ relation.Name }}', $query_transform_callback);
 	}

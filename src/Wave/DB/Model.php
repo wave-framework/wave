@@ -586,7 +586,7 @@ class Model {
      * @return null
      * @throws Wave\Exception
      */
-    protected function _getRelationObjects($relation_name) {
+    protected function _getRelationObjects($relation_name, $query_transform_callback = null) {
 
         $relation_data = $this->_getRelation($relation_name);
 
@@ -603,6 +603,10 @@ class Model {
                     return null;
 
                 $query->where(sprintf('%s.%s = ?', $from_alias, $db->escape($relation_data['related_columns'][$position])), $this->_data[$local_column]);
+            }
+
+            if($query_transform_callback !== null && is_callable($query_transform_callback)){
+                call_user_func($query_transform_callback, $query);
             }
 
             switch($relation_data['relation_type']){
