@@ -223,11 +223,12 @@ class Model {
     /**
      * @return string
      */
-    public static function _getDatabaseName() {
+    public static function _getSchemaName() {
+
         if(!isset(static::$_schema_name)) {
-            $config = DB::getConfigForNamespace(static::_getDatabaseNamespace());
-            static::$_schema_name = $config['database'];
+            static::$_schema_name = DB::get(static::_getDatabaseNamespace())->getSchema();
         }
+
         return static::$_schema_name;
     }
 

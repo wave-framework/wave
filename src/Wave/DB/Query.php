@@ -568,13 +568,13 @@ class Query {
 
         /** @var Model $from_class */
         $from_class = $this->unaliasClass($this->from_alias);
-        $query .= sprintf("FROM %s.%s AS %s\n", $this->escape($from_class::_getDatabaseName()), $this->escape($from_class::_getTableName()), $this->from_alias);
+        $query .= sprintf("FROM %s.%s AS %s\n", $this->escape($from_class::_getSchemaName()), $this->escape($from_class::_getTableName()), $this->from_alias);
 
         //joins (includes withs)
         foreach($this->joins as $join) {
             /** @var Model $join_class */
             $join_class = $join['class'];
-            $query .= sprintf("%s %s.%s AS %s %s\n", $join['type'], $this->escape($join_class::_getDatabaseName()), $this->escape($join_class::_getTableName()), $join['table_alias'], $join['condition']);
+            $query .= sprintf("%s %s.%s AS %s %s\n", $join['type'], $this->escape($join_class::_getSchemaName()), $this->escape($join_class::_getTableName()), $join['table_alias'], $join['condition']);
         }
 
         foreach($this->where as $index => $where) {
