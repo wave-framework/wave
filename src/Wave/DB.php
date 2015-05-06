@@ -403,12 +403,12 @@ class DB {
 
         $connection->prepare($sql)->execute($params);
 
-        $liid = intval($connection->lastInsertId());
-        if($liid !== 0) {
-            $primary_key = $object::_getPrimaryKey();
-            if($primary_key !== null && count($primary_key) === 1) {
-                $object->{current($primary_key)} = $liid;
-            }
+        $primary_key = $object::_getPrimaryKey();
+        if($primary_key !== null && count($primary_key) === 1) {
+            $column = current($primary_key);
+            $field = $object::_getField($column);
+            $liid = intval($connection->lastInsertId($field['sequence']));
+            $object->$column = $liid;
         }
 
         return $object->_setLoaded();

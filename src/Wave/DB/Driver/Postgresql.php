@@ -76,7 +76,7 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
         if(isset(self::$_column_cache[$namespace][$table->getName()])) {
             foreach(self::$_column_cache[$namespace][$table->getName()] as $cached_row) {
 
-                list($default_value, $is_serial) = self::translateSQLDefault($cached_row['column_default']);
+                list($default_value, $is_serial, $sequence) = self::translateSQLDefault($cached_row['column_default']);
 
                 $column = new DB\Column(
                     $table,
@@ -86,6 +86,9 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
                     $default_value,
                     $is_serial
                 );
+
+                if($sequence !== null)
+                    $column->setSequenceName($sequence);
 
                 $columns[$cached_row['column_name']] = $column;
             }
@@ -298,12 +301,14 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
         list($value, $original_type) = explode('::', $column_default, 2) + array(null, null);
 
         $is_serial = false;
+        $sequence = null;
         $type = self::translateSQLDataType($original_type);
         if(strtolower($value) === 'null') {
             $value = null;
-        } else if(strpos($value, 'nextval(') === 0) {
+        } else if(preg_match('/nextval\(\'(?<sequence_name>.+?)\'/', $column_default, $matches)) {
             $value = null;
             $is_serial = true;
+            $sequence = $matches['sequence_name'];
         } else if(DB\Column::TYPE_FLOAT == $type) {
             $value = (float) $value;
         } else if(DB\Column::TYPE_INT === $type) {
@@ -315,7 +320,7 @@ class PostgreSQL extends AbstractDriver implements DriverInterface {
             $value = trim($value, '\'');
         }
 
-        return array($value, $is_serial);
+        return array($value, $is_serial, $sequence);
     }
 
 
