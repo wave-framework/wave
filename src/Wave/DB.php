@@ -13,6 +13,7 @@ namespace Wave;
 use Wave\Config;
 use Wave\DB\Exception as DBException;
 use Wave\DB\Model;
+use Wave\DB\Query;
 
 class DB {
 
@@ -302,10 +303,10 @@ class DB {
      * @return mixed
      */
     public function getSchema() {
-        if(!$this->config->offsetExists('schema'))
-            return $this->config->database;
+        if($this->config->offsetExists('schema'))
+            return $this->config->schema;
 
-        return $this->config->schema;
+        return $this->config->database;
     }
 
     /**
@@ -318,7 +319,7 @@ class DB {
      * @return DB\Query
      */
     public function from($from, &$alias = null, $fields = null) {
-        $query = new \Wave\DB\Query($this);
+        $query = new Query($this);
         return $query->from($from, $alias, $fields);
     }
 
@@ -394,7 +395,7 @@ class DB {
         }
 
         $sql = sprintf(
-            'INSERT INTO %s.%s (%s) VALUES (%s);', $database->escape($object::_getDatabaseName()),
+            'INSERT INTO %s.%s (%s) VALUES (%s);', $database->escape($object::_getSchemaName()),
             $database->escape($object::_getTableName()),
             implode(',', $fields),
             implode(',', $placeholders)
@@ -402,12 +403,12 @@ class DB {
 
         $connection->prepare($sql)->execute($params);
 
-        $liid = intval($connection->lastInsertId());
-        if($liid !== 0) {
-            $primary_key = $object::_getPrimaryKey();
-            if($primary_key !== null && count($primary_key) === 1) {
-                $object->{current($primary_key)} = $liid;
-            }
+        $primary_key = $object::_getPrimaryKey();
+        if($primary_key !== null && count($primary_key) === 1) {
+            $column = current($primary_key);
+            $field = $object::_getField($column);
+            $liid = intval($connection->lastInsertId($field['sequence']));
+            $object->$column = $liid;
         }
 
         return $object->_setLoaded();
@@ -441,7 +442,7 @@ class DB {
         }
 
         $sql = sprintf(
-            'UPDATE %s.%s SET %s WHERE %s;', $database->escape($object::_getDatabaseName()),
+            'UPDATE %s.%s SET %s WHERE %s;', $database->escape($object::_getSchemaName()),
             $database->escape($object::_getTableName()),
             implode(',', $updates),
             implode(' AND ', $criteria)
@@ -473,7 +474,7 @@ class DB {
         }
 
         $sql = sprintf(
-            'DELETE FROM %s.%s WHERE %s LIMIT 1;', $database->escape($object::_getDatabaseName()),
+            'DELETE FROM %s.%s WHERE %s;', $database->escape($object::_getSchemaName()),
             $database->escape($object::_getTableName()),
             implode(' AND ', $criteria)
         );

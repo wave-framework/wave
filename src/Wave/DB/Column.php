@@ -39,6 +39,8 @@ class Column {
     private $extra;
     /** @var string $comment */
     private $comment;
+    /** @var string $sequence_name */
+    private $sequence_name;
     /** @var  array $metadata */
     private $metadata = array();
 
@@ -174,6 +176,20 @@ class Column {
             $this->metadata = $parsed;
         }
 
+    }
+
+    /**
+     * @return string
+     */
+    public function getSequenceName() {
+        return $this->sequence_name;
+    }
+
+    /**
+     * @param string $sequence_name
+     */
+    public function setSequenceName($sequence_name) {
+        $this->sequence_name = $sequence_name;
     }
 
 }

@@ -15,8 +15,10 @@
 	/**
 	 * {{ relation.Name }} - many-to-one
 	 *
-	 * @return {{ relation.ReferencedTable.getClassName(true) }}
+     * @param callable $transform_callback
+     * @return {{ relation.ReferencedTable.getClassName(true) }}
 	**/
-	public function get{{ relation.Name }}($query_transform_callback = null){
-		return $this->_getRelationObjects('{{ relation.Name }}', $query_transform_callback);
+	public function get{{ relation.Name }}(){
+        $transform_callback = func_num_args() >= 1 ? func_get_arg(0) : null;
+		return $this->_getRelationObjects('{{ relation.Name }}', $transform_callback);
 	}
