@@ -16,12 +16,23 @@ class JSON {
             return $data->format('r');
         } else if(is_array($data) || is_object($data)) {
             $jsonarr = array();
-            if($data instanceof Model)
+
+            if($data instanceof Model) {
                 $data = $data->_toArray();
+            }
+
             foreach($data as $key => $value) {
                 $jsonarr[$key] = self::arrayify($value);
             }
-            return $jsonarr;
+
+            // empty objects will be converted to arrays when json_encoded
+            // so preserve the object type if the array is empty
+            if(is_object($data) && empty($jsonarr)){
+                return (object) $jsonarr;
+            }
+            else {
+                return $jsonarr;
+            }
         } else {
             return $data;
         }
