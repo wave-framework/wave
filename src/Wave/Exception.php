@@ -67,8 +67,7 @@ class Exception extends \Exception {
             return true;
         }
 
-        $e = new ErrorException($message, $code, $code, $file, $line);
-        return self::handle($e, true);
+        throw new ErrorException($message, $code, $code, $file, $line);
     }
 
     public static function handleFatalError() {
