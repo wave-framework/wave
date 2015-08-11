@@ -16,6 +16,7 @@ class Validator implements ArrayAccess {
     const CONSTRAINT_CLASS_MASK = "\\Wave\\Validator\\Constraints\\%sConstraint";
 
     private static $use_exceptions = false;
+    private static $null_cleaned = true;
 
     private static $_schema_cache = array();
     private $_schema;
@@ -30,6 +31,14 @@ class Validator implements ArrayAccess {
      * @deprecated Errors can be found in the Validator\Result object passed back from Validator::validate()
      */
     public static $last_errors = array();
+
+    public static function useExceptions($use_exceptions = false) {
+        self::$use_exceptions = $use_exceptions;
+    }
+
+    public static function nullCleaned($null_cleaned = true) {
+        self::$null_cleaned = $null_cleaned;
+    }
 
     /**
      * @param array $input The data to validate against
@@ -64,7 +73,9 @@ class Validator implements ArrayAccess {
                 }
             }
 
-            $this->setCleanedData($field_name, null);
+            if(self::$null_cleaned) {
+                $this->setCleanedData($field_name, null);
+            }
 
             // manual check, if the field isn't in the data array throw an error
             // if it is a required field, otherwise just skip and continue validating the rest
@@ -72,7 +83,6 @@ class Validator implements ArrayAccess {
                 || (is_string($this->_data[$field_alias]) && strlen($this->_data[$field_alias]) <= 0)
                 || (is_array($this->_data[$field_alias]) && empty($this->_data[$field_alias]))
             ) {
-
                 $is_required = !(isset($definition['required']) && is_bool($definition['required']) && !$definition['required']);
                 $message = 'This field is required';
                 if(isset($definition['required'])) {
@@ -101,13 +111,15 @@ class Validator implements ArrayAccess {
                     continue;
             }
 
-            if(isset($this->_data[$field_alias]))
+            if(isset($this->_data[$field_alias])) {
                 $this->setCleanedData($field_name, $this->_data[$field_alias]);
+            }
             else if(isset($definition['default'])) {
-                if(is_callable($definition['default']))
+                if (is_callable($definition['default'])) {
                     $this->setCleanedData($field_name, call_user_func($definition['default'], $this));
-                else
+                } else {
                     $this->setCleanedData($field_name, $definition['default']);
+                }
             }
 
             foreach($definition as $constraint => $arguments) {
@@ -226,10 +238,6 @@ class Validator implements ArrayAccess {
 
     }
 
-    public static function useExceptions($use_exceptions = false) {
-        self::$use_exceptions = $use_exceptions;
-    }
-
     public function setCleanedData($field, $value) {
         $this->_cleaned[$field] = $value;
     }
@@ -274,5 +282,4 @@ class Validator implements ArrayAccess {
     public function offsetUnset($offset) {
         throw new \BadMethodCallException("Unsetting validator input data is not supported");
     }
-
 }
