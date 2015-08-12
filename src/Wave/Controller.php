@@ -147,12 +147,15 @@ class Controller {
         if($data === null)
             $data = $this->_data;
 
-        if(($output = Validator::validate($schema, $data, true)) && $output->isValid()) {
+        try {
+            $output = Validator::validate($schema, $data);
             $this->_cleaned = $output;
             return true;
         }
+        catch(InvalidInputException $e) {
+            $this->_input_errors = $e->getViolations();
+        }
 
-        $this->_input_errors = $output->getViolations();
         return false;
     }
 
