@@ -12,10 +12,25 @@ use Wave\Validator\Exception;
  */
 class AnyConstraint extends AbstractConstraint implements CleanerInterface {
 
+    private $inherit_schema = array(
+        'required' => false
+    );
+
     private $cleaned = null;
     private $violations = array();
 
     private $message = null;
+
+    public function __construct($property, $arguments, Validator &$validator) {
+        parent::__construct($property, $arguments, $validator);
+
+        // inherit the default value from the parent instance of
+        $schema = $validator->getSchemaKey($property);
+        if(array_key_exists('default', $schema)) {
+            $this->inherit_schema['default'] = $schema['default'];
+        }
+    }
+
 
     /**
      * @throws \InvalidArgumentException
@@ -36,15 +51,17 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
                 continue;
             }
 
-            $schema = array('fields' => array($this->property => $constraint_group));
-            if(!isset($schema['fields'][$this->property]['required']))
-                $schema['fields'][$this->property]['required'] = false;
-
-            $instance = new Validator($input, $schema, $this->validator);
+            $instance = new Validator($input, array(
+                'fields' => array(
+                    $this->property => array_replace($this->inherit_schema, $constraint_group)
+                )
+            ), $this->validator);
 
             if($instance->execute()) {
                 $cleaned = $instance->getCleanedData();
-                $this->cleaned = $cleaned[$this->property];
+                if(isset($cleaned[$this->property])) {
+                    $this->cleaned = $cleaned[$this->property];
+                }
                 return true;
             } else {
                 $violations = $instance->getViolations();
@@ -72,4 +89,5 @@ class AnyConstraint extends AbstractConstraint implements CleanerInterface {
     public function getCleanedData() {
         return $this->cleaned;
     }
+
 }
