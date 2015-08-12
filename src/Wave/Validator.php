@@ -281,6 +281,10 @@ class Validator implements ArrayAccess {
         return $this->cleaned[$offset];
     }
 
+    public function offsetGetOrNull($offset) {
+        return isset($this->cleaned[$offset]) ? $this->cleaned[$offset] : null;
+    }
+
     public function offsetSet($offset, $value) {
         throw new \BadMethodCallException("Setting validator input data is not supported");
     }
