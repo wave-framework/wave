@@ -19,12 +19,12 @@ class Validator implements ArrayAccess {
     private static $null_cleaned = true;
 
     private static $_schema_cache = array();
-    private $_schema;
+    private $schema;
 
     private $parent_instance = null;
-    private $_data;
-    private $_cleaned = array();
-    private $_violations = array();
+    private $input;
+    private $cleaned = array();
+    private $violations = array();
 
     /**
      * @var array
@@ -40,178 +40,26 @@ class Validator implements ArrayAccess {
         self::$null_cleaned = $null_cleaned;
     }
 
-    /**
-     * @param array $input The data to validate against
-     * @param array $schema The schema to validate against
-     * @param Validator $parent_instance
-     */
-    public function __construct(array $input, array $schema, $parent_instance = null) {
-        $this->_data = $input;
-        $this->_schema = $schema['fields'];
-
-        if(array_key_exists('aliases', $schema)) {
-            $this->aliases = $schema['aliases'];
-        }
-
-        $this->parent_instance = $parent_instance;
-    }
-
-    public function execute() {
-
-        foreach($this->_schema as $field_name => $definition) {
-
-            $field_alias = $field_name;
-            if(!isset($this->_data[$field_name]) && isset($this->aliases[$field_name])) {
-                if(!is_array($this->aliases[$field_name]))
-                    $this->aliases[$field_name] = array($this->aliases[$field_name]);
-
-                foreach($this->aliases[$field_name] as $alias) {
-                    if(isset($this->_data[$alias])) {
-                        $field_alias = $alias;
-                        break;
-                    }
-                }
-            }
-
-            if(self::$null_cleaned) {
-                $this->setCleanedData($field_name, null);
-            }
-
-            // manual check, if the field isn't in the data array throw an error
-            // if it is a required field, otherwise just skip and continue validating the rest
-            if(!isset($this->_data[$field_alias])
-                || (is_string($this->_data[$field_alias]) && strlen($this->_data[$field_alias]) <= 0)
-                || (is_array($this->_data[$field_alias]) && empty($this->_data[$field_alias]))
-            ) {
-                $is_required = !(isset($definition['required']) && is_bool($definition['required']) && !$definition['required']);
-                $message = 'This field is required';
-                if(isset($definition['required'])) {
-                    if(is_array($definition['required']) && isset($definition['required']['value'], $definition['required']['message'])) {
-                        $message = $definition['required']['message'];
-                        $definition['required'] = $definition['required']['value'];
-                    }
-                    if(is_callable($definition['required']))
-                        $is_required = call_user_func($definition['required'], $this);
-                    elseif(is_string($definition['required']))
-                        $is_required = isset($this->_data[$definition['required']]);
-
-                }
-
-                if($is_required) {
-                    $this->addViolation(
-                        $field_alias, array(
-                            'field_name' => $field_alias,
-                            'reason' => 'missing',
-                            'message' => $message
-                        )
-                    );
-                }
-                // don't continue if there isn't a default value set
-                if(!isset($definition['default']))
-                    continue;
-            }
-
-            if(isset($this->_data[$field_alias])) {
-                $this->setCleanedData($field_name, $this->_data[$field_alias]);
-            }
-            else if(isset($definition['default'])) {
-                if (is_callable($definition['default'])) {
-                    $this->setCleanedData($field_name, call_user_func($definition['default'], $this));
-                } else {
-                    $this->setCleanedData($field_name, $definition['default']);
-                }
-            }
-
-            foreach($definition as $constraint => $arguments) {
-                if($constraint === 'required') continue;
-                $handler = self::translateConstraintKeyToClass($constraint);
-                if(!class_exists($handler))
-                    throw new InvalidConstraintException("Handler for '$constraint' does not exist");
-
-                /** @var $instance \Wave\Validator\Constraints\AbstractConstraint */
-                $instance = new $handler($field_name, $arguments, $this);
-                if(!$instance->evaluate()) {
-                    $violations = $instance->getViolationPayload();
-                    if(!empty($violations))
-                        $this->addViolation($field_alias, $violations);
-
-                    $this->setCleanedData($field_name, null);
-                    break;
-                }
-
-                if($instance instanceof CleanerInterface) {
-                    $this->setCleanedData($field_name, $instance->getCleanedData());
-                }
-            }
-        }
-
-        return empty($this->_violations);
-    }
-
-    /**
-     * @param string $field the name of the field with the violation
-     * @param array $payload information about the violation
-     */
-    public function addViolation($field, array $payload) {
-        $this->_violations[$field] = $payload;
-    }
-
-    /**
-     * @param string $field the name of the field with the violation
-     * @return
-     */
-    public function getViolation($field_name) {
-        $field_alias = $field_name;
-        if(!isset($this->_violations[$field_name]) && isset($this->aliases[$field_name])) {
-            if(!is_array($this->aliases[$field_name]))
-                $this->aliases[$field_name] = array($this->aliases[$field_name]);
-
-            foreach($this->aliases[$field_name] as $alias) {
-                if(isset($this->_violations[$alias])) {
-                    return $this->_violations[$alias];
-                }
-            }
-        }
-
-        return isset($this->_violations[$field_alias]) ? $this->_violations[$field_alias] : null;
-    }
-
-    public function getViolations() {
-        return $this->_violations;
-    }
-
-    public function getSchemaKey($key) {
-        if(array_key_exists($key, $this->_schema))
-            return $this->_schema[$key];
-
-        return null;
-    }
 
     /**
      * @param string $schema A schema file to load from the configured schema path
      * @param array $input
      *
-     * @param bool $use_result
+     * @param bool $strict_required
+     * @return array|bool|Result
+     * @throws InvalidConstraintException
+     * @throws InvalidInputException
+     * @throws ValidationException
      *
-     * @throws \InvalidArgumentException
-     * @throws Validator\Exception\InvalidInputException
-     * @throws Validator\Exception\ValidationException
-     * @return array|bool|\Wave\Validator\Result
      */
-    public static function validate($schema, array $input, $use_result = false) {
+    public static function validate($schema, array $input, $strict_required = false) {
 
         $instance = new self($input, self::getSchema($schema));
-        $result = $instance->execute();
-
-        if($use_result || $result){
+        if($instance->execute($strict_required)){
             return new Result($instance->getCleanedData(), $instance->getViolations());
         }
-        else if(self::$use_exceptions) {
-            throw new InvalidInputException($instance->getViolations());
-        }
         else {
-            trigger_error('Deprecated use of validator. Validator::validate() will return a Wave\\Validator\\Result object soon', E_USER_DEPRECATED);
-            return $result ? $instance->getCleanedData() : false;
+            throw new InvalidInputException($instance->getViolations());
         }
 
     }
@@ -238,29 +86,187 @@ class Validator implements ArrayAccess {
 
     }
 
+    private static function translateConstraintKeyToClass($key) {
+        return sprintf(self::CONSTRAINT_CLASS_MASK, str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
+    }
+
+    /**
+     * @param array $input The data to validate against
+     * @param array $schema The schema to validate against
+     * @param Validator $parent_instance
+     */
+    public function __construct(array $input, array $schema, $parent_instance = null) {
+        $this->input = $input;
+        $this->schema = $schema['fields'];
+
+        if(array_key_exists('aliases', $schema)) {
+            $this->aliases = $schema['aliases'];
+        }
+
+        $this->parent_instance = $parent_instance;
+    }
+
+    public function execute() {
+
+        foreach($this->schema as $field_name => $definition) {
+
+            // check if the field was supplied using one of its aliases
+            $field_alias = $field_name;
+            if(!isset($this->input[$field_name]) && isset($this->aliases[$field_name])) {
+                if(!is_array($this->aliases[$field_name]))
+                    $this->aliases[$field_name] = array($this->aliases[$field_name]);
+
+                foreach($this->aliases[$field_name] as $alias) {
+                    if(isset($this->input[$alias])) {
+                        $field_alias = $alias;
+                        break;
+                    }
+                }
+            }
+
+            if(self::$null_cleaned) {
+                $this->setCleanedData($field_name, null);
+            }
+
+            $is_required = !(isset($definition['required']) && is_bool($definition['required']) && !$definition['required']);
+            $message = 'This field is required';
+            if(isset($definition['required'])) {
+                if(is_array($definition['required']) && isset($definition['required']['value'], $definition['required']['message'])) {
+                    $message = $definition['required']['message'];
+                    $definition['required'] = $definition['required']['value'];
+                }
+
+                if(is_callable($definition['required'])) {
+                    $is_required = call_user_func($definition['required'], $this);
+                }
+                else if(is_string($definition['required'])) {
+                    $is_required = isset($this->input[$definition['required']]);
+                }
+            }
+
+            // A default value of null implies allow_null => true so prepend that constraint to the definition
+            if(array_key_exists('default', $definition) && $definition['default'] === null) {
+                // use array_replace to get the allow_null early in the definition order
+                $definition = array_replace(array('allow_null' => true), $definition);
+            }
+
+            // if the field is_required and not supplied then fail with a violation,
+            // otherwise attempt to use a default if there is one specified, skipping the remaining
+            // constraints if that is the case
+            if(!array_key_exists($field_alias, $this->input)) {
+                if($is_required) {
+                    $this->addViolation( $field_alias, array(
+                        'field_name' => $field_alias,
+                        'reason' => 'missing',
+                        'message' => $message
+                    ));
+                    continue;
+                }
+                else {
+                    if(array_key_exists('default', $definition)) {
+                        if (is_callable($definition['default'])) {
+                            $this->setCleanedData($field_name, call_user_func($definition['default'], $this));
+                        } else {
+                            $this->setCleanedData($field_name, $definition['default']);
+                        }
+                    }
+                    else {
+                        continue;
+                    }
+                }
+            }
+            else {
+                $this->setCleanedData($field_name, $this->input[$field_alias]);
+            }
+
+            foreach($definition as $constraint => $arguments) {
+                if($constraint === 'required') continue;
+                $handler = self::translateConstraintKeyToClass($constraint);
+                if(!class_exists($handler))
+                    throw new InvalidConstraintException("Handler for '$constraint' does not exist");
+
+                /** @var $instance \Wave\Validator\Constraints\AbstractConstraint */
+                $instance = new $handler($field_name, $arguments, $this);
+                if(!$instance->evaluate()) {
+                    $violations = $instance->getViolationPayload();
+                    if(!empty($violations)) {
+                        $this->addViolation($field_alias, $violations);
+                        $this->unsetCleanedData($field_name, true);
+                    }
+                    break;
+                }
+
+                if($instance instanceof CleanerInterface) {
+                    $this->setCleanedData($field_name, $instance->getCleanedData());
+                }
+            }
+        }
+
+        return empty($this->violations);
+    }
+
+    /**
+     * @param string $field the name of the field with the violation
+     * @param array $payload information about the violation
+     */
+    public function addViolation($field, array $payload) {
+        $this->violations[$field] = $payload;
+    }
+
+    /**
+     * @param string $field the name of the field with the violation
+     * @return
+     */
+    public function getViolation($field_name) {
+        $field_alias = $field_name;
+        if(!isset($this->violations[$field_name]) && isset($this->aliases[$field_name])) {
+            if(!is_array($this->aliases[$field_name]))
+                $this->aliases[$field_name] = array($this->aliases[$field_name]);
+
+            foreach($this->aliases[$field_name] as $alias) {
+                if(isset($this->violations[$alias])) {
+                    return $this->violations[$alias];
+                }
+            }
+        }
+
+        return isset($this->violations[$field_alias]) ? $this->violations[$field_alias] : null;
+    }
+
+    public function getViolations() {
+        return $this->violations;
+    }
+
+    public function getSchemaKey($key) {
+        if(array_key_exists($key, $this->schema))
+            return $this->schema[$key];
+
+        return null;
+    }
+
     public function setCleanedData($field, $value) {
-        $this->_cleaned[$field] = $value;
+        $this->cleaned[$field] = $value;
     }
 
     public function unsetCleanedData($field, $remove = false) {
-        if($remove) unset($this->_cleaned[$field]);
-        else $this->_cleaned[$field] = null;
+        if($remove) unset($this->cleaned[$field]);
+        else $this->cleaned[$field] = null;
     }
 
     public function getCleanedData() {
-        return $this->_cleaned;
+        return $this->cleaned;
     }
 
     public function getInputData($key = null) {
         if($key === null)
-            return $this->_data;
-        elseif(isset($this->_data[$key]))
-            return $this->_data[$key];
+            return $this->input;
+        elseif(isset($this->input[$key]))
+            return $this->input[$key];
         else return null;
     }
 
-    private static function translateConstraintKeyToClass($key) {
-        return sprintf(self::CONSTRAINT_CLASS_MASK, str_replace(' ', '', ucwords(str_replace('_', ' ', $key))));
+    public function hasInputData($key) {
+        return array_key_exists($key, $this->input);
     }
 
     public function getParentInstance() {
@@ -268,11 +274,11 @@ class Validator implements ArrayAccess {
     }
 
     public function offsetExists($offset) {
-        return array_key_exists($offset, $this->_cleaned);
+        return array_key_exists($offset, $this->cleaned);
     }
 
     public function offsetGet($offset) {
-        return $this->_cleaned[$offset];
+        return $this->cleaned[$offset];
     }
 
     public function offsetSet($offset, $value) {
@@ -282,4 +288,11 @@ class Validator implements ArrayAccess {
     public function offsetUnset($offset) {
         throw new \BadMethodCallException("Unsetting validator input data is not supported");
     }
+
+    private function valueIsNullish($input) {
+        return is_null($input)                              // actually null
+            || (is_string($input) && strlen($input) <= 0)   // an empty string (from a query string)
+            || (is_array($input) && empty($input));         // an empty array (from a query string)
+    }
+
 }

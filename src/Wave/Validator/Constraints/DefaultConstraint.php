@@ -18,7 +18,7 @@ class DefaultConstraint extends AbstractConstraint implements CleanerInterface {
     }
 
     public function getCleanedData() {
-        return $this->data === null ? $this->arguments : $this->data;
+        return $this->validator->hasInputData($this->property) === null ? $this->arguments : $this->data;
     }
 
 }
