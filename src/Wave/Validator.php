@@ -19,10 +19,14 @@ class Validator implements ArrayAccess {
     private static $null_cleaned = true;
 
     private static $_schema_cache = array();
-    private $schema;
 
     private $parent_instance = null;
+    private $schema;
     private $input;
+    private $aliases = array();
+    private $options = array(
+        'strict' => true,
+    );
     private $cleaned = array();
     private $violations = array();
 
@@ -45,17 +49,16 @@ class Validator implements ArrayAccess {
      * @param string $schema A schema file to load from the configured schema path
      * @param array $input
      *
-     * @param bool $strict_required
      * @return array|bool|Result
      * @throws InvalidConstraintException
      * @throws InvalidInputException
      * @throws ValidationException
      *
      */
-    public static function validate($schema, array $input, $strict_required = false) {
+    public static function validate($schema, array $input) {
 
         $instance = new self($input, self::getSchema($schema));
-        if($instance->execute($strict_required)){
+        if($instance->execute()){
             return new Result($instance->getCleanedData(), $instance->getViolations());
         }
         else {
@@ -101,6 +104,10 @@ class Validator implements ArrayAccess {
 
         if(array_key_exists('aliases', $schema)) {
             $this->aliases = $schema['aliases'];
+        }
+
+        if(array_key_exists('options', $schema)) {
+            $this->options = array_merge($this->options, $schema['options']);
         }
 
         $this->parent_instance = $parent_instance;
@@ -153,7 +160,17 @@ class Validator implements ArrayAccess {
             // if the field is_required and not supplied then fail with a violation,
             // otherwise attempt to use a default if there is one specified, skipping the remaining
             // constraints if that is the case
-            if(!array_key_exists($field_alias, $this->input)) {
+            $input_present = array_key_exists($field_alias, $this->input);
+            if(!$this->options['strict'] && $input_present) {
+                $empty_string = is_string($this->input[$field_alias]) && strlen($this->input[$field_alias]) <= 0;
+                $empty_array = is_array($this->input[$field_alias]) && empty($this->input[$field_alias]);
+                if($empty_string || $empty_array) {
+                    unset($this->input[$field_alias]);
+                    $input_present = false;
+                }
+            }
+
+            if(!$input_present) {
                 if($is_required) {
                     $this->addViolation( $field_alias, array(
                         'field_name' => $field_alias,
