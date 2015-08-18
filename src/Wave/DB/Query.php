@@ -389,7 +389,9 @@ class Query {
 
         if(is_array($params)) {
             $num_params = count($params);
-            if($num_params <= 0) return false;
+            if($num_params <= 0) {
+                $condition = 'FALSE';
+            }
 
             if($num_placeholders < $num_params) {
                 //otherwise change the parameters to matcht he num in the array and make it an 'IN' clause.
