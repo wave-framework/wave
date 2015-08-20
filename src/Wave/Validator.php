@@ -161,7 +161,8 @@ class Validator implements ArrayAccess {
             // otherwise attempt to use a default if there is one specified, skipping the remaining
             // constraints if that is the case
             $input_present = array_key_exists($field_alias, $this->input);
-            if(!$this->options['strict'] && $input_present) {
+            $is_strict = isset($definition['strict']) ? $definition['strict'] : $this->options['strict'];
+            if(!$is_strict && $input_present) {
                 $empty_string = is_string($this->input[$field_alias]) && strlen($this->input[$field_alias]) <= 0;
                 $empty_array = is_array($this->input[$field_alias]) && empty($this->input[$field_alias]);
                 if($empty_string || $empty_array) {
@@ -196,8 +197,9 @@ class Validator implements ArrayAccess {
                 $this->setCleanedData($field_name, $this->input[$field_alias]);
             }
 
+            unset($definition['required'], $definition['strict'], $definition['default']);
             foreach($definition as $constraint => $arguments) {
-                if($constraint === 'required') continue;
+                //if($constraint === 'required') continue;
                 $handler = self::translateConstraintKeyToClass($constraint);
                 if(!class_exists($handler))
                     throw new InvalidConstraintException("Handler for '$constraint' does not exist");
