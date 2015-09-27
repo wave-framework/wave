@@ -37,83 +37,85 @@ use Wave\DB;
 */
 abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 
-	//Table name
-	protected static $_database = '{{ table.Database.getNamespace(false) }}';
-	protected static $_table_name = '{{ table.Name }}';
-	
-	//Fields
-	protected static $_fields = array(
-	{% for column in table.Columns %}
-	
-		//{{ column.TypeDescription|raw }} {{ column.Extra }} {{ column.Comment }}
-		'{{ column.Name }}' => array(
-			'default'	=> {{ column.Default|formatType }},
-			'data_type'	=> {{ column.DataType }},
-			'nullable'	=> {% if column.isNullable %}true{% else %}false{% endif %},
-			'serial'    => {% if column.isSerial %}true{% else %}false{% endif %},
-			'sequence'  => {% if column.SequenceName %}'{{ column.SequenceName }}'{% else %}null{% endif %},
-			'metadata'  => array({% for key, value in column.Metadata %}{{key|export}} =>{{value|export}}{% if not loop.last %},{% endif %} {% endfor %})
+    //Table name
+    protected static $_database = '{{ table.Database.getNamespace(false) }}';
+    protected static $_table_name = '{{ table.Name }}';
 
-		){% if not loop.last %},{% endif %}
-		
-	{% endfor %});
+    //Fields
+    protected static $_fields = array(
+    {% for column in table.Columns %}
 
-	//Indexes
-	protected static $_constraints = array(
-	{% for constraint in table.Constraints %}{% if constraint.Type == constant('\\Wave\\DB\\Constraint::TYPE_PRIMARY') or constraint.Type == constant('\\Wave\\DB\\Constraint::TYPE_UNIQUE')  %}
-		
-		'{{ constraint.Name }}' => array(
-			'type'	=> {{ constraint.Type }},
-			'fields'	=> array({% for column in constraint.Columns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %})
+        //{{ column.TypeDescription|raw }} {{ column.Extra }} {{ column.Comment }}
+        '{{ column.Name }}' => array(
+            'default'	=> {{ column.Default|formatType }},
+            'data_type'	=> {{ column.DataType }},
+            'nullable'	=> {% if column.isNullable %}true{% else %}false{% endif %},
+            'serial'    => {% if column.isSerial %}true{% else %}false{% endif %},
+            'sequence'  => {% if column.SequenceName %}'{{ column.SequenceName }}'{% else %}null{% endif %},
+            'metadata'  => array({% for key, value in column.Metadata %}{{key|export}} =>{{value|export}}{% if not loop.last %},{% endif %} {% endfor %})
 
-		){% if not loop.last %},{% endif %}
-		
-	{% endif %}{% endfor %});
-	
-	//Relations
-	protected static $_relations = array(
-		{% for relation in table.Relations if relation.Type != constant('\\Wave\\DB\\Relation::RELATION_UNKNOWN') %}
-		
-		//{{ relation.Description }}
-		'{{ relation.Name }}' => array(
-			'relation_type'		=> {{ relation.Type }},
-			'local_columns'		=> array({% for column in relation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
-			'related_class'		=> '{{ relation.ReferencedTable.getClassName(true)|addslashes }}',
-			'related_columns'	=> array({% for column in relation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
-			{% if relation.Type ==  constant('\\Wave\\DB\\Relation::MANY_TO_MANY') %}'target_relation'	=> array(
-				'local_columns'		=> array({% for column in relation.TargetRelation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
-				'related_class'		=> '{{ relation.TargetRelation.ReferencedTable.getClassName(true)|addslashes }}',
-				'related_columns'	=> array({% for column in relation.TargetRelation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
-			)
-			{% endif %}
-			
-		),
+        ){% if not loop.last %},{% endif %}
 
-	{% endfor %});
+    {% endfor %});
 
-	{% for column in table.Columns %}
-	
-	//{{ column.TypeDescription|raw }} {{ column.Extra }} {{ column.Comment }}
-	public function get{{ column.Name }}(){
-		return $this->_data['{{ column.Name }}'];
-	}
-	
-	public function set{{ column.Name }}($value){
-		$this->_data['{{ column.Name }}'] = $value;
+    //Indexes
+    protected static $_constraints = array(
+    {% for constraint in table.Constraints %}{% if constraint.Type == constant('\\Wave\\DB\\Constraint::TYPE_PRIMARY') or constraint.Type == constant('\\Wave\\DB\\Constraint::TYPE_UNIQUE')  %}
+
+        '{{ constraint.Name }}' => array(
+            'type'	=> {{ constraint.Type }},
+            'fields'	=> array({% for column in constraint.Columns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %})
+
+        ){% if not loop.last %},{% endif %}
+
+    {% endif %}{% endfor %});
+
+    //Relations
+    protected static $_relations = array(
+        {% for relation in table.Relations if relation.Type != constant('\\Wave\\DB\\Relation::RELATION_UNKNOWN') %}
+
+        //{{ relation.Description }}
+        '{{ relation.Name }}' => array(
+            'relation_type'		=> {{ relation.Type }},
+            'local_columns'		=> array({% for column in relation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
+            'related_class'		=> '{{ relation.ReferencedTable.getClassName(true)|addslashes }}',
+            'related_columns'	=> array({% for column in relation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
+            {% if relation.Type ==  constant('\\Wave\\DB\\Relation::MANY_TO_MANY') %}'target_relation'	=> array(
+                'local_columns'		=> array({% for column in relation.TargetRelation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
+                'related_class'		=> '{{ relation.TargetRelation.ReferencedTable.getClassName(true)|addslashes }}',
+                'related_columns'	=> array({% for column in relation.TargetRelation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
+            )
+            {% endif %}
+
+        ),
+
+    {% endfor %});
+
+    {% for column in table.Columns %}
+
+    //{{ column.TypeDescription|raw }} {{ column.Extra }} {{ column.Comment }}
+    public function get{{ column.Name }}(){
+        return $this->_data['{{ column.Name }}'];
+    }
+
+    public function set{{ column.Name }}($value){
+        $this->_data['{{ column.Name }}'] = $value;
         $this->_dirty['{{ column.Name }}'] = true;
         return $this;
-	}
-	{% endfor %}
-	
-	//Relations
-	{% for relation in table.Relations %}
-	
-	{% if relation.Type == constant('\\Wave\\DB\\Relation::ONE_TO_ONE') %}{% include 'relations/one-to-one.phpt' %}
-	{% elseif relation.Type == constant('\\Wave\\DB\\Relation::ONE_TO_MANY') %}{% include 'relations/one-to-many.phpt' %}
-	{% elseif relation.Type == constant('\\Wave\\DB\\Relation::MANY_TO_ONE') %}{% include 'relations/many-to-one.phpt' %}
-	{% elseif relation.Type == constant('\\Wave\\DB\\Relation::MANY_TO_MANY') %}{% include 'relations/many-to-many.phpt' %}
-	{% endif %}
-		
-	{% endfor %}
-	
+    }
+    {% endfor %}
+
+    //Relations
+    {% for relation in table.Relations %}
+
+    {% if relation.Type == constant('\\Wave\\DB\\Relation::ONE_TO_ONE') %}{% include 'relations/one-to-one.phpt' %}
+    {% elseif relation.Type == constant('\\Wave\\DB\\Relation::ONE_TO_MANY') %}{% include 'relations/one-to-many.phpt' %}
+    {% elseif relation.Type == constant('\\Wave\\DB\\Relation::MANY_TO_ONE') %}{% include 'relations/many-to-one.phpt' %}
+    {% elseif relation.Type == constant('\\Wave\\DB\\Relation::MANY_TO_MANY') %}{% include 'relations/many-to-many.phpt' %}
+    {% endif %}
+
+    {% endfor %}
+
+
+
 }

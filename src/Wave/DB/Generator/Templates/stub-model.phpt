@@ -17,8 +17,8 @@
 namespace {{ table.Database.Namespace }};
 
 use Wave,
-	Wave\DB;
-		
+    Wave\DB;
+
 class {{ table.ClassName }} extends Base\{{ table.ClassName }} {
 
 }

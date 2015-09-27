@@ -11,7 +11,7 @@ namespace Wave\DB;
 use Wave;
 use Wave\DB;
 
-class Model {
+class Model implements \JsonSerializable {
 
     /** @var string */
     protected static $_database;
@@ -368,6 +368,15 @@ class Model {
     public function _getIdentifyingData() {
         $columns = self::_getIdentifyingColumns();
         return array_intersect_key($this->_data, array_flip($columns));
+    }
+
+    /**
+     * Returns what should be serialized when object is encountered by json_encode
+     *
+     * @return array
+     */
+    public function jsonSerialize() {
+        return $this->_data;
     }
 
     /**
