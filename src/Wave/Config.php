@@ -31,6 +31,14 @@ class Config {
         return $this->_data->{$offset};
     }
 
+    public function offsetExists($offset){
+        return isset($this->_data->{$offset});
+    }
+
+    /**
+     * @param $namespace
+     * @return $this
+     */
     public static function get($namespace) {
         static $configs;
         if(!isset($configs[$namespace])) {
