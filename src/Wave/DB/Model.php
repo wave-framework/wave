@@ -99,6 +99,32 @@ class Model implements \JsonSerializable {
     }
 
     /**
+     * Generic function for updating model data. Only updates
+     * properties present in the $data array. Can use setters or amend data
+     * directly depending on $user_setters flag.
+     *
+     * @param Array $data
+     * @param bool $use_setters
+     */
+    public function updateFromArray($data = null, $use_setters = true){
+
+        $connection = DB::get(self::_getDatabaseNamespace());
+
+        foreach(self::_getFields() as $field) {
+            if($data !== null && array_key_exists($field, $data)){
+                // Handle the case where we get a model instance back from the validator instead of [object_name]_id
+                $value = ($data[$field] instanceof self) ? $data[$field]->getid() : $data[$field];
+
+                if($use_setters)
+                    $this->$field = $value;
+                else
+                    $connection->valueFromSQL($value, self::_getField($field));
+            }
+        }
+
+    }
+
+    /**
      * Makes a new instance of a model from an array of data, returns either
      * the new object on success or null on failure
      *
@@ -145,6 +171,25 @@ class Model implements \JsonSerializable {
 
         return $stmt->fetchRow();
     }
+
+    /**
+     * Generic paging function that returns Model instances by offset & limit
+     *
+     * @param int $offset
+     * @param int $limit
+     *
+     * @return Model[]
+     */
+    public static function loadAllByPage($offset = 0, $limit = 0) {
+
+        $stmt = DB::get(self::_getDatabaseNamespace())
+            ->from(get_called_class())
+            ->offset($offset)
+            ->limit($limit);
+
+        return $stmt->fetchAll();
+    }
+
 
     /**
      * Save the current model instance to the database
