@@ -106,19 +106,19 @@ class Model implements \JsonSerializable {
      * @param Array $data
      * @param bool $use_setters
      */
-    public function updateFromArray($data = null, $use_setters = true){
-
-        $connection = DB::get(self::_getDatabaseNamespace());
+    public function updateFromArray($data, $use_setters = true){
 
         foreach(self::_getFields() as $field) {
-            if($data !== null && array_key_exists($field, $data)){
+            if(array_key_exists($field, $data)){
                 // Handle the case where we get a model instance back from the validator instead of [object_name]_id
                 $value = ($data[$field] instanceof self) ? $data[$field]->getid() : $data[$field];
 
-                if($use_setters)
+                if($use_setters) {
                     $this->$field = $value;
-                else
-                    $connection->valueFromSQL($value, self::_getField($field));
+                }
+                else {
+                    $this->_data[$field] = $value;
+                }
             }
         }
 
@@ -173,21 +173,29 @@ class Model implements \JsonSerializable {
     }
 
     /**
-     * Generic paging function that returns Model instances by offset & limit
+     * Generic paging function that returns Model instances.
      *
-     * @param int $offset
-     * @param int $limit
+     * @param int|null $results_per_page
+     * @param int $page_number
+     * @param $number_of_results
      *
      * @return Model[]
+     * @throws Wave\Exception
      */
-    public static function loadAllByPage($offset = 0, $limit = 0) {
+    public static function loadAllByPage($results_per_page = null, $page_number = 0, &$number_of_results) {
 
         $stmt = DB::get(self::_getDatabaseNamespace())
-            ->from(get_called_class())
-            ->offset($offset)
-            ->limit($limit);
+            ->from(get_called_class());
 
-        return $stmt->fetchAll();
+        if(isset($results_per_page)) {
+            $stmt = $stmt->offset($results_per_page * $page_number)
+                         ->limit($results_per_page * ($page_number + 1));
+        }
+
+        $results = $stmt->fetchAll();
+        $number_of_results = $stmt->fetchRowCount();
+
+        return $results;
     }
 
 
