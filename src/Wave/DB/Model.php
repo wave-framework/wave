@@ -99,6 +99,32 @@ class Model implements \JsonSerializable {
     }
 
     /**
+     * Generic function for updating model data. Only updates
+     * properties present in the $data array. Can use setters or amend data
+     * directly depending on $user_setters flag.
+     *
+     * @param Array $data
+     * @param bool $use_setters
+     */
+    public function updateFromArray($data, $use_setters = true){
+
+        foreach(self::_getFields() as $field) {
+            if(array_key_exists($field, $data)){
+                // Handle the case where we get a model instance back from the validator instead of [object_name]_id
+                $value = ($data[$field] instanceof self) ? $data[$field]->getid() : $data[$field];
+
+                if($use_setters) {
+                    $this->$field = $value;
+                }
+                else {
+                    $this->_data[$field] = $value;
+                }
+            }
+        }
+
+    }
+
+    /**
      * Makes a new instance of a model from an array of data, returns either
      * the new object on success or null on failure
      *
@@ -145,6 +171,32 @@ class Model implements \JsonSerializable {
 
         return $stmt->fetchRow();
     }
+
+    /**
+     * Generic paging function that returns Model instances.
+     *
+     * @param int|null $results_per_page
+     * @param int $page_number
+     * @param $number_of_results
+     *
+     * @return Model[]
+     * @throws Wave\Exception
+     */
+    public static function loadAllByPage($results_per_page = null, $page_number = 0, &$number_of_results = 0) {
+
+        $stmt = DB::get(self::_getDatabaseNamespace())
+            ->from(get_called_class());
+
+        if(isset($results_per_page)) {
+            $stmt = $stmt->paginate($results_per_page * $page_number, $results_per_page * ($page_number + 1));
+        }
+
+        $results = $stmt->fetchAll();
+        $number_of_results = $stmt->fetchRowCount();
+
+        return $results;
+    }
+
 
     /**
      * Save the current model instance to the database
