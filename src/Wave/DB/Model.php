@@ -182,14 +182,13 @@ class Model implements \JsonSerializable {
      * @return Model[]
      * @throws Wave\Exception
      */
-    public static function loadAllByPage($results_per_page = null, $page_number = 0, &$number_of_results) {
+    public static function loadAllByPage($results_per_page = null, $page_number = 0, &$number_of_results = 0) {
 
         $stmt = DB::get(self::_getDatabaseNamespace())
             ->from(get_called_class());
 
         if(isset($results_per_page)) {
-            $stmt = $stmt->offset($results_per_page * $page_number)
-                         ->limit($results_per_page * ($page_number + 1));
+            $stmt = $stmt->paginate($results_per_page * $page_number, $results_per_page * ($page_number + 1));
         }
 
         $results = $stmt->fetchAll();
