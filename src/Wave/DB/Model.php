@@ -192,7 +192,10 @@ class Model implements \JsonSerializable {
         }
 
         $results = $stmt->fetchAll();
-        $number_of_results = $stmt->fetchRowCount();
+
+        if(isset($results_per_page)) {
+            $number_of_results = $stmt->fetchRowCount();
+        }
 
         return $results;
     }
