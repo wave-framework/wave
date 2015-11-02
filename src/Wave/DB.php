@@ -407,8 +407,10 @@ class DB {
         if($primary_key !== null && count($primary_key) === 1) {
             $column = current($primary_key);
             $field = $object::_getField($column);
-            $liid = intval($connection->lastInsertId($field['sequence']));
-            $object->$column = $liid;
+            if($field['serial'] === true){
+                $liid = intval($connection->lastInsertId($field['sequence']));
+                $object->$column = $liid;
+            }
         }
 
         return $object->_setLoaded();
