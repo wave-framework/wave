@@ -537,6 +537,22 @@ class Model implements \JsonSerializable {
         return method_exists($this, self::_getGetter($property));
     }
 
+    public function __unset($property){
+        $this->__set($property, null);
+    }
+
+
+    public function __clone(){
+        if(null === $pk = $this->_getPrimaryKey()){
+            return;
+        }
+
+        foreach($pk as $field_name) {
+            unset($this->$field_name);
+        }
+    }
+
+
     /**
      * Returns the function representing the setter for the given property
      * @param $property
