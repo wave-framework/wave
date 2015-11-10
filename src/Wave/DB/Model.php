@@ -538,7 +538,8 @@ class Model implements \JsonSerializable {
     }
 
     public function __unset($property){
-        $this->__set($property, null);
+        unset($this->_data[$property]);
+        unset($this->_dirty[$property]);
     }
 
 
