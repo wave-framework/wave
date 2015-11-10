@@ -682,8 +682,9 @@ class Model implements \JsonSerializable {
             //Add in all of the related columns
             foreach($relation_data['local_columns'] as $position => $local_column) {
                 //At this point, may as well return as there aren't null-relations
-                if($this->_data[$local_column] === null)
+                if(!isset($this->_data[$local_column])){
                     return null;
+                }
 
                 $query->where(sprintf('%s.%s = ?', $from_alias, $db->escape($relation_data['related_columns'][$position])), $this->_data[$local_column]);
             }
