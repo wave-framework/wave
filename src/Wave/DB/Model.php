@@ -550,6 +550,7 @@ class Model implements \JsonSerializable {
         foreach($pk as $field_name) {
             unset($this->$field_name);
         }
+        $this->_setLoaded(false);
     }
 
 
