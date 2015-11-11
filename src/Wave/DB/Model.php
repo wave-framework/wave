@@ -538,8 +538,7 @@ class Model implements \JsonSerializable {
     }
 
     public function __unset($property){
-        unset($this->_data[$property]);
-        unset($this->_dirty[$property]);
+        $this->__set($property, self::getFieldDefault($property));
     }
 
 
@@ -640,10 +639,12 @@ class Model implements \JsonSerializable {
                     $related_class_name = $relation_data['related_class'];
 
                     $rc = new $related_class_name();
-                    foreach($relation_data['target_relation']['local_columns'] as $position => $local_column)
-                        $rc->{$local_column} = $object->{$relation_data['target_relation']['related_columns'][$position]};
-                    foreach($join_data as $key => $value)
+                    foreach($join_data as $key => $value){
                         $rc->{$key} = $value;
+                    }
+                    foreach($relation_data['target_relation']['local_columns'] as $position => $local_column){
+                        $rc->{$local_column} = $object->{$relation_data['target_relation']['related_columns'][$position]};
+                    }
 
                     $object->_setParentObject($rc);
                     //Deliberate non-break here so the -many logic flows on with $object reassigned.
