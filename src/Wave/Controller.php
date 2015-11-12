@@ -103,8 +103,30 @@ class Controller {
             }
 
             Hook::triggerAction('controller.before_dispatch', array(&$controller));
+
+            $parameters = array();
+            foreach($action->getMethodParameters() as $parameter){
+                list($parameter_name, $parameter_type) = $parameter;
+                if(isset($controller->_cleaned[$parameter_name])){
+                    //Try first in validator output
+                    $parameters[] = $controller->_cleaned[$parameter_name];
+                } elseif(isset($controller->_data[$parameter_name])){
+                    //Then if just using the passed data - there may be a legitimate use for this?
+                    $parameters[] = $controller->_data[$parameter_name];
+                } elseif($parameter_type === 'Wave\\Validator\\Result'){
+                    //If the validator is requested, give it
+                    $parameters[] = $controller->_cleaned;
+                }elseif($parameter_type === get_class($request)){
+                    //If the request is requested, give it
+                    $parameters[] = $request;
+                } else {
+                    //Otherwise place hold. Could maybe get the default value during generation and pass that instead
+                    $parameters[] = null;
+                }
+            }
+
             try {
-                $response = $controller->{$action_method}();
+                $response = call_user_func_array(array($controller, $action), $parameters);
             } catch(InvalidInputException $e) {
                 $controller->_input_errors = $e->getViolations();
                 $response = $controller->request();
