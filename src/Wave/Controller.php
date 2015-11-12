@@ -126,7 +126,7 @@ class Controller {
             }
 
             try {
-                $response = call_user_func_array(array($controller, $action), $parameters);
+                $response = call_user_func_array(array($controller, $action_method), $parameters);
             } catch(InvalidInputException $e) {
                 $controller->_input_errors = $e->getViolations();
                 $response = $controller->request();
