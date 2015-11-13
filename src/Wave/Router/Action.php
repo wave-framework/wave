@@ -27,6 +27,7 @@ class Action {
 	private $response_methods = array();
 
     private $validation_schema = null;
+    private $method_parameters = array();
 
     public static function getDefaultAction($action_method){
         $action = new Action();
@@ -190,6 +191,14 @@ class Action {
 
     public function hasAnnotation($key) {
         return isset($this->annotations[$key]);
+    }
+
+    public function addMethodParameter($name, $type) {
+        $this->method_parameters[] = array($name, $type);
+    }
+
+    public function getMethodParameters() {
+        return $this->method_parameters;
     }
 
 }

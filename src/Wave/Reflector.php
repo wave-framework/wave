@@ -80,6 +80,7 @@ class Reflector {
                     'name' => $method_name,
                     'visibility' => $visibility,
                     'static' => $method->isStatic(),
+                    'parameters' => $method->getParameters(),
                     'annotations' => $method_annotations,
                     'declaring_class' => $method->getDeclaringClass()->getName()
                 );
