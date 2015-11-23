@@ -103,7 +103,7 @@ class Model implements \JsonSerializable {
      * properties present in the $data array. Can use setters or amend data
      * directly depending on $user_setters flag.
      *
-     * @param Array $data
+     * @param \Wave\Validator\Result|Array $data
      * @param bool $use_setters
      */
     public function updateFromArray($data, $use_setters = true){
@@ -111,7 +111,7 @@ class Model implements \JsonSerializable {
         foreach(self::_getFields() as $field) {
             if(array_key_exists($field, $data)){
                 // Handle the case where we get a model instance back from the validator instead of [object_name]_id
-                $value = ($data[$field] instanceof self) ? $data[$field]->getid() : $data[$field];
+                $value = ($data[$field] instanceof self) ? $data[$field]->id : $data[$field];
 
                 if($use_setters) {
                     $this->$field = $value;
