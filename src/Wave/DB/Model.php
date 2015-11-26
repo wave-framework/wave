@@ -130,7 +130,7 @@ class Model implements \JsonSerializable {
      *
      * @param array $data
      *
-     * @return null|Model
+     * @return null|self
      */
     public static function createFromArray(array $data) {
 

@@ -499,12 +499,17 @@ class Query {
     /**
      * Add a HAVING clause
      * @param $having
+     * @param array $params
      *
      * @return Query
      */
-    public function having($having) {
+    public function having($having, $params = array()) {
 
-        $this->having[] = $having;
+        if(!is_array($params)){
+            $params = array($params);
+        }
+
+        $this->having[] = array('condition' => $having, 'params' => $params);
         return $this;
     }
 
@@ -589,7 +594,16 @@ class Query {
 
 
         if(isset($this->group[0])) $query .= 'GROUP BY ' . implode(',', $this->group) . "\n";
-        if(isset($this->having)) $query .= 'HAVING ' . implode('AND ', $this->having) . "\n";
+
+        if(isset($this->having)){
+            foreach($this->having as $index => $having){
+                $query .= ($index === 0 ? 'HAVING' : 'AND');
+                $query .= sprintf(' %s ', $having['condition']);
+                $this->_params = array_merge($this->_params, $having['params']);
+            }
+
+        }
+
         if(isset($this->order[0])) $query .= 'ORDER BY ' . $this->order . "\n";
 
         if(isset($this->limit)) {

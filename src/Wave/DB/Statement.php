@@ -20,8 +20,9 @@ class Statement extends \PDOStatement {
         parent::execute($input_parameters);
 
         \Wave\Debug::getInstance()->addQuery($time = microtime(true) - $start, $this);
+
+        //printf("%s: %s: %s\n", microtime(true), $time, implode(' ', explode("\n", $this->queryString)));
     }
 
 }
 
-?>
