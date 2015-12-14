@@ -13,7 +13,11 @@ class JSON {
 
     public static function arrayify($data) {
         if($data instanceof DateTime) {
-            return $data->format('r');
+            /*
+             * DateTime::ISO8601 isn't actually iso-8601
+             * http://php.net/manual/en/class.datetime.php#datetime.constants.iso8601
+             */
+            return $data->format(DateTime::ATOM);
         } else if(is_array($data) || is_object($data)) {
             $jsonarr = array();
 
