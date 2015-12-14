@@ -13,7 +13,7 @@ class JSON {
 
     public static function arrayify($data) {
         if($data instanceof DateTime) {
-            return $data->format('r');
+            return $data->format('c');
         } else if(is_array($data) || is_object($data)) {
             $jsonarr = array();
 
