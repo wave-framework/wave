@@ -2,6 +2,7 @@
 
 namespace Wave\Utils;
 
+use ArrayObject;
 use DateTime;
 use Wave\DB\Model;
 
@@ -23,6 +24,10 @@ class JSON {
 
             if($data instanceof Model) {
                 $data = $data->_toArray();
+            }
+
+            if($data instanceof ArrayObject){
+                $data = $data->getArrayCopy();
             }
 
             foreach($data as $key => $value) {
