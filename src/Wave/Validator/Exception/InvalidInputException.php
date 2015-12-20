@@ -9,7 +9,7 @@ class InvalidInputException extends ValidationException {
     public function __construct(array $violations) {
         $this->violations = $violations;
 
-        parent::__construct('Input validation failed', 449);
+        parent::__construct('Input validation failed', 400);
     }
 
     public function getViolations() {
