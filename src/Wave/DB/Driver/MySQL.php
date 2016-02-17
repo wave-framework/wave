@@ -20,7 +20,7 @@ class MySQL extends AbstractDriver implements DriverInterface {
 
     public static function constructDSN(Row $config) {
 
-        return "mysql:host={$config->host};dbname={$config->database};port={$config->port}";
+        return "mysql:host={$config->host};dbname={$config->database};port={$config->port};charset={$config->charset}";
     }
 
     public static function getDriverName() {
