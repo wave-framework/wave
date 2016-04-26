@@ -134,7 +134,7 @@ class Model implements \JsonSerializable {
      */
     public static function createFromArray(array $data) {
 
-        foreach(self::_getIdentifyingColumns() as $required_column) {
+        foreach(static::_getIdentifyingColumns() as $required_column) {
             if(!isset($data[$required_column]) || $data[$required_column] === '') {
                 return null;
             }
