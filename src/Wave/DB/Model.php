@@ -16,7 +16,7 @@ class Model implements \JsonSerializable {
     /** @var string */
     protected static $_database;
     /** @var string */
-    protected static $_schema_name;
+    protected static $_schema_names = [];
     /** @var string */
     protected static $_table_name;
 
@@ -280,11 +280,12 @@ class Model implements \JsonSerializable {
      */
     public static function _getSchemaName() {
 
-        if(!isset(static::$_schema_name)) {
-            static::$_schema_name = DB::get(static::_getDatabaseNamespace())->getSchema();
+        $namespace = static::_getDatabaseNamespace();
+        if(!isset(static::$_schema_names[$namespace])) {
+            static::$_schema_names[$namespace] = DB::get($namespace)->getSchema();
         }
 
-        return static::$_schema_name;
+        return static::$_schema_names[$namespace];
     }
 
     /**
