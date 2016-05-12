@@ -86,7 +86,7 @@ class Exception extends \Exception {
         }
     }
 
-    public static function handle(\Exception $e, $send_response = true) {
+    public static function handle(\Throwable $e, $send_response = true) {
         try {
             Hook::triggerAction('exception.handle', array(&$e));
 
