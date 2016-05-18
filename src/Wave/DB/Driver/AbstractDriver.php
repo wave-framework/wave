@@ -13,6 +13,9 @@ abstract class AbstractDriver {
             case is_bool($value):
                 return $value ? 1 : 0;
             case $value instanceof DateTime:
+                if($value->getTimezone()->getName() !== date_default_timezone_get()){
+                    $value->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+                }
                 return $value->format('Y-m-d H:i:s');
 
             default:
@@ -43,8 +46,9 @@ abstract class AbstractDriver {
 
             case Column::TYPE_DATE:
             case Column::TYPE_TIMESTAMP:
-                if($value == 'CURRENT_TIMESTAMP')
+                if($value == 'CURRENT_TIMESTAMP'){
                     $value = 'now';
+                }
                 return new DateTime($value);
 
             default:
