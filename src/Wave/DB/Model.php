@@ -16,7 +16,7 @@ class Model implements \JsonSerializable {
     /** @var string */
     protected static $_database;
     /** @var string */
-    protected static $_schema_names = [];
+    protected static $_schema_name = [];
     /** @var string */
     protected static $_table_name;
 
@@ -234,7 +234,7 @@ class Model implements \JsonSerializable {
      * @param $resolved_class
      */
     public function addJoinedObject(Model &$object, $alias, $resolved_class) {
-        $this->_joined_aliases[$resolved_class][] = $alias;
+        $this->_joined_aliases[$resolved_class] = $alias;
         if(!isset($this->_joined_objects[$alias]))
             $this->_joined_objects[$alias] = array();
 
@@ -281,11 +281,11 @@ class Model implements \JsonSerializable {
     public static function _getSchemaName() {
 
         $namespace = static::_getDatabaseNamespace();
-        if(!isset(static::$_schema_names[$namespace])) {
-            static::$_schema_names[$namespace] = DB::get($namespace)->getSchema();
+        if(!isset(static::$_schema_name[$namespace])) {
+            static::$_schema_name[$namespace] = DB::get($namespace)->getSchema();
         }
 
-        return static::$_schema_names[$namespace];
+        return static::$_schema_name[$namespace];
     }
 
     /**
@@ -370,9 +370,12 @@ class Model implements \JsonSerializable {
     public function _getJoinedObjectsForClass($class) {
         $objects = array();
         if(isset($this->_joined_aliases[$class])) {
-            foreach($this->_joined_aliases[$class] as $alias) {
-                $objects = array_merge($objects, $this->_joined_objects[$alias]);
-            }
+
+            return $this->_joined_objects[$this->_joined_aliases[$class]];
+//            There really should only be one in here..
+//            foreach($this->_joined_aliases[$class] as $alias) {
+//                $objects = array_merge($objects, $this->_joined_objects[$alias]);
+//            }
         }
         return $objects;
     }
