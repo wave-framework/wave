@@ -277,7 +277,7 @@ class Query {
         if($last_index === -1)
             throw new Wave\Exception('Wave\DB\Query::on and ::using may only be used following a join.');
 
-        $this->joins[$last_index]['condition'] .= $condition;
+        $this->joins[$last_index]['condition'] .= " $condition";
     }
 
     /*
