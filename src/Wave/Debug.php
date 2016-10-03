@@ -32,7 +32,8 @@ class Debug {
     public static function init(array $config = array()) {
         $defaults = array(
             'start_time' => microtime(true),
-            'log_queries' => Core::$_MODE !== Core::MODE_PRODUCTION
+            'log_queries' => Core::$_MODE !== Core::MODE_PRODUCTION,
+            'log_checkpoints' => Core::$_MODE !== Core::MODE_PRODUCTION
         );
 
         self::$instance = new self(array_merge($defaults, $config));
@@ -66,11 +67,14 @@ class Debug {
     }
 
     public function addCheckpoint($name) {
-        $this->checkpoints[] = array(
-            'name' => $name,
-            'time' => $this->getExecutionTime(),
-            'memory' => $this->getCurrentMemoryUsage()
-        );
+        if($this->config['log_checkpoints']){
+            $this->checkpoints[] = array(
+                'name' => $name,
+                'time' => $this->getExecutionTime(),
+                'memory' => $this->getCurrentMemoryUsage()
+            );
+
+        }
     }
 
     /**
