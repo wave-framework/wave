@@ -2,7 +2,6 @@
 
 namespace Wave\DB\Driver;
 
-use DateTime;
 use Wave\DB\Column;
 
 abstract class AbstractDriver {
@@ -12,7 +11,7 @@ abstract class AbstractDriver {
         switch(true) {
             case is_bool($value):
                 return $value ? 1 : 0;
-            case $value instanceof DateTime:
+            case $value instanceof \DateTimeInterface:
                 return $value->format('Y-m-d H:i:s');
 
             default:
@@ -45,7 +44,7 @@ abstract class AbstractDriver {
             case Column::TYPE_TIMESTAMP:
                 if($value == 'CURRENT_TIMESTAMP')
                     $value = 'now';
-                return new DateTime($value);
+                return new \DateTime($value);
 
             default:
                 return $value;
