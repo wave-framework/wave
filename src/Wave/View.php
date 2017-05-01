@@ -39,9 +39,8 @@ class View {
                 return false;
             }
         );
-        $this->twig->addFilter('last', new \Twig_Filter_Function('\\Wave\\Utils::array_peek'));
-        $this->twig->addFilter(
-            'short', new \Twig_Filter_Function(
+        $this->twig->addFilter(new \Twig_SimpleFilter('last','\\Wave\\Utils::array_peek'));
+        $this->twig->addFilter(new \Twig_SimpleFilter('short',
                 '\\Wave\\Utils::shorten', array(
                     'pre_escape' => 'html',
                     'is_safe' => array('html')
