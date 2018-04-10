@@ -20,6 +20,7 @@ class Column {
     const TYPE_TIMESTAMP = 4;
     const TYPE_FLOAT = 5;
     const TYPE_DATE = 6;
+    const TYPE_JSON = 7;
 
     /** @var Table $table */
     private $table;

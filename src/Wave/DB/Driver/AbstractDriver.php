@@ -13,6 +13,8 @@ abstract class AbstractDriver {
                 return $value ? 1 : 0;
             case $value instanceof \DateTimeInterface:
                 return $value->format('Y-m-d H:i:s');
+            case is_object($value):
+                return json_encode($value);
 
             default:
                 return $value;
@@ -39,6 +41,9 @@ abstract class AbstractDriver {
 
             case Column::TYPE_STRING:
                 return (string) $value;
+
+            case Column::TYPE_JSON:
+                return json_decode($value);
 
             case Column::TYPE_DATE:
             case Column::TYPE_TIMESTAMP:

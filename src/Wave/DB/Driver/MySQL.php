@@ -245,6 +245,9 @@ class MySQL extends AbstractDriver implements DriverInterface {
             case 'date' :
                 return DB\Column::TYPE_DATE;
 
+            case 'json' :
+                return DB\Column::TYPE_JSON;
+
             default:
                 return DB\Column::TYPE_UNKNOWN;
         }
