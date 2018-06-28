@@ -82,9 +82,12 @@ class Relation {
                     $type = self::MANY_TO_MANY;
                     //go back and find the other relation
                     //need to iterate to find the one that's not this.
-                    foreach($this->getReferencedTable()->getRelations() as $relation)
-                        if($relation->getReferencedColumns() != $this->local_columns)
+                    foreach($this->getReferencedTable()->getRelations() as $relation) {
+                        if ($relation->getReferencedColumns() != $this->local_columns) {
                             $this->target_relation = $relation;
+                            break;
+                        }
+                    }
 
                     //if target relation isn't found, there must be a special case, so just roll back to one-to-many
                     //or if target relation has a dual primary key, can't base it being a join table on it anymore.
