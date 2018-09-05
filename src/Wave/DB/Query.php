@@ -555,6 +555,18 @@ class Query {
     }
 
     /**
+     * Manually add an additional parameter to the query
+     * @param $param
+     *
+     * @return Query
+     */
+    public function addParameter($param){
+        $this->_params[] = $param;
+
+        return $this;
+    }
+
+    /**
      * Build this query object into a valid SQL statement
      *
      * @return string
