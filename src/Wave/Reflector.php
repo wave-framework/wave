@@ -125,6 +125,10 @@ class Reflector {
      * @return string|false Full class name if found, false otherwise
      */
     protected function findClass($file) {
+        // skip anything that's not a regular file
+        if (!is_file($file))
+            return false;
+        
         $class = false;
         $namespace = false;
         $tokens = token_get_all(file_get_contents($file));
