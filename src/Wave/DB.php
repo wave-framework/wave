@@ -145,6 +145,18 @@ class DB {
     }
 
     /**
+     * Removes existing instances (and therefore connections, forcing a new connection when get() is next called)
+     *
+     * @return DB
+     * @throws Exception
+     */
+    public static function reset() {
+        self::$instances = array();
+
+        return self::get();
+    }
+
+    /**
      * Reverse lookup by DB name
      *
      * Note: This function is quite slow, it should only be used during model generation for relations.
