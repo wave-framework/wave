@@ -4,6 +4,7 @@ namespace Wave;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Twig\Loader\FilesystemLoader;
 
 class View {
 
@@ -19,7 +20,7 @@ class View {
 
     private function __construct() {
 
-        $loader = new \Twig_Loader_Filesystem(Config::get('wave')->path->views);
+        $loader = new FilesystemLoader(Config::get('wave')->path->views);
 
         $conf = array('cache' => Config::get('wave')->view->cache);
         if(Core::$_MODE !== Core::MODE_PRODUCTION) {
