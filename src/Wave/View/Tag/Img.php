@@ -2,35 +2,39 @@
 
 namespace Wave\View\Tag;
 
+use Twig\Compiler;
+use Twig\Node\Node;
+use Twig\Token;
+use Twig\TokenParser\AbstractTokenParser;
 use Wave;
 
-class Img extends \Twig_TokenParser {
+class Img extends AbstractTokenParser {
 
     const TYPE_JS = 'js';
     const TYPE_CSS = 'css';
 
-    public function parse(\Twig_Token $token) {
+    public function parse(Token $token) {
         $lineno = $token->getLine();
 
-        $path = $this->parser->getStream()->expect(\Twig_Token::STRING_TYPE)->getValue();
+        $path = $this->parser->getStream()->expect(Token::STRING_TYPE)->getValue();
 
         if(!preg_match('/http(s)?\:\/\//', $path))
             $path = Wave\Config::get('deploy')->assets . $path;
 
         $attributes = array();
-        if($this->parser->getStream()->test(\Twig_Token::STRING_TYPE)) {
-            $str = $this->parser->getStream()->expect(\Twig_Token::STRING_TYPE)->getValue();
+        if($this->parser->getStream()->test(Token::STRING_TYPE)) {
+            $str = $this->parser->getStream()->expect(Token::STRING_TYPE)->getValue();
             $attributes['title'] = $str;
             $attributes['alt'] = $str;
         }
-        if(!$this->parser->getStream()->test(\Twig_Token::BLOCK_END_TYPE)) {
+        if(!$this->parser->getStream()->test(Token::BLOCK_END_TYPE)) {
             $array = $this->parser->getExpressionParser()->parseArrayExpression();
             foreach($array->getIterator() as $key => $node) {
                 $attributes[$key] = $node->getAttribute('value');
             }
         }
 
-        $this->parser->getStream()->expect(\Twig_Token::BLOCK_END_TYPE);
+        $this->parser->getStream()->expect(Token::BLOCK_END_TYPE);
 
 
         return new ImgNode($path, $attributes, $lineno, $this->getTag());
@@ -43,13 +47,13 @@ class Img extends \Twig_TokenParser {
 
 }
 
-class ImgNode extends \Twig_Node {
+class ImgNode extends Node {
 
     public function __construct($src, $attributes, $line, $tag = null) {
         parent::__construct(array(), array('src' => $src, 'attributes' => $attributes), $line, $tag);
     }
 
-    public function compile(\Twig_Compiler $compiler) {
+    public function compile(Compiler $compiler) {
 
         $src = $this->getAttribute('src');
         $attributes = $this->getAttribute('attributes');

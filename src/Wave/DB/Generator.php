@@ -1,20 +1,21 @@
 <?php
 
 /**
- *    DB Genration class. Creates models.
+ *    DB Generation class. Creates models.
  *
  * @author Michael michael@calcin.ai
  **/
 
 namespace Wave\DB;
 
-use Twig_Environment;
-use Twig_Loader_Filesystem;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+use Twig\TwigFilter;
 use Wave;
 
 class Generator {
 
-    /** @var Twig_Environment $twig */
+    /** @var Environment $twig */
     private static $twig;
 
     private static $baseModelClass = '\\Wave\\DB\\Model';
@@ -85,26 +86,26 @@ class Generator {
      */
     private static function renderTemplate($template, $data, $template_ext = '.phpt') {
 
-        $loaded_template = self::$twig->loadTemplate($template . $template_ext);
+        $loaded_template = self::$twig->load($template . $template_ext);
         return $loaded_template->render($data);
 
     }
 
     private static function initTwig() {
 
-        $loader = new Twig_Loader_Filesystem(__DIR__ . DS . 'Generator' . DS . 'Templates');
-        self::$twig = new Twig_Environment($loader, array('autoescape' => false));
-        self::$twig->addFilter('addslashes', new \Twig_Filter_Function('addslashes'));
+        $loader = new FilesystemLoader(__DIR__ . DS . 'Generator' . DS . 'Templates');
+        self::$twig = new Environment($loader, array('autoescape' => false));
+        self::$twig->addFilter(new TwigFilter('addslashes'));
         self::$twig->addFilter(
-            'export', new \Twig_Filter_Function(
+            new TwigFilter('export',
                 function ($var) {
                     return var_export($var, true);
                 }
             )
         );
-        self::$twig->addFilter('implode', new \Twig_Filter_Function('implode'));
-        self::$twig->addFilter('singularize', new \Twig_Filter_Function('\\Wave\\Inflector::singularize'));
-        self::$twig->addFilter('formatType', new \Twig_Filter_Function('\\Wave\\DB\\Generator::formatTypeForSource'));
+        self::$twig->addFilter(new TwigFilter('implode'));
+        self::$twig->addFilter(new TwigFilter('singularize', '\\Wave\\Inflector::singularize'));
+        self::$twig->addFilter(new TwigFilter('formatType', '\\Wave\\DB\\Generator::formatTypeForSource'));
         self::$twig->addGlobal('baseModelClass', static::$baseModelClass);
     }
 

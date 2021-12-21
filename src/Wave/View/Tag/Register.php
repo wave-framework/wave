@@ -2,38 +2,43 @@
 
 namespace Wave\View\Tag;
 
+use Twig\Compiler;
+use Twig\Error\SyntaxError;
+use Twig\Node\Node;
+use Twig\Token;
+use Twig\TokenParser\AbstractTokenParser;
 use Wave;
 
-class Register extends \Twig_TokenParser {
+class Register extends AbstractTokenParser {
 
     const TYPE_JS = 'js';
     const TYPE_CSS = 'css';
 
-    public function parse(\Twig_Token $token) {
+    public function parse(Token $token) {
         $lineno = $token->getLine();
 
         $extras = '';
 
-        $type = $this->parser->getStream()->expect(\Twig_Token::NAME_TYPE)->getValue();
+        $type = $this->parser->getStream()->expect(Token::NAME_TYPE)->getValue();
 
         if(!in_array($type, array(self::TYPE_JS, self::TYPE_CSS)))
-            throw new \Twig_SyntaxError("Register type must be 'css' or 'js'.", $lineno, $token->getFilename());
+            throw new SyntaxError("Register type must be 'css' or 'js'.", $lineno, $token->getFilename());
 
-        $file = $this->parser->getStream()->expect(\Twig_Token::STRING_TYPE)->getValue();
+        $file = $this->parser->getStream()->expect(Token::STRING_TYPE)->getValue();
 
         if($type == self::TYPE_CSS) {
-            if($this->parser->getStream()->test(\Twig_Token::STRING_TYPE))
-                $extras = $this->parser->getStream()->expect(\Twig_Token::STRING_TYPE)->getValue();
+            if($this->parser->getStream()->test(Token::STRING_TYPE))
+                $extras = $this->parser->getStream()->expect(Token::STRING_TYPE)->getValue();
             else
                 $extras = 'all';
         }
 
-        if($this->parser->getStream()->test(\Twig_Token::NUMBER_TYPE))
-            $priority = $this->parser->getStream()->expect(\Twig_Token::NUMBER_TYPE)->getValue();
+        if($this->parser->getStream()->test(Token::NUMBER_TYPE))
+            $priority = $this->parser->getStream()->expect(Token::NUMBER_TYPE)->getValue();
         else
             $priority = 0;
 
-        $this->parser->getStream()->expect(\Twig_Token::BLOCK_END_TYPE);
+        $this->parser->getStream()->expect(Token::BLOCK_END_TYPE);
 
         return new RegisterNode($type, $file, $extras, $priority, $lineno, $this->getTag());
     }
@@ -45,7 +50,7 @@ class Register extends \Twig_TokenParser {
 
 }
 
-class RegisterNode extends \Twig_Node {
+class RegisterNode extends Node {
 
     public function __construct($type, $file, $extras, $priority, $line, $tag = null) {
         parent::__construct(
@@ -58,7 +63,7 @@ class RegisterNode extends \Twig_Node {
         );
     }
 
-    public function compile(\Twig_Compiler $compiler) {
+    public function compile(Compiler $compiler) {
 
         $type = $this->getAttribute('type');
         $file = $this->getAttribute('file');

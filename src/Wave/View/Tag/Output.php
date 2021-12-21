@@ -2,16 +2,21 @@
 
 namespace Wave\View\Tag;
 
-class Output extends \Twig_TokenParser {
+use Twig\Compiler;
+use Twig\Node\Node;
+use Twig\Token;
+use Twig\TokenParser\AbstractTokenParser;
 
-    public function parse(\Twig_Token $token) {
+class Output extends AbstractTokenParser {
+
+    public function parse(Token $token) {
         $lineno = $token->getLine();
 
 
-        $type = $this->parser->getStream()->expect(\Twig_Token::NAME_TYPE)->getValue();
+        $type = $this->parser->getStream()->expect(Token::NAME_TYPE)->getValue();
 
 
-        $this->parser->getStream()->expect(\Twig_Token::BLOCK_END_TYPE);
+        $this->parser->getStream()->expect(Token::BLOCK_END_TYPE);
 
         return new OutputNode($type, $lineno, $this->getTag());
     }
@@ -23,7 +28,7 @@ class Output extends \Twig_TokenParser {
 
 }
 
-class OutputNode extends \Twig_Node {
+class OutputNode extends Node {
 
 
     const FORMAT_JS = '<script type=\"text/javascript\" src=\"%s\"></script>';
@@ -33,7 +38,7 @@ class OutputNode extends \Twig_Node {
         parent::__construct(array(), array('type' => $type), $line, $tag);
     }
 
-    public function compile(\Twig_Compiler $compiler) {
+    public function compile(Compiler $compiler) {
 
         $compiler
             ->addDebugInfo($this);

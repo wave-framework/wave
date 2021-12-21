@@ -16,7 +16,6 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\AbstractHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use Wave\Config;
 use Wave\Log\CliHandler;
 use Wave\Log\ExceptionIntrospectionProcessor;
 

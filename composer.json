@@ -27,9 +27,9 @@
     "bin": ["bin/wave"],
 
     "require": {
-        "php": ">=7.4",
-        "twig/twig": "1.*",
-        "monolog/monolog": "1.*",
+        "php": ">=8.1",
+        "twig/twig": "3.*",
+        "monolog/monolog": "2.*",
         "dragonmantank/cron-expression": "^3.3"
     },
 
