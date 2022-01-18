@@ -315,6 +315,11 @@ class DB {
      * @return DB\Connection
      */
     public function getReplicaConnection() {
+        // Return the primary connection if no replica is available
+        if (!$this->replica_connection instanceof DB\Connection) {
+            return $this->getConnection();
+        }
+
         return $this->replica_connection;
     }
 
