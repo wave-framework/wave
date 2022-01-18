@@ -32,6 +32,9 @@ class DB {
     /** @var \Wave\DB\Connection $connection */
     private $connection;
 
+    /** @var \Wave\DB\Connection $replica_connection */
+    private $replica_connection;
+
     /** @var string $namespace */
     private $namespace;
 
@@ -56,6 +59,18 @@ class DB {
         $this->escape_character = $driver::getEscapeCharacter();
 
         $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+        /**
+         * If the `replica_host` configuration parameter is set we'll also connect
+         * to the specified host (with the same authentication details and options)
+         * for the purposes of splitting the read workload.
+         **/
+        if (isset($config->replica_host)) {
+            $config->host = $config->replica_host;
+
+            $this->replica_connection = new DB\Connection($config);
+            $this->replica_connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        }
     }
 
     /**
@@ -291,6 +306,16 @@ class DB {
      */
     public function getConnection() {
         return $this->connection;
+    }
+
+    /**
+     * Return the connection to the database
+     * replica, if one is present.
+     *
+     * @return DB\Connection
+     */
+    public function getReplicaConnection() {
+        return $this->replica_connection;
     }
 
     /**
