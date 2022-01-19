@@ -640,8 +640,9 @@ class Query {
     /**
      * Execute this query against the current database instance
      * @param bool $debug
+     * @param bool $use_replica
      */
-    public function execute($debug = false) {
+    public function execute($debug = false, $use_replica = false) {
 
         $sql = $this->buildSQL();
 
@@ -649,11 +650,14 @@ class Query {
             echo "QUERY: $sql\n";
             echo "PARAMS: \n";
             print_r($this->_params);
-
         }
 
-        $statement = $this->database->getConnection()->prepare($sql);
+        $connection = $this->database->getConnection();
+        if ($use_replica === true) {
+            $connection = $this->database->getReplicaConnection();
+        }
 
+        $statement = $connection->prepare($sql);
         $statement->execute($this->_params);
 
         $this->_statement = $statement;
@@ -667,13 +671,14 @@ class Query {
      * @param bool $parse_objects If true the array is filled with Model objects, otherwise the result is an array
      *                            of associative arrays.
      * @param bool $debug Used to print the query to STDOUT before being executed
+     * @param bool $use_replica Run the query on the replica DB server (if one is configured).
      *
      * @return Model[]|array
      */
-    public function fetchAll($parse_objects = true, $debug = false) {
+    public function fetchAll($parse_objects = true, $debug = false, $use_replica = false) {
 
         $rows = array();
-        while($row = $this->fetchRow($parse_objects, $debug)) {
+        while($row = $this->fetchRow($parse_objects, $debug, $use_replica)) {
             $rows[] = $row;
         }
 
@@ -688,15 +693,16 @@ class Query {
      * @param bool $parse_objects If true the array is filled with Model objects, otherwise the result is an array
      *                            of associative arrays.
      * @param bool $debug Used to print the query to STDOUT before being executed
+     * @param bool $use_replica Run the query on the replica DB server (if one is configured).
      *
      * @return Model|array|null
      */
-    public function fetchRow($parse_objects = true, $debug = false) {
+    public function fetchRow($parse_objects = true, $debug = false, $use_replica = false) {
 
         $object_instances = array();
 
         if(!$this->_executed)
-            $this->execute($debug);
+            $this->execute($debug, $use_replica);
 
         for(; ;) {
 
