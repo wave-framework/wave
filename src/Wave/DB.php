@@ -17,23 +17,14 @@ use Wave\DB\Query;
 
 class DB {
 
-    /** @var int $num_databases */
-    private static $num_databases = 0;
-
     /** @var DB[] $instances */
     private static $instances = array();
 
     /** @var string $default_namespace */
     private static $default_namespace;
 
-    /** @var string $escape_character */
-    private $escape_character;
-
-    /** @var \Wave\DB\Connection $connection */
-    private $connection;
-
-    /** @var \Wave\DB\Connection $replica_connection */
-    private $replica_connection;
+    /** @var \Wave\DB\Connection[] $connections */
+    private $connections;
 
     /** @var string $namespace */
     private $namespace;
@@ -44,32 +35,65 @@ class DB {
     /** @var \Wave\DB\Table[] $tables */
     private $tables;
 
+    // Default alias for the primary database connection
+    const PRIMARY_CONNECTION = 'primary';
+
     /**
+     * Set up a new DB instance
+     *
+     * DB configuration can include multiple connections, for use
+     * cases such as read-only replica hosts to be targeted by some queries.
+     *
+     * In this case, swap out the standard configuration for a key value
+     * with the default connection aliased as 'primary', as shown below.
+     *
+     * [ 'primary' => ['host' => 'a', 'driver...], 'secondary' => ['host' => 'b'...]
+     *
+     * Note that currently connections must use the same driver, as the driver
+     * from the primary connection is used as the escape character across all connections.
+     *
      * @param $namespace
      * @param $config
+     * @throws DBException
      */
     private function __construct($namespace, $config) {
 
-        $this->connection = new DB\Connection($config);
+        $installed_drivers = DB\Connection::getAvailableDrivers();
         $this->namespace = $namespace;
-        $this->config = $config;
+        $connections = [];
 
-        /** @var DB\Driver\DriverInterface $driver */
-        $driver = $this->connection->getDriverClass();
-        $this->escape_character = $driver::getEscapeCharacter();
+        // Default configuration syntax - just one connection
+        if (isset($config->driver)) {
+            $connections[self::PRIMARY_CONNECTION] = $config;
+        }
 
-        $this->connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        // Alternative configuration syntax - multiple connections
+        if (isset($config->primary)) {
+            $connections = $config;
+        }
 
-        /**
-         * If the `replica_host` configuration parameter is set we'll also connect
-         * to the specified host (with the same authentication details and options)
-         * for the purposes of splitting the read workload.
-         **/
-        if (isset($config->replica_host)) {
-            $config->host = $config->replica_host;
+        // No valid configuration - so we can't proceed.
+        if (count(array_keys($connections)) == 0) {
+            throw new DBException("Invalid database configuration - at minimum, a 'primary' configuration must be specified");
+        }
 
-            $this->replica_connection = new DB\Connection($config);
-            $this->replica_connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        foreach ($connections as $alias => $conf)
+        {
+            /** @var DB\Driver\DriverInterface $driver_class */
+            $driver_class = self::getDriverClass($conf->driver);
+
+            // Check PDO driver is installed on system
+            if(!in_array($driver_class::getDriverName(), $installed_drivers))
+                throw new DBException(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
+
+            // Use the primary connection for default configuration
+            if ($alias == self::PRIMARY_CONNECTION) {
+                $this->config = $conf;
+            }
+
+            $connection = new DB\Connection($config, $namespace);
+            $connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $this->connections[$alias] = $connection;
         }
     }
 
@@ -81,17 +105,6 @@ class DB {
      * @throws DB\Exception
      */
     private static function init($namespace, $database) {
-
-        $installed_drivers = DB\Connection::getAvailableDrivers();
-
-        /** @var DB\Driver\DriverInterface $driver_class */
-        $driver_class = self::getDriverClass($database->driver);
-
-        //Check PDO driver is installed on system
-        if(!in_array($driver_class::getDriverName(), $installed_drivers))
-            throw new DBException(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
-
-        self::$num_databases++;
 
         $instance = new self($namespace, $database);
         Hook::triggerAction('db.after_init', array(&$instance));
@@ -140,7 +153,7 @@ class DB {
 
         if(!isset(self::$instances[$namespace])) {
             $config = self::getConfigForNamespace($namespace);
-            self::$instances[$namespace] = self::init($namespace, $config, $namespace);
+            self::$instances[$namespace] = self::init($namespace, $config);
         }
 
         return self::$instances[$namespace];
@@ -185,7 +198,7 @@ class DB {
         $databases = Config::get('db')->databases;
         foreach($databases as $namespace => $modes)
             foreach($modes as $mode)
-                if($mode['database'] === $name)
+                if($mode['database'] === $name || (isset($mode[self::PRIMARY_CONNECTION]) && $mode[self::PRIMARY_CONNECTION]['database'] === $name))
                     return self::get($namespace);
 
         return null;
@@ -197,7 +210,7 @@ class DB {
         foreach($databases as $namespace => $modes) {
             foreach($modes as $mode) {
                 foreach($config_options as $option => $value) {
-                    if($mode[$option] !== $value)
+                    if($mode[$option] !== $value && (!isset($mode[self::PRIMARY_CONNECTION]) || $mode[self::PRIMARY_CONNECTION][$option] !== $value))
                         continue 2;
                 }
                 return self::get($namespace);
@@ -264,14 +277,21 @@ class DB {
     }
 
     /**
-     * Escape using the escaping character of the current connection
+     * Escape using the escaping character of the primary connection
+     *
+     * Like many functions in this class, this should be connection specific
+     * and will be fixed when we re-design this to be in the context
+     * of a connection.
      *
      * @param $string
      *
      * @return string
+     * @throws DBException
      */
     public function escape($string) {
-        return $this->escape_character . $string . $this->escape_character;
+        $driver = $this->getConnection()->getDriverClass();
+
+        return $driver::getEscapeCharacter() . $string . $driver::getEscapeCharacter();
     }
 
     /**
@@ -282,7 +302,7 @@ class DB {
      * @return mixed
      */
     public function valueToSQL($value) {
-        $driver_class = $this->connection->getDriverClass();
+        $driver_class = $this->getConnection()->getDriverClass();
         return $driver_class::valueToSQL($value);
 
     }
@@ -296,31 +316,27 @@ class DB {
      * @return mixed
      */
     public function valueFromSQL($value, array $field_data) {
-        $driver_class = $this->connection->getDriverClass();
+        $driver_class =$this->getConnection()->getDriverClass();
         return $driver_class::valueFromSQL($value, $field_data);
 
     }
 
     /**
-     * @return DB\Connection
-     */
-    public function getConnection() {
-        return $this->connection;
-    }
-
-    /**
-     * Return the connection to the database
-     * replica, if one is present.
+     * Retrieve a DB connection
+     *
+     * If using multiple connections, provide the name of the connection required,
+     * otherwise the primary connection is retrieved.
+     *
+     * @param string $alias
      *
      * @return DB\Connection
      */
-    public function getReplicaConnection() {
-        // Return the primary connection if no replica is available
-        if (!$this->replica_connection instanceof DB\Connection) {
-            return $this->getConnection();
+    public function getConnection($alias = self::PRIMARY_CONNECTION) {
+        if (!isset($this->connections[$alias])) {
+            throw new DBException(sprintf('A connection with the alias [%s] has not been defined', $alias));
         }
 
-        return $this->replica_connection;
+        return $this->connections[$alias];
     }
 
     /**
@@ -361,7 +377,7 @@ class DB {
      * @return DB\Query
      */
     public function from($from, &$alias = null, $fields = null) {
-        $query = new Query($this);
+        $query = new Query($this->getConnection());
         return $query->from($from, $alias, $fields);
     }
 
@@ -393,7 +409,7 @@ class DB {
      * @return \PDOStatement
      */
     public function statement($sql, array $params = array()) {
-        $statement = $this->connection->prepare($sql);
+        $statement = $this->getConnection()->prepare($sql);
         $statement->execute($params);
 
         return $statement;

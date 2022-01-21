@@ -19,16 +19,18 @@ class Connection extends PDO {
     private $driver_class;
 
     private $cache_enabled;
+    private $namespace;
     private $statement_cache = array();
 
     /**
      * @param \Wave\Config\Row $config
      */
-    public function __construct(ConfigRow $config) {
+    public function __construct(ConfigRow $config, $namespace) {
 
         /** @var DriverInterface $driver_class */
         $driver_class = DB::getDriverClass($config->driver);
         $this->driver_class = $driver_class;
+        $this->namespace = $namespace;
 
         $options = array();
         if(isset($config->driver_options)) {
@@ -74,6 +76,16 @@ class Connection extends PDO {
      */
     public function getDriverClass() {
         return $this->driver_class;
+    }
+
+    /**
+     * Return the namespace this connection
+     * was established within
+     *
+     * @return mixed
+     */
+    public function getNamespace() {
+        return $this->namespace;
     }
 
 

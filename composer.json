@@ -1,7 +1,7 @@
 {
     "name": "wave-framework/wave",
     "type": "library",
-    "description": "Wave is a lightweight PHP5.3 MVC framework",
+    "description": "Wave is a lightweight PHP MVC framework",
     "keywords": [
         "framework",
         "mvc",
@@ -28,7 +28,7 @@
     "bin": ["bin/wave"],
 
     "require": {
-        "php": ">=5.3.2",
+        "php": ">=5.4.2",
         "twig/twig": "1.*",
         "monolog/monolog": "1.*"
     },
