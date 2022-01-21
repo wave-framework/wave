@@ -9,6 +9,7 @@
 namespace Wave\DB;
 
 use Wave;
+use Wave\Config;
 
 /**
  * @method \Wave\DB\Query and () and ($condition, mixed $params = array())
@@ -868,6 +869,7 @@ class Query {
 
         $class = trim($class, '\\');
         $namespace = $this->connection->getNamespace();
+        $namespace = Config::get('wave')->model->base_namespace . '\\' . $namespace;
         if(strpos($class, $namespace) !== 0)
             $class = $namespace . '\\' . $class;
 
