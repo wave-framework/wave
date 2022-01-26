@@ -73,7 +73,7 @@ class DB {
         }
 
         // No valid configuration - so we can't proceed.
-        if (count(array_keys($connections)) == 0) {
+        if (count($connections) == 0) {
             throw new DBException("Invalid database configuration - at minimum, a 'primary' configuration must be specified");
         }
 
@@ -91,7 +91,7 @@ class DB {
                 $this->config = $conf;
             }
 
-            $connection = new DB\Connection($config, $namespace);
+            $connection = new DB\Connection($conf, $namespace);
             $connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
             $this->connections[$alias] = $connection;
         }
