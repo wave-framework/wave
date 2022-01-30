@@ -198,7 +198,8 @@ class DB {
         $databases = Config::get('db')->databases;
         foreach($databases as $namespace => $modes)
             foreach($modes as $mode)
-                if($mode['database'] === $name || (isset($mode[self::PRIMARY_CONNECTION]) && $mode[self::PRIMARY_CONNECTION]['database'] === $name))
+                if((isset($mode['database']) && $mode['database'] === $name) ||
+                    (isset($mode[self::PRIMARY_CONNECTION]) && $mode[self::PRIMARY_CONNECTION]['database'] === $name))
                     return self::get($namespace);
 
         return null;
@@ -210,7 +211,8 @@ class DB {
         foreach($databases as $namespace => $modes) {
             foreach($modes as $mode) {
                 foreach($config_options as $option => $value) {
-                    if($mode[$option] !== $value && (!isset($mode[self::PRIMARY_CONNECTION]) || $mode[self::PRIMARY_CONNECTION][$option] !== $value))
+                    if((!isset($mode[$option]) || $mode[$option] !== $value) &&
+                        (!isset($mode[self::PRIMARY_CONNECTION]) || $mode[self::PRIMARY_CONNECTION][$option] !== $value))
                         continue 2;
                 }
                 return self::get($namespace);
