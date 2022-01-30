@@ -9,6 +9,7 @@
 namespace Wave\DB;
 
 use Wave;
+use Wave\Config;
 
 /**
  * @method \Wave\DB\Query and () and ($condition, mixed $params = array())
@@ -21,13 +22,12 @@ class Query {
 
     private $_last_clause = 0;
 
-    private $escape_character;
-
     private $class_aliases = array();
     private $alias_counter;
 
-    /** @var Wave\DB $database */
-    private $database;
+    /** @var Wave\DB\Connection $connection */
+    private $connection;
+
     private $from_alias;
     private $fields = array();
     private $with = array();
@@ -49,8 +49,8 @@ class Query {
 
     private $relation_tables = array();
 
-    public function __construct($database) {
-        $this->database = $database;
+    public function __construct(Connection $connection) {
+        $this->connection = $connection;
         $this->alias_counter = 'a';
     }
 
@@ -626,7 +626,7 @@ class Query {
 
         $this->_params = array_map(
             array(
-                $this->database->getConnection()->getDriverClass(),
+                $this->connection->getDriverClass(),
                 'valueToSQL'
             ), $this->_params
         );
@@ -639,6 +639,7 @@ class Query {
 
     /**
      * Execute this query against the current database instance
+     *
      * @param bool $debug
      */
     public function execute($debug = false) {
@@ -649,11 +650,9 @@ class Query {
             echo "QUERY: $sql\n";
             echo "PARAMS: \n";
             print_r($this->_params);
-
         }
 
-        $statement = $this->database->getConnection()->prepare($sql);
-
+        $statement = $this->connection->prepare($sql);
         $statement->execute($this->_params);
 
         $this->_statement = $statement;
@@ -761,7 +760,8 @@ class Query {
                 foreach($object_instances[$this->from_alias]->_getIdentifyingData() as $property => $value) {
                     $class = $this->class_aliases[$this->from_alias]['class'];
                     $alias = $this->class_aliases[$this->from_alias]['columns'][$property];
-                    $cast_value = $this->database->valueFromSQL($this->_last_row[$alias], $class::_getField($property));
+                    $driver_class = $this->connection->getDriverClass();
+                    $cast_value = $driver_class::valueFromSQL($this->_last_row[$alias], $class::_getField($property));
 
                     if($cast_value !== $value)
                         return isset($object_instances[$this->from_alias]) ? $object_instances[$this->from_alias] : null; // break 2;
@@ -847,7 +847,7 @@ class Query {
 
         $sql = 'SELECT FOUND_ROWS() AS row_count;';
 
-        $statement = $this->database->getConnection()->prepare($sql);
+        $statement = $this->connection->prepare($sql);
         $statement->execute();
 
         $rslt = $statement->fetch(Connection::FETCH_ASSOC);
@@ -868,7 +868,8 @@ class Query {
             return $class;
 
         $class = trim($class, '\\');
-        $namespace = $this->database->getNamespace();
+        $namespace = $this->connection->getNamespace();
+        $namespace = Config::get('wave')->model->base_namespace . '\\' . $namespace;
         if(strpos($class, $namespace) !== 0)
             $class = $namespace . '\\' . $class;
 
@@ -978,7 +979,8 @@ class Query {
      * @return string
      */
     private function escape($text) {
-        return $this->database->escape($text);
+        $driver = $this->connection->getDriverClass();
+        return $driver::getEscapeCharacter() . $text . $driver::getEscapeCharacter();
     }
 
     /**
@@ -988,7 +990,9 @@ class Query {
      * @return string
      */
     private function unescape($text) {
-        return trim($text, $this->escape_character);
+        $driver = $this->connection->getDriverClass();
+
+        return trim($text, $driver::getEscapeCharacter());
     }
 
     /**
