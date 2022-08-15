@@ -64,7 +64,7 @@ class Generator {
             $rendered_fingerprint =  $table->getSchemaFingerprint();
             $current_contents = file_get_contents($filepath);
             preg_match('/@fingerprint: ([0-9a-f]{32})/', $current_contents, $matches);
-            if($rendered_fingerprint !== $matches[1]){
+            if(!isset($matches[1]) || $rendered_fingerprint !== $matches[1]){
                 Wave\Log::write('generator', sprintf('Table [%s] has changed, updating base model file...', $table->getName()), Wave\Log::DEBUG);
                 file_put_contents($filepath, $contents);
             }
