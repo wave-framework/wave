@@ -37,7 +37,8 @@ class Generator {
 
             foreach($tables as $table) {
                 $base_file = self::getBaseModelPath($database) . $table->getClassName() . '.php';
-                file_put_contents($base_file, self::renderTemplate('base-model', array('table' => $table)));
+                $base_rendered = self::renderTemplate('base-model', array('table' => $table));
+                self::writeTemplateIfChanged($table, $base_file, $base_rendered);
 
                 $stub_file = self::getModelPath($database) . $table->getClassName() . '.php';
                 if(!file_exists($stub_file))
@@ -49,6 +50,30 @@ class Generator {
             $orphans = array_diff($existing_files, $current_files);
 
         }
+    }
+
+    /**
+     * @param string $filepath
+     * @param string $content
+     *
+     * @return bool
+     */
+    private static function writeTemplateIfChanged($table, $filepath, $contents) {
+
+        if(file_exists($filepath)){
+            $rendered_fingerprint =  $table->getSchemaFingerprint();
+            $current_contents = file_get_contents($filepath);
+            preg_match('/@fingerprint: ([0-9a-f]{32})/', $current_contents, $matches);
+            if($rendered_fingerprint !== $matches[1]){
+                Wave\Log::write('generator', sprintf('Table [%s] has changed, updating base model file...', $table->getName()), Wave\Log::DEBUG);
+                file_put_contents($filepath, $contents);
+            }
+        }
+        else {
+            Wave\Log::write('generator', sprintf('Base Model for table [%s] doesn\'t exist, creating...', $table->getName()), Wave\Log::DEBUG);
+            file_put_contents($filepath, $contents);
+        }
+
     }
 
     /**
