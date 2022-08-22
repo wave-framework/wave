@@ -138,4 +138,26 @@ class Table {
         return $prefix . Wave\Inflector::camelize($this->table);
     }
 
+    /**
+     * Returns a fingerprint of this table schema that can be used to calculate if 
+     * the table defintion has changed. This is primarily used when generating models
+     * to avoid recreating models that haven't changed.
+     * 
+     * Makes use of overloaded __serialize() methods on the Column, Relation, and
+     * Constraint components to calculate a MD5 hash.
+     */
+    public function getSchemaFingerprint() {
+        $fingerprint = [
+            'database' => $this->database->getName(),
+            'table' => $this->table,
+            'engine' => $this->engine,
+            'collation' => $this->collation,
+            'comment' => $this->comment,
+            'columns' => $this->getColumns(),
+            'relations' => $this->getRelations(),
+            'constraints' => $this->getConstraints()
+        ];
+        return md5(serialize($fingerprint));
+    }
+
 }

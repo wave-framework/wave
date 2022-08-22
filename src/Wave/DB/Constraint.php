@@ -60,4 +60,16 @@ class Constraint {
         return $this->columns;
     }
 
+    /**
+     * Provide a representation of this constraint that can be used to calculate a 
+     * fingerprint for whether it has changed or not.
+     */
+    public function __serialize() {
+        return [
+            'name' => $this->getName(),
+            'type' => $this->getType(),
+            'columns' => array_map(fn($column) => $column->getName(), $this->getColumns())
+        ];
+    }
+
 }

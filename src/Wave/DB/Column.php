@@ -193,4 +193,22 @@ class Column {
         $this->sequence_name = $sequence_name;
     }
 
+    /**
+     * Provide a representation of this column that can be used to calculate a 
+     * fingerprint for whether it has changed or not.
+     */
+    public function __serialize() {
+        return [
+            'table' => $this->table->getName(),
+            'name' => $this->getName(),
+            'nullable' => $this->isNullable(),
+            'data_type' => $this->getDataType(),
+            'default' => $this->getDefault(),
+            'serial' => $this->isSerial(),
+            'type_desc' => $this->getTypeDescription(),
+            'extra' => $this->getExtra(),
+            'comment' => $this->getComment()
+        ];
+    }
+
 }

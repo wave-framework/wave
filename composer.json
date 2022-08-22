@@ -13,8 +13,7 @@
     ],
     "homepage": "http://github.com/wave-framework/wave",
 
-    "authors": [
-        {
+    "authors": [{
             "name": "Patrick Hindmarsh",
             "email": "patrick@hindmar.sh",
             "homepage": "https://github.com/phindmarsh"
@@ -28,7 +27,7 @@
     "bin": ["bin/wave"],
 
     "require": {
-        "php": ">=5.4.2",
+        "php": ">=7.4",
         "twig/twig": "1.*",
         "monolog/monolog": "1.*"
     },

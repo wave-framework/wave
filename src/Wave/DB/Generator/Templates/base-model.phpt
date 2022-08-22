@@ -12,6 +12,7 @@
  * @table:     {{ table.Name }}
  * @engine:    {{ table.Engine }}
  * @collation: {{ table.Collation }}
+ * @fingerprint: {{table.SchemaFingerprint}}
  *
  */
 

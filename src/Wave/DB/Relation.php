@@ -198,5 +198,35 @@ class Relation {
 
     }
 
+    /**
+     * Provide a representation of this relation that can be used to calculate a fingerprint
+     * for whether it has changed or not. This is used by the Table getSchemaFingerprint
+     */
+    public function __serialize() { 
+        $serialized = [
+            'instance_name' => $this->instance_name,
+            'local_columns' => array_map(fn($column) => $this->serializeColumn($column), $this->getLocalColumns()),
+            'referenced_columns' => array_map(fn($column) => $this->serializeColumn($column), $this->getReferencedColumns()),
+            'is_reversed_relation' => $this->is_reverse_relation,
+            'target_relation' => $this->getTargetRelation(),
+            'type' => $this->type,
+        ];
+
+        return $serialized;
+
+    }
+
+    /**
+     * For relations, the only thing that matters is the name of the column and the 
+     * database/table it comes from. Other attributes like type etc are not factored 
+     * in this context
+     */
+    private function serializeColumn(Column $column) {
+        return [
+            $column->getTable()->getDatabase()->getName(), 
+            $column->getTable()->getName(), 
+            $column->getName()
+        ];
+    }
 
 }
