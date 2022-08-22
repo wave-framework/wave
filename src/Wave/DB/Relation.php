@@ -202,7 +202,7 @@ class Relation {
      * Provide a representation of this relation that can be used to calculate a fingerprint
      * for whether it has changed or not. This is used by the Table getSchemaFingerprint
      */
-    public function __serialize(){ 
+    public function __serialize() { 
         $serialized = [
             'instance_name' => $this->instance_name,
             'local_columns' => array_map(fn($column) => $this->serializeColumn($column), $this->getLocalColumns()),
