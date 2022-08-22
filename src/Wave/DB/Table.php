@@ -146,7 +146,7 @@ class Table {
      * Makes use of overloaded __serialize() methods on the Column, Relation, and
      * Constraint components to calculate a MD5 hash.
      */
-    public function getSchemaFingerprint(){
+    public function getSchemaFingerprint() {
         $fingerprint = [
             'database' => $this->database->getName(),
             'table' => $this->table,

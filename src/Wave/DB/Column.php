@@ -197,7 +197,7 @@ class Column {
      * Provide a representation of this column that can be used to calculate a 
      * fingerprint for whether it has changed or not.
      */
-    public function __serialize(){
+    public function __serialize() {
         return [
             'table' => $this->table->getName(),
             'name' => $this->getName(),
