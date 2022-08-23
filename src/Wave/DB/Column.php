@@ -170,6 +170,14 @@ class Column {
         return $pk === null ? false : in_array($this, $pk->getColumns());
     }
 
+    /**
+     * @return bool
+     */
+    public function isGenerated(): bool
+    {
+        return stripos($this->getExtra(), 'VIRTUAL') === 0;
+    }
+
     private function parseMetadata($raw) {
 
         $parsed = json_decode($raw, true);

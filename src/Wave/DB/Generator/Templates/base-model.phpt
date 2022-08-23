@@ -52,6 +52,7 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
             'data_type'	=> {{ column.DataType }},
             'nullable'	=> {% if column.isNullable %}true{% else %}false{% endif %},
             'serial'    => {% if column.isSerial %}true{% else %}false{% endif %},
+            'generated' => {% if column.isGenerated %}true{% else %}false{% endif %},
             'sequence'  => {% if column.SequenceName %}'{{ column.SequenceName }}'{% else %}null{% endif %},
             'metadata'  => array({% for key, value in column.Metadata %}{{key|export}} =>{{value|export}}{% if not loop.last %},{% endif %} {% endfor %})
 

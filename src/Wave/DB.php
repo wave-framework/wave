@@ -443,6 +443,11 @@ class DB {
         $fields = $params = $placeholders = array();
         $object_data = $object->_getData();
         foreach($object->_getFields(true) as $object_field => $field_properties) {
+            //Don't take any action for generated columns.
+            if($field_properties['generated']){
+                continue;
+            }
+
             $object_value = $object_data[$object_field];
 
             $fields[] = $database->escape($object_field);
