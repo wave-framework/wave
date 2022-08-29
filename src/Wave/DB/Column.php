@@ -175,7 +175,7 @@ class Column {
      */
     public function isGenerated(): bool
     {
-        return stripos($this->getExtra(), 'VIRTUAL') === 0;
+        return strpos($this->getExtra(), 'GENERATED') !== false;
     }
 
     private function parseMetadata($raw) {
@@ -214,6 +214,7 @@ class Column {
             'default' => $this->getDefault(),
             'serial' => $this->isSerial(),
             'type_desc' => $this->getTypeDescription(),
+            'generated' => $this->isGenerated(),
             'extra' => $this->getExtra(),
             'comment' => $this->getComment()
         ];
