@@ -214,6 +214,7 @@ class Column {
             'default' => $this->getDefault(),
             'serial' => $this->isSerial(),
             'type_desc' => $this->getTypeDescription(),
+            'generated' => $this->isGenerated(),
             'extra' => $this->getExtra(),
             'comment' => $this->getComment()
         ];
