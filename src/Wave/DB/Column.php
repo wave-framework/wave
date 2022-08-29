@@ -175,7 +175,7 @@ class Column {
      */
     public function isGenerated(): bool
     {
-        return stripos($this->getExtra(), 'VIRTUAL') === 0 || stripos($this->getExtra(), 'STORED') === 0;
+        return strpos($this->getExtra(), 'GENERATED') !== false;
     }
 
     private function parseMetadata($raw) {
