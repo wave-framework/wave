@@ -465,7 +465,13 @@ class Model implements \JsonSerializable {
      * Generates a string hash of the object based on 'identifying data' returned from the above methods.
      */
     public function _getFingerprint(){
-        return sha1(implode('::', $this->_getIdentifyingData()));
+        $database = DB::get($this->_getDatabaseNamespace());
+
+        $values = array_map(function($value) use ($database) {
+            return $database->valueToSQL($value);
+        }, $this->_getIdentifyingData());
+
+        return sha1(implode('::', $values));
     }
 
 
