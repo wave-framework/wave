@@ -5,6 +5,7 @@ namespace Wave;
 use Wave\Http\Exception\NotFoundException;
 use Wave\Http\Request;
 use Wave\Http\Response;
+use Wave\Router\Action;
 use Wave\Router\Node;
 use Wave\Router\RoutingException;
 
@@ -56,6 +57,21 @@ class Router {
 
     public static function getCacheName($host, $type) {
         return "routes/$host.$type";
+    }
+
+    /**
+     * Return all routes that have a schedule expression
+     *
+     * @return Action[]
+     * @throws RoutingException
+     */
+    public function getScheduledRoutes()
+    {
+        $table = static::getRoutesTableCache($this->profile);
+
+        return array_filter($table, function (Action $action){
+            return $action->hasSchedule();
+        });
     }
 
     public static function getRoutesTreeCache($profile) {
