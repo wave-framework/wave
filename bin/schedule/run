@@ -10,10 +10,9 @@ $router = \Wave\Router::init();
 $scheduled_routes = $router->getScheduledRoutes();
 
 foreach ($scheduled_routes as $action) {
-    $tz = $action->getScheduleTimezone() ?? date_default_timezone_get();
     $expression = new \Cron\CronExpression($action->getSchedule());
     if ($expression->isDue('now', $action->getScheduleTimezone())) {
-        printf('Running %s', $action->getAction());
-        $response = Controller::invoke($action, new Request('schedule://x'));
+        printf("Running %s\n", $action->getAction());
+        $response = Controller::invoke($action, new Request('schedule://x-wave'));
     }
 }
