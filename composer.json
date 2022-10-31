@@ -29,7 +29,8 @@
     "require": {
         "php": ">=7.4",
         "twig/twig": "1.*",
-        "monolog/monolog": "1.*"
+        "monolog/monolog": "1.*",
+        "dragonmantank/cron-expression": "^3.3"
     },
 
     "require-dev": {

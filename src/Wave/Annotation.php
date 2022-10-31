@@ -2,26 +2,35 @@
 
 namespace Wave;
 
+use Wave\Annotation\BaseRoute;
+use Wave\Annotation\BaseURL;
 use Wave\Annotation\InvalidAnnotationException;
+use Wave\Annotation\RequiresLevel;
+use Wave\Annotation\RespondsWith;
+use Wave\Annotation\Route;
+use Wave\Annotation\Schedule;
+use Wave\Annotation\Validate;
+use Wave\DB\Model;
 
 class Annotation {
 
     const FOR_CLASS = 'class';
 
-    const CLASS_CONTROLLER = '\\Wave\\Controller';
-    const CLASS_MODEL = '\\Wave\\Model';
+    const CLASS_CONTROLLER = Controller::class;
+    const CLASS_MODEL = Model::class;
 
     protected $key;
     protected $value;
     protected $from_class;
 
     protected static $handlers = array(
-        'baseroute' => '\\Wave\\Annotation\\BaseRoute',
-        'baseurl' => '\\Wave\\Annotation\\BaseURL',
-        'requireslevel' => '\\Wave\\Annotation\\RequiresLevel',
-        'respondswith' => '\\Wave\\Annotation\\RespondsWith',
-        'route' => '\\Wave\\Annotation\\Route',
-        'validate' => '\\Wave\\Annotation\\Validate',
+        'baseroute' => BaseRoute::class,
+        'baseurl' => BaseURL::class,
+        'requireslevel' => RequiresLevel::class,
+        'respondswith' => RespondsWith::class,
+        'route' => Route::class,
+        'validate' => Validate::class,
+        'schedule' => Schedule::class,
     );
 
     public static function factory($key, $value, $from_class = null){

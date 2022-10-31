@@ -1,0 +1,23 @@
+#!/usr/bin/env php
+<?php
+require_once dirname(__FILE__) . '/../cli-tools.php';
+
+$router = \Wave\Router::init();
+$scheduled_routes = $router->getScheduledRoutes();
+
+$format = "| %-50s | %-28s | %-17s | %-33s |";
+$header = sprintf($format, 'Action', 'Schedule', 'Timezone', 'Next Run');
+$break = str_repeat('-', strlen($header));
+
+print "$break\n";
+print "$header\n";
+print "$break\n";
+
+foreach ($scheduled_routes as $action) {
+    $expression = new \Cron\CronExpression($action->getSchedule());
+    $next_run = $expression->getNextRunDate('now', 0, false, $action->getScheduleTimezone());
+    printf($format, $action->getAction(), $action->getSchedule(), $next_run->getTimezone()->getName(), $next_run->format('r'));
+    print "\n";
+}
+
+print "$break\n";

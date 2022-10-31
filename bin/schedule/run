@@ -1,0 +1,18 @@
+#!/usr/bin/env php
+<?php
+
+use Wave\Controller;
+use Wave\Http\Request;
+
+require_once dirname(__FILE__) . '/../cli-tools.php';
+
+$router = \Wave\Router::init();
+$scheduled_routes = $router->getScheduledRoutes();
+
+foreach ($scheduled_routes as $action) {
+    $expression = new \Cron\CronExpression($action->getSchedule());
+    if ($expression->isDue('now', $action->getScheduleTimezone())) {
+        printf("Running %s\n", $action->getAction());
+        $response = Controller::invoke($action, new Request('schedule://x-wave'));
+    }
+}

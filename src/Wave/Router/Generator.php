@@ -39,8 +39,9 @@ class Generator {
                 $route = clone $base_route; // copy from the controller route
 
                 if($method['visibility'] == Wave\Reflector::VISIBILITY_PUBLIC) {
-                    foreach($method['annotations'] as $annotation)
+                    foreach($method['annotations'] as $annotation){
                         $route->addAnnotation($annotation);
+                    }
 
                     foreach($method['parameters'] as $parameter) {
                         /** @var \ReflectionParameter $parameter */
@@ -52,7 +53,7 @@ class Generator {
 
                 $route->setAction($controller['class']['name'] . '.' . $method['name']);
 
-                if($route->hasRoutes()) {
+                if($route->hasRoutes() || $route->hasSchedule()) {
                     if(isset($compiled_routes[$base_route->getProfile()][$route->getAction()])) {
                         throw new \LogicException(sprintf("Action %s is declared twice", $route->getAction()));
                     }
