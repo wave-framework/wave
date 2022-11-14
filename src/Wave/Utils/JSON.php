@@ -4,6 +4,7 @@ namespace Wave\Utils;
 
 use ArrayObject;
 use DateTime;
+use DateTimeInterface;
 use Wave\DB\Model;
 
 class JSON {
@@ -13,7 +14,7 @@ class JSON {
     }
 
     public static function arrayify($data) {
-        if($data instanceof DateTime) {
+        if($data instanceof DateTimeInterface) {
             /*
              * DateTime::ISO8601 isn't actually iso-8601
              * http://php.net/manual/en/class.datetime.php#datetime.constants.iso8601
