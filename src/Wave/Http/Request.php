@@ -409,7 +409,7 @@ class Request {
      * @return string base path
      */
     protected function prepareBasePath() {
-        $filename = basename($this->server->get('SCRIPT_FILENAME'));
+        $filename = basename($this->server->get('SCRIPT_FILENAME', ''));
         $baseUrl = $this->getBaseUrl();
         if(empty($baseUrl)) {
             return '';
@@ -476,12 +476,12 @@ class Request {
      * @return string
      */
     protected function prepareBaseUrl() {
-        $filename = basename($this->server->get('SCRIPT_FILENAME'));
+        $filename = basename($this->server->get('SCRIPT_FILENAME', ''));
 
-        if(basename($this->server->get('SCRIPT_NAME')) === $filename) {
-            $baseUrl = $this->server->get('SCRIPT_NAME');
-        } elseif(basename($this->server->get('PHP_SELF')) === $filename) {
-            $baseUrl = $this->server->get('PHP_SELF');
+        if(basename($this->server->get('SCRIPT_NAME', '')) === $filename) {
+            $baseUrl = $this->server->get('SCRIPT_NAME', '');
+        } elseif(basename($this->server->get('PHP_SELF', '')) === $filename) {
+            $baseUrl = $this->server->get('PHP_SELF', '');
         } else {
             // Backtrack up the script_filename to find the portion matching
             // php_self
@@ -500,7 +500,7 @@ class Request {
         }
 
         // Does the baseUrl have anything in common with the request_uri?
-        $requestUri = $this->server->get('REQUEST_URI');
+        $requestUri = $this->server->get('REQUEST_URI', '');
 
         if($baseUrl && false !== $prefix = $this->getUrlencodedPrefix($requestUri, $baseUrl)) {
             // full $baseUrl matches
