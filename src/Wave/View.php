@@ -5,6 +5,8 @@ namespace Wave;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use Twig\Loader\FilesystemLoader;
+use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 class View {
 
@@ -30,18 +32,18 @@ class View {
         $this->twig = new View\TwigEnvironment($loader, $conf);
         $this->twig->addExtension(new View\TwigExtension());
         foreach(self::$_filters as $name => $action)
-            $this->twig->addFilter($name, $action);
+            $this->twig->addFilter(new TwigFilter($name, $action));
         $this->twig->registerUndefinedFilterCallback(
             function ($name) {
                 if(function_exists($name)) {
-                    return new \Twig_Filter_Function($name);
+                    return new TwigFunction($name);
                 }
 
                 return false;
             }
         );
-        $this->twig->addFilter(new \Twig_SimpleFilter('last','\\Wave\\Utils::array_peek'));
-        $this->twig->addFilter(new \Twig_SimpleFilter('short',
+        $this->twig->addFilter(new TwigFilter('last','\\Wave\\Utils::array_peek'));
+        $this->twig->addFilter(new TwigFilter('short',
                 '\\Wave\\Utils::shorten', array(
                     'pre_escape' => 'html',
                     'is_safe' => array('html')
@@ -82,7 +84,7 @@ class View {
         // locate the template file
         $template .= Config::get('wave')->view->extension;
         Hook::triggerAction('view.before_load_template', array(&$this, &$template));
-        $loaded_template = $this->twig->loadTemplate($template);
+        $loaded_template = $this->twig->load($template);
         Hook::triggerAction('view.before_render', array(&$this, &$data));
         $html = $loaded_template->render($data);
         Hook::triggerAction('view.after_render', array(&$this, &$html));
@@ -139,7 +141,7 @@ class View {
         foreach($iterator as $template) {
             $filename = $template->getFilename();
             if(pathinfo($filename, PATHINFO_EXTENSION) != 'phtml') continue;
-            $self->twig->loadTemplate(substr($template, $l));
+            $self->twig->load(substr($template, $l));
         }
 
     }
