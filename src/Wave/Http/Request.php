@@ -199,7 +199,11 @@ class Request {
         if(null === $default) {
             $default = PHP_SAPI === 'cli' ? 'cli' : Config::get('wave')->response->default_format;
         }
-        $path = pathinfo($url);
+
+        $path = [];
+        if (!empty($url)) {
+            $path = pathinfo($url);
+        }
 
         return isset($path['extension']) ? $path['extension'] : $default;
     }
