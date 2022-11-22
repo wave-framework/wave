@@ -4,9 +4,11 @@ namespace Wave\View;
 
 use Twig\Extension;
 
-class TwigExtension extends Extension\AbstractExtension {
+class TwigExtension extends Extension\AbstractExtension
+{
 
-    public function getTokenParsers() {
+    public function getTokenParsers()
+    {
         return array(
             new Tag\Register(),
             new Tag\Output(),
@@ -14,7 +16,8 @@ class TwigExtension extends Extension\AbstractExtension {
         );
     }
 
-    public function getName() {
+    public function getName()
+    {
         return 'wave_view';
     }
 

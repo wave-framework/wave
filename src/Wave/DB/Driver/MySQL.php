@@ -12,19 +12,21 @@ use Wave;
 use Wave\Config\Row;
 use Wave\DB;
 
-class MySQL extends AbstractDriver implements DriverInterface {
+class MySQL extends AbstractDriver implements DriverInterface
+{
 
     //Selecting from the information schema tables is slow as they are built on select so need to cache the whole set and manipulate in php.
     static $_column_cache;
     static $_relation_cache;
 
-    public static function constructDSN(Row $config) {
+    public static function constructDSN(Row $config)
+    {
 
         $dsn = "mysql:host={$config->host};dbname={$config->database};port={$config->port}";
 
         $optional_properties = ['charset'];
-        foreach($optional_properties as $prop){
-            if(isset($config->{$prop}))
+        foreach ($optional_properties as $prop) {
+            if (isset($config->{$prop}))
                 $dsn .= ";{$prop}={$config->$prop}";
 
         }
@@ -32,15 +34,18 @@ class MySQL extends AbstractDriver implements DriverInterface {
         return $dsn;
     }
 
-    public static function getDriverName() {
+    public static function getDriverName()
+    {
         return 'mysql';
     }
 
-    public static function getEscapeCharacter() {
+    public static function getEscapeCharacter()
+    {
         return '`';
     }
 
-    public static function getTables(DB $database) {
+    public static function getTables(DB $database)
+    {
 
         $table_sql = 'SELECT TABLE_NAME, ENGINE, TABLE_COLLATION, TABLE_COMMENT ' .
             'FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = ?;';
@@ -50,7 +55,7 @@ class MySQL extends AbstractDriver implements DriverInterface {
         $table_stmt->execute(array($database->getName()));
 
         $tables = array();
-        while($table_row = $table_stmt->fetch()) {
+        while ($table_row = $table_stmt->fetch()) {
 
             $table = new DB\Table(
                 $database,
@@ -68,12 +73,13 @@ class MySQL extends AbstractDriver implements DriverInterface {
     }
 
 
-    public static function getColumns(DB\Table $table) {
+    public static function getColumns(DB\Table $table)
+    {
 
         //using namespace for the table identifier as there might be same name DBs on different servers
         $namespace = $table->getDatabase()->getNamespace();
 
-        if(!isset(self::$_column_cache[$namespace])) {
+        if (!isset(self::$_column_cache[$namespace])) {
 
             self::$_column_cache[$namespace] = array();
 
@@ -83,15 +89,15 @@ class MySQL extends AbstractDriver implements DriverInterface {
             $column_stmt = $table->getDatabase()->getConnection()->prepare($column_sql);
             $column_stmt->execute(array($table->getDatabase()->getName()));
 
-            while($column_row = $column_stmt->fetch())
+            while ($column_row = $column_stmt->fetch())
                 self::$_column_cache[$namespace][$column_row['TABLE_NAME']][] = $column_row;
 
         }
 
         $columns = array();
         //may not be any columns
-        if(isset(self::$_column_cache[$namespace][$table->getName()])) {
-            foreach(self::$_column_cache[$namespace][$table->getName()] as $cached_row) {
+        if (isset(self::$_column_cache[$namespace][$table->getName()])) {
+            foreach (self::$_column_cache[$namespace][$table->getName()] as $cached_row) {
 
                 $column = new DB\Column(
                     $table,
@@ -113,7 +119,8 @@ class MySQL extends AbstractDriver implements DriverInterface {
 
     }
 
-    public static function getRelations(DB\Table $table) {
+    public static function getRelations(DB\Table $table)
+    {
 
         //using namespace for the table identifier as there might be same name DBs on different servers
         $namespace = $table->getDatabase()->getNamespace();
@@ -122,34 +129,34 @@ class MySQL extends AbstractDriver implements DriverInterface {
 
         $relations = array();
         //may not be any constraints
-        if($relation_cache !== null) {
-            foreach($relation_cache as $cached_row) {
+        if ($relation_cache !== null) {
+            foreach ($relation_cache as $cached_row) {
 
                 //--- check both ends of the relation can be built.
                 $local_db = DB::getByDatabaseName($cached_row['TABLE_SCHEMA']);
-                if($local_db === null) {
+                if ($local_db === null) {
                     Wave\Log::write('mysql_driver', sprintf('Database [%s] is not referenced in the configuration - skipping building relations.', $cached_row['TABLE_SCHEMA']), Wave\Log::WARNING);
                     continue;
                 }
                 $local_column = $local_db->getColumn($cached_row['TABLE_NAME'], $cached_row['COLUMN_NAME']);
 
                 //skip if there's no referenced schema.  This is because primary keys will be in the relation cache (no ref schema)
-                if($cached_row['REFERENCED_TABLE_SCHEMA'] === null)
+                if ($cached_row['REFERENCED_TABLE_SCHEMA'] === null)
                     continue;
 
                 $referenced_db = DB::getByDatabaseName($cached_row['REFERENCED_TABLE_SCHEMA']);
-                if($referenced_db === null) {
+                if ($referenced_db === null) {
                     Wave\Log::write('mysql_driver', sprintf('Database [%s] is not referenced in the configuration - skipping building relations.', $cached_row['REFERENCED_TABLE_SCHEMA']), Wave\Log::WARNING);
                     continue;
                 }
                 $referenced_column = $referenced_db->getColumn($cached_row['REFERENCED_TABLE_NAME'], $cached_row['REFERENCED_COLUMN_NAME']);
-                if($referenced_column === null) {
+                if ($referenced_column === null) {
                     Wave\Log::write('mysql_driver', sprintf('Column [%s] is not referenced in the configuration - skipping building relations.', $cached_row['REFERENCED_COLUMN_NAME']), Wave\Log::WARNING);
                     continue;
                 }
                 //-----
 
-                if($cached_row['REFERENCED_TABLE_SCHEMA'] != $cached_row['TABLE_SCHEMA']) {
+                if ($cached_row['REFERENCED_TABLE_SCHEMA'] != $cached_row['TABLE_SCHEMA']) {
                     //print_r($cached_row);
                     //exit;
                 }
@@ -157,7 +164,7 @@ class MySQL extends AbstractDriver implements DriverInterface {
 
                 $relation = DB\Relation::create($local_column, $referenced_column, $cached_row['CONSTRAINT_NAME'], isset($cached_row['REVERSE']));
 
-                if($relation !== null)
+                if ($relation !== null)
                     $relations[$relation->getIdentifyingName()] = $relation;
                 else
                     Wave\Log::write('mysql_driver', sprintf('[%s.%s.%s] has duplicate relations.', $cached_row['TABLE_SCHEMA'], $cached_row['TABLE_NAME'], $cached_row['COLUMN_NAME']), Wave\Log::WARNING);
@@ -169,21 +176,22 @@ class MySQL extends AbstractDriver implements DriverInterface {
 
     }
 
-    public static function getConstraints(DB\Table $table) {
+    public static function getConstraints(DB\Table $table)
+    {
 
         $constraints = array();
 
-        if(null === $relation_cache = self::_getRelationCache($table))
+        if (null === $relation_cache = self::_getRelationCache($table))
             return $constraints;
 
-        foreach($relation_cache as $relation) {
+        foreach ($relation_cache as $relation) {
 
             $column = $table->getDatabase()->getColumn($relation['TABLE_NAME'], $relation['COLUMN_NAME']);
 
-            if($column === null)
+            if ($column === null)
                 continue;
 
-            if(!isset($constraints[$relation['CONSTRAINT_NAME']])) {
+            if (!isset($constraints[$relation['CONSTRAINT_NAME']])) {
                 $constraints[$relation['CONSTRAINT_NAME']] = new DB\Constraint($column, self::translateSQLConstraintType($relation['CONSTRAINT_TYPE']), $relation['CONSTRAINT_NAME']);
             } else {
                 $idx = $constraints[$relation['CONSTRAINT_NAME']];
@@ -193,11 +201,12 @@ class MySQL extends AbstractDriver implements DriverInterface {
         return $constraints;
     }
 
-    private static function _getRelationCache(DB\Table $table) {
+    private static function _getRelationCache(DB\Table $table)
+    {
 
         $namespace = $table->getDatabase()->getNamespace();
 
-        if(!isset(self::$_relation_cache[$namespace])) {
+        if (!isset(self::$_relation_cache[$namespace])) {
 
             self::$_relation_cache[$namespace] = array();
 
@@ -210,7 +219,7 @@ class MySQL extends AbstractDriver implements DriverInterface {
             $relations_stmt = $table->getDatabase()->getConnection()->prepare($relations_sql);
             $relations_stmt->execute(array($table->getDatabase()->getName(), $table->getDatabase()->getName()));
 
-            while($relations_row = $relations_stmt->fetch()) {
+            while ($relations_row = $relations_stmt->fetch()) {
                 self::$_relation_cache[$namespace][$relations_row['TABLE_NAME']][] = $relations_row;
                 //Relations added for both directions, flag the one that's reversed.
                 $relations_row['REVERSE'] = true;
@@ -222,9 +231,10 @@ class MySQL extends AbstractDriver implements DriverInterface {
 
     }
 
-    public static function translateSQLDataType($type) {
+    public static function translateSQLDataType($type)
+    {
 
-        switch($type) {
+        switch ($type) {
             case 'varchar':
                 return DB\Column::TYPE_STRING;
 
@@ -254,9 +264,10 @@ class MySQL extends AbstractDriver implements DriverInterface {
     }
 
 
-    public static function translateSQLConstraintType($type) {
+    public static function translateSQLConstraintType($type)
+    {
 
-        switch($type) {
+        switch ($type) {
             case 'PRIMARY KEY':
                 return DB\Constraint::TYPE_PRIMARY;
             case 'UNIQUE':
@@ -269,9 +280,10 @@ class MySQL extends AbstractDriver implements DriverInterface {
     }
 
 
-    public static function translateSQLNullable($nullable) {
+    public static function translateSQLNullable($nullable)
+    {
 
-        switch($nullable) {
+        switch ($nullable) {
             case 'NO':
                 return false;
             case 'YES':
@@ -279,18 +291,19 @@ class MySQL extends AbstractDriver implements DriverInterface {
         }
     }
 
-    public static function translateSQLDefault($row) {
+    public static function translateSQLDefault($row)
+    {
 
         $value = $row['COLUMN_DEFAULT'];
         $type = self::translateSQLDataType($row['DATA_TYPE']);
 
-        if(strtolower($value) === 'null' || self::translateSQLNullable($row['IS_NULLABLE'])) {
+        if (strtolower($value) === 'null' || self::translateSQLNullable($row['IS_NULLABLE'])) {
             $value = null;
-        } else if(DB\Column::TYPE_FLOAT == $type) {
-            $value = (float) $value;
-        } else if(DB\Column::TYPE_INT === $type) {
-            $value = (int) $value;
-        } elseif(DB\Column::TYPE_BOOL === $type) {
+        } else if (DB\Column::TYPE_FLOAT == $type) {
+            $value = (float)$value;
+        } else if (DB\Column::TYPE_INT === $type) {
+            $value = (int)$value;
+        } elseif (DB\Column::TYPE_BOOL === $type) {
             $value = !!$value;
         }
 

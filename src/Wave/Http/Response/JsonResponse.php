@@ -6,7 +6,8 @@ use Wave\Http\Request;
 use Wave\Http\Response;
 use Wave\Utils\JSON;
 
-class JsonResponse extends Response {
+class JsonResponse extends Response
+{
 
     protected static $acceptable_types = array(
         'application/json',
@@ -24,14 +25,15 @@ class JsonResponse extends Response {
 
     protected $jsonp_callback = null;
 
-    public function prepare(Request $request) {
+    public function prepare(Request $request)
+    {
         parent::prepare($request);
 
-        if($request->query->has('jsonp_callback')) {
+        if ($request->query->has('jsonp_callback')) {
             $this->jsonp_callback = $request->query->get('jsonp_callback');
         }
 
-        if(!$this->headers->has('Content-Type')) {
+        if (!$this->headers->has('Content-Type')) {
             $content_types = array_map('trim', explode(',', $request->headers->get('accept', static::$default_type, true)));
             $allowed = array_intersect($content_types, static::$acceptable_types);
             $content_type = empty($allowed) ? static::$default_type : array_shift($allowed);
@@ -46,8 +48,9 @@ class JsonResponse extends Response {
         return $this;
     }
 
-    public function setContent($data, $convert = true) {
-        if($convert) {
+    public function setContent($data, $convert = true)
+    {
+        if ($convert) {
             $this->data = $data;
             $data = JSON::encode($data);
         }
@@ -55,9 +58,10 @@ class JsonResponse extends Response {
         parent::setContent($data);
     }
 
-    public function sendContent() {
+    public function sendContent()
+    {
 
-        if($this->jsonp_callback !== null) {
+        if ($this->jsonp_callback !== null) {
             echo "{$this->jsonp_callback}($this->content);";
         } else parent::sendContent();
 
@@ -66,7 +70,8 @@ class JsonResponse extends Response {
     /**
      * @return mixed
      */
-    public function getData() {
+    public function getData()
+    {
         return $this->data;
     }
 

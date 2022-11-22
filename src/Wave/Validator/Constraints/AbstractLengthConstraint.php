@@ -5,7 +5,8 @@ namespace Wave\Validator\Constraints;
 use DateTime;
 use Wave\Validator;
 
-abstract class AbstractLengthConstraint extends AbstractConstraint {
+abstract class AbstractLengthConstraint extends AbstractConstraint
+{
 
     const COMPARATOR_ARRAY = 'array';
     const COMPARATOR_INT = 'int';
@@ -17,10 +18,11 @@ abstract class AbstractLengthConstraint extends AbstractConstraint {
     protected $count = null;
     protected $message = null;
 
-    public function __construct($property, $arguments, Validator $validator) {
+    public function __construct($property, $arguments, Validator $validator)
+    {
         parent::__construct($property, $arguments, $validator);
 
-        if(is_array($arguments)) {
+        if (is_array($arguments)) {
             $this->limit = isset($arguments['limit'])
                 ? $arguments['limit']
                 : null;
@@ -40,18 +42,18 @@ abstract class AbstractLengthConstraint extends AbstractConstraint {
             $this->limit = $arguments;
         }
 
-        if($this->comparator === null) {
-            if(is_array($this->data))
+        if ($this->comparator === null) {
+            if (is_array($this->data))
                 $this->count = self::COMPARATOR_ARRAY;
-            elseif(is_numeric($this->data))
+            elseif (is_numeric($this->data))
                 $this->comparator = self::COMPARATOR_INT;
-            elseif(is_string($this->data))
+            elseif (is_string($this->data))
                 $this->comparator = self::COMPARATOR_STRING;
-            elseif($this->data instanceof DateTime)
+            elseif ($this->data instanceof DateTime)
                 $this->comparator = self::COMPARATOR_DATETIME;
         }
 
-        switch($this->comparator) {
+        switch ($this->comparator) {
             case self::COMPARATOR_ARRAY:
                 $this->count = count($this->data);
                 break;
@@ -62,7 +64,7 @@ abstract class AbstractLengthConstraint extends AbstractConstraint {
                 $this->count = $this->data;
                 break;
             default:
-                $this->count = (double) $this->data;
+                $this->count = (double)$this->data;
         }
     }
 

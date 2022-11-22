@@ -2,7 +2,8 @@
 
 namespace Wave\Validator\Constraints;
 
-class InstanceOfConstraint extends AbstractConstraint {
+class InstanceOfConstraint extends AbstractConstraint
+{
 
 
     /**
@@ -10,11 +11,13 @@ class InstanceOfConstraint extends AbstractConstraint {
      *
      * @return mixed
      */
-    public function evaluate() {
+    public function evaluate()
+    {
         return $this->data instanceof $this->arguments;
     }
 
-    protected function getViolationMessage($context = 'This value') {
+    protected function getViolationMessage($context = 'This value')
+    {
         return sprintf("%s is not a valid %s object", $context, $this->arguments);
     }
 

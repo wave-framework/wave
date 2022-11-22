@@ -2,10 +2,12 @@
 
 namespace Wave\Validator\Datatypes;
 
-class ArrayDatatype extends AbstractDatatype {
+class ArrayDatatype extends AbstractDatatype
+{
 
 
-    public function __invoke() {
+    public function __invoke()
+    {
         return is_array($this->input);
 
     }
@@ -14,7 +16,8 @@ class ArrayDatatype extends AbstractDatatype {
     /**
      * @return string a type to use in the violation message
      */
-    public function getType() {
+    public function getType()
+    {
         return 'array';
     }
 }

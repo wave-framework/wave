@@ -2,14 +2,16 @@
 
 namespace Wave\Validator\Datatypes;
 
-abstract class AbstractDatatype {
+abstract class AbstractDatatype
+{
 
     /**
      * @var $input mixed
      */
     protected $input;
 
-    public function __construct($input) {
+    public function __construct($input)
+    {
         $this->input = $input;
     }
 

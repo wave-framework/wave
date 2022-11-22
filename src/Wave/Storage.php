@@ -2,7 +2,8 @@
 
 namespace Wave;
 
-abstract class Storage {
+abstract class Storage
+{
 
 
 }

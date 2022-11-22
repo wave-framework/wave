@@ -11,7 +11,8 @@ namespace Wave\DB;
 use Wave;
 use Wave\DB;
 
-class Model implements \JsonSerializable {
+class Model implements \JsonSerializable
+{
 
     /** @var string */
     protected static $_database;
@@ -83,17 +84,18 @@ class Model implements \JsonSerializable {
     protected $_parent_object = null;
 
 
-    public function __construct($data = null, $is_loaded = false) {
+    public function __construct($data = null, $is_loaded = false)
+    {
 
         $connection = DB::get(self::_getDatabaseNamespace());
 
-        foreach(self::_getFields() as $field) {
+        foreach (self::_getFields() as $field) {
             $this->_data[$field] = $data !== null && array_key_exists($field, $data)
                 ? $connection->valueFromSQL($data[$field], self::_getField($field))
                 : self::getFieldDefault($field);
         }
 
-        if($is_loaded)
+        if ($is_loaded)
             $this->_setLoaded();
 
     }
@@ -106,17 +108,17 @@ class Model implements \JsonSerializable {
      * @param \Wave\Validator\Result|Array $data
      * @param bool $use_setters
      */
-    public function updateFromArray($data, $use_setters = true){
+    public function updateFromArray($data, $use_setters = true)
+    {
 
-        foreach(self::_getFields() as $field) {
-            if(array_key_exists($field, $data)){
+        foreach (self::_getFields() as $field) {
+            if (array_key_exists($field, $data)) {
                 // Handle the case where we get a model instance back from the validator instead of [object_name]_id
                 $value = ($data[$field] instanceof self) ? $data[$field]->id : $data[$field];
 
-                if($use_setters) {
+                if ($use_setters) {
                     $this->$field = $value;
-                }
-                else {
+                } else {
                     $this->_data[$field] = $value;
                 }
             }
@@ -132,10 +134,11 @@ class Model implements \JsonSerializable {
      *
      * @return null|self
      */
-    public static function createFromArray(array $data) {
+    public static function createFromArray(array $data)
+    {
 
-        foreach(static::_getIdentifyingColumns() as $required_column) {
-            if(!isset($data[$required_column]) || $data[$required_column] === '') {
+        foreach (static::_getIdentifyingColumns() as $required_column) {
+            if (!isset($data[$required_column]) || $data[$required_column] === '') {
                 return null;
             }
         }
@@ -151,7 +154,8 @@ class Model implements \JsonSerializable {
      *
      * @return mixed
      */
-    public static function getFieldDefault($field_name) {
+    public static function getFieldDefault($field_name)
+    {
         $field = self::_getField($field_name);
         return DB::get(self::_getDatabaseNamespace())->valueFromSQL($field['default'], $field);
     }
@@ -162,11 +166,12 @@ class Model implements \JsonSerializable {
      *
      * @return Model
      */
-    public static function loadByID() {
+    public static function loadByID()
+    {
 
         $stmt = DB::get(self::_getDatabaseNamespace())->from(get_called_class());
 
-        foreach(self::_getIdentifyingColumns() as $index => $column)
+        foreach (self::_getIdentifyingColumns() as $index => $column)
             $stmt->where("$column = ?", func_get_arg($index));
 
         return $stmt->fetchRow();
@@ -182,18 +187,19 @@ class Model implements \JsonSerializable {
      * @return Model[]
      * @throws Wave\Exception
      */
-    public static function loadAllByPage($results_per_page = null, $page_number = 0, &$number_of_results = 0) {
+    public static function loadAllByPage($results_per_page = null, $page_number = 0, &$number_of_results = 0)
+    {
 
         $stmt = DB::get(self::_getDatabaseNamespace())
             ->from(get_called_class());
 
-        if(isset($results_per_page)) {
+        if (isset($results_per_page)) {
             $stmt = $stmt->paginate($results_per_page * $page_number, $results_per_page * ($page_number + 1));
         }
 
         $results = $stmt->fetchAll();
 
-        if(isset($results_per_page)) {
+        if (isset($results_per_page)) {
             $number_of_results = $stmt->fetchRowCount();
         }
 
@@ -208,7 +214,8 @@ class Model implements \JsonSerializable {
      *
      * @return bool
      */
-    public function save($save_relations = true) {
+    public function save($save_relations = true)
+    {
         return DB::save($this, $save_relations);
     }
 
@@ -217,13 +224,15 @@ class Model implements \JsonSerializable {
      *
      * @return bool
      */
-    public function delete() {
+    public function delete()
+    {
         return DB::delete($this);
     }
 
-    public function _equals(Model $object) {
+    public function _equals(Model $object)
+    {
         return (get_class($this) === get_class($object)) &&
-        array_diff_assoc($this->_getIdentifyingData(), $object->_getIdentifyingData());
+            array_diff_assoc($this->_getIdentifyingData(), $object->_getIdentifyingData());
     }
 
     /**
@@ -233,9 +242,10 @@ class Model implements \JsonSerializable {
      * @param $alias
      * @param $resolved_class
      */
-    public function addJoinedObject(Model &$object, $alias, $resolved_class) {
+    public function addJoinedObject(Model &$object, $alias, $resolved_class)
+    {
         $this->_joined_aliases[$resolved_class][] = $alias;
-        if(!isset($this->_joined_objects[$alias]))
+        if (!isset($this->_joined_objects[$alias]))
             $this->_joined_objects[$alias] = array();
 
         $this->_joined_objects[$alias][] = $object;
@@ -250,38 +260,43 @@ class Model implements \JsonSerializable {
      *
      * @return mixed
      */
-    public function getid() {
+    public function getid()
+    {
         return $this->_data[self::_getTableName() . '_id'];
     }
 
     /**
      * @return array
      */
-    public function _getData() {
+    public function _getData()
+    {
         return $this->_data;
     }
 
     /**
      * @return array
      */
-    public function _getDirty() {
+    public function _getDirty()
+    {
         return array_intersect_key($this->_data, $this->_dirty);
     }
 
     /**
      * @return string
      */
-    public static function _getTableName() {
+    public static function _getTableName()
+    {
         return static::$_table_name;
     }
 
     /**
      * @return string
      */
-    public static function _getSchemaName() {
+    public static function _getSchemaName()
+    {
 
         $namespace = static::_getDatabaseNamespace();
-        if(!isset(static::$_schema_names[$namespace])) {
+        if (!isset(static::$_schema_names[$namespace])) {
             static::$_schema_names[$namespace] = DB::get($namespace)->getSchema();
         }
 
@@ -291,7 +306,8 @@ class Model implements \JsonSerializable {
     /**
      * @return string
      */
-    public static function _getDatabaseNamespace() {
+    public static function _getDatabaseNamespace()
+    {
         return static::$_database;
     }
 
@@ -300,7 +316,8 @@ class Model implements \JsonSerializable {
      *
      * @return array
      */
-    public static function _getFields($field_data = false) {
+    public static function _getFields($field_data = false)
+    {
         return $field_data ? static::$_fields : array_keys(static::$_fields);
     }
 
@@ -309,14 +326,16 @@ class Model implements \JsonSerializable {
      *
      * @return mixed
      */
-    public static function _getField($field_name) {
+    public static function _getField($field_name)
+    {
         return static::$_fields[$field_name];
     }
 
     /**
      * @return mixed
      */
-    public static function _getRelations() {
+    public static function _getRelations()
+    {
         return static::$_relations;
     }
 
@@ -329,9 +348,10 @@ class Model implements \JsonSerializable {
      * @return mixed
      * @throws \Wave\Exception
      */
-    public static function _getRelation($relation_name) {
+    public static function _getRelation($relation_name)
+    {
 
-        if(isset(static::$_relations[$relation_name])){
+        if (isset(static::$_relations[$relation_name])) {
             return static::$_relations[$relation_name];
         }
 
@@ -344,9 +364,10 @@ class Model implements \JsonSerializable {
      * @param $class_name
      * @return null|string
      */
-    public static function _findRelationName($class_name){
-        foreach(static::$_relations as $rel_name => $relation){
-            if($relation['related_class'] === $class_name){
+    public static function _findRelationName($class_name)
+    {
+        foreach (static::$_relations as $rel_name => $relation) {
+            if ($relation['related_class'] === $class_name) {
                 return $rel_name;
             }
         }
@@ -356,7 +377,8 @@ class Model implements \JsonSerializable {
     /**
      * @return array
      */
-    public function _getJoinedObjects() {
+    public function _getJoinedObjects()
+    {
         return $this->_joined_objects;
     }
 
@@ -367,10 +389,11 @@ class Model implements \JsonSerializable {
      *
      * @return array
      */
-    public function _getJoinedObjectsForClass($class) {
+    public function _getJoinedObjectsForClass($class)
+    {
         $objects = array();
-        if(isset($this->_joined_aliases[$class])) {
-            foreach($this->_joined_aliases[$class] as $alias) {
+        if (isset($this->_joined_aliases[$class])) {
+            foreach ($this->_joined_aliases[$class] as $alias) {
                 $objects = array_merge($objects, $this->_joined_objects[$alias]);
             }
         }
@@ -385,7 +408,8 @@ class Model implements \JsonSerializable {
      *
      * @return bool
      */
-    public function _setLoaded($loaded = true) {
+    public function _setLoaded($loaded = true)
+    {
         //at this point it won't be dirty.
         $this->_dirty = array();
         return $this->_loaded = $loaded;
@@ -394,23 +418,26 @@ class Model implements \JsonSerializable {
     /**
      * @return bool
      */
-    public function _isLoaded() {
+    public function _isLoaded()
+    {
         return $this->_loaded;
     }
 
     /**
      * @return bool
      */
-    public function _isDirty() {
+    public function _isDirty()
+    {
         return count($this->_dirty) !== 0;
     }
 
     /**
      * @return null|array
      */
-    public static function _getPrimaryKey() {
-        foreach(static::$_constraints as $constraint)
-            if($constraint['type'] === Constraint::TYPE_PRIMARY)
+    public static function _getPrimaryKey()
+    {
+        foreach (static::$_constraints as $constraint)
+            if ($constraint['type'] === Constraint::TYPE_PRIMARY)
                 return $constraint['fields'];
 
         return null;
@@ -421,7 +448,8 @@ class Model implements \JsonSerializable {
      *
      * @return array
      */
-    public function _getIdentifyingData() {
+    public function _getIdentifyingData()
+    {
         $columns = self::_getIdentifyingColumns();
         return array_intersect_key($this->_data, array_flip($columns));
     }
@@ -445,16 +473,17 @@ class Model implements \JsonSerializable {
      *
      * @return array
      */
-    public static function _getIdentifyingColumns() {
+    public static function _getIdentifyingColumns()
+    {
         //first PK
-        foreach(static::$_constraints as $constraint) {
-            if($constraint['type'] === Constraint::TYPE_PRIMARY)
+        foreach (static::$_constraints as $constraint) {
+            if ($constraint['type'] === Constraint::TYPE_PRIMARY)
                 return $constraint['fields'];
-            elseif($constraint['type'] === Constraint::TYPE_UNIQUE)
+            elseif ($constraint['type'] === Constraint::TYPE_UNIQUE)
                 $unique = $constraint['fields'];
         }
         //then unique if no return for primary
-        if(isset($unique))
+        if (isset($unique))
             return $unique;
 
         //then all (if no keys are set for some reason) @todo - throw appropriate error
@@ -465,10 +494,11 @@ class Model implements \JsonSerializable {
     /**
      * Generates a string hash of the object based on 'identifying data' returned from the above methods.
      */
-    public function _getFingerprint(){
+    public function _getFingerprint()
+    {
         $database = DB::get($this->_getDatabaseNamespace());
 
-        $values = array_map(function($value) use ($database) {
+        $values = array_map(function ($value) use ($database) {
             return $database->valueToSQL($value);
         }, $this->_getIdentifyingData());
 
@@ -486,7 +516,7 @@ class Model implements \JsonSerializable {
     public function _toArray(): array
     {
         $data = array();
-        foreach(static::_getFields(false) as $field) {
+        foreach (static::_getFields(false) as $field) {
             $getter = self::_getGetter($field);
             $data[$field] = $this->$getter();
         }
@@ -502,11 +532,12 @@ class Model implements \JsonSerializable {
      *
      * @return mixed
      */
-    public function __set($property, $data) {
+    public function __set($property, $data)
+    {
 
         $setter = self::_getSetter($property);
-        if(method_exists($this, $setter)) {
-            if($this->$property === $data)
+        if (method_exists($this, $setter)) {
+            if ($this->$property === $data)
                 return $data;
 
             return $this->$setter($data);
@@ -523,9 +554,10 @@ class Model implements \JsonSerializable {
      *
      * @return mixed
      */
-    public function __get($property) {
+    public function __get($property)
+    {
         $getter = self::_getGetter($property);
-        if(!method_exists($this, $getter)) {
+        if (!method_exists($this, $getter)) {
             $stack = debug_backtrace(false);
             $stack = array_shift($stack);
             trigger_error('Notice: Undefined property ' . get_called_class() . '::' . $property . ' in ' . $stack['file'] . ' on line ' . $stack['line'] . " (via by Wave\\DB_Model::__get())\n");
@@ -542,21 +574,24 @@ class Model implements \JsonSerializable {
      *
      * @return bool
      */
-    public function __isset($property) {
+    public function __isset($property)
+    {
         return method_exists($this, self::_getGetter($property));
     }
 
-    public function __unset($property){
+    public function __unset($property)
+    {
         $this->__set($property, self::getFieldDefault($property));
     }
 
 
-    public function __clone(){
-        if(null === $pk = $this->_getPrimaryKey()){
+    public function __clone()
+    {
+        if (null === $pk = $this->_getPrimaryKey()) {
             return;
         }
 
-        foreach($pk as $field_name) {
+        foreach ($pk as $field_name) {
             unset($this->$field_name);
         }
         $this->_setLoaded(false);
@@ -569,7 +604,8 @@ class Model implements \JsonSerializable {
      *
      * @return string
      */
-    private static function _getSetter($property) {
+    private static function _getSetter($property)
+    {
         return 'set' . $property;
     }
 
@@ -579,21 +615,24 @@ class Model implements \JsonSerializable {
      *
      * @return string
      */
-    private static function _getGetter($property) {
+    private static function _getGetter($property)
+    {
         return 'get' . $property;
     }
 
     /**
      * @return Model
      */
-    public function _getParentObject() {
+    public function _getParentObject()
+    {
         return $this->_parent_object;
     }
 
     /**
      * @param Model $parent_object
      */
-    public function _setParentObject(Model $parent_object) {
+    public function _setParentObject(Model $parent_object)
+    {
         $this->_parent_object = $parent_object;
     }
 
@@ -605,18 +644,19 @@ class Model implements \JsonSerializable {
      * @param Model $object
      *
      */
-    protected function _setRelationObject($relation_name, Model $object, $create_relation) {
+    protected function _setRelationObject($relation_name, Model $object, $create_relation)
+    {
 
         $this->_data[$relation_name] = $object;
         $object->_setParentObject($this);
 
-        if($object !== null && $create_relation) {
-            if(!$object->_isLoaded())
+        if ($object !== null && $create_relation) {
+            if (!$object->_isLoaded())
                 $object->save();
 
             $relation_data = $this->_getRelation($relation_name);
 
-            foreach($relation_data['local_columns'] as $position => $local_column){
+            foreach ($relation_data['local_columns'] as $position => $local_column) {
                 $setter = self::_getSetter($local_column);
                 $this->$setter($object->{$relation_data['related_columns'][$position]});
             }
@@ -632,26 +672,27 @@ class Model implements \JsonSerializable {
      * @param $create_relation
      * @throws Wave\Exception
      */
-    protected function _addRelationObject($relation_name, Model $object, $create_relation = true, $join_data = array()) {
+    protected function _addRelationObject($relation_name, Model $object, $create_relation = true, $join_data = array())
+    {
 
         $this->_data[$relation_name][] = $object;
 
         $relation_data = $this->_getRelation($relation_name);
 
-        if($object !== null && $create_relation) {
+        if ($object !== null && $create_relation) {
 
-            switch($relation_data['relation_type']) {
+            switch ($relation_data['relation_type']) {
                 case Relation::MANY_TO_MANY:
-                    if(!$object->_isLoaded())
+                    if (!$object->_isLoaded())
                         $object->save();
 
                     $related_class_name = $relation_data['related_class'];
 
                     $rc = new $related_class_name();
-                    foreach($join_data as $key => $value){
+                    foreach ($join_data as $key => $value) {
                         $rc->{$key} = $value;
                     }
-                    foreach($relation_data['target_relation']['local_columns'] as $position => $local_column){
+                    foreach ($relation_data['target_relation']['local_columns'] as $position => $local_column) {
                         $rc->{$local_column} = $object->{$relation_data['target_relation']['related_columns'][$position]};
                     }
 
@@ -659,7 +700,7 @@ class Model implements \JsonSerializable {
                     //Deliberate non-break here so the -many logic flows on with $object reassigned.
                     $object = $rc;
                 case Relation::ONE_TO_MANY:
-                    foreach($relation_data['local_columns'] as $position => $local_column)
+                    foreach ($relation_data['local_columns'] as $position => $local_column)
                         $object->{$relation_data['related_columns'][$position]} = $this->_data[$local_column];
 
                     $object->_setParentObject($this);
@@ -679,40 +720,41 @@ class Model implements \JsonSerializable {
      * @return null
      * @throws Wave\Exception
      */
-    protected function _getRelationObjects($relation_name, $query_transform_callback = null) {
+    protected function _getRelationObjects($relation_name, $query_transform_callback = null)
+    {
 
         $relation_data = $this->_getRelation($relation_name);
 
-        if(!isset($this->_data[$relation_name])) {
+        if (!isset($this->_data[$relation_name])) {
 
             $related_class = $relation_data['related_class'];
             $db = Wave\DB::get($related_class::_getDatabaseNamespace());
             $query = $db->from($related_class, $from_alias);
 
             //Add in all of the related columns
-            foreach($relation_data['local_columns'] as $position => $local_column) {
+            foreach ($relation_data['local_columns'] as $position => $local_column) {
                 //At this point, may as well return as there aren't null-relations
-                if(!isset($this->_data[$local_column])){
+                if (!isset($this->_data[$local_column])) {
                     return null;
                 }
 
                 $query->where(sprintf('%s.%s = ?', $from_alias, $db->escape($relation_data['related_columns'][$position])), $this->_data[$local_column]);
             }
 
-            if($query_transform_callback !== null && is_callable($query_transform_callback)){
+            if ($query_transform_callback !== null && is_callable($query_transform_callback)) {
                 call_user_func($query_transform_callback, $query);
             }
 
-            switch($relation_data['relation_type']){
+            switch ($relation_data['relation_type']) {
                 case Relation::MANY_TO_MANY:
                     $target_relation = $related_class::_findRelationName($relation_data['target_relation']['related_class']);
                     $query->with($target_relation); //I can put this here!
                     //Relation on the 'with' will always be -to-one
                     $this->_data[$relation_name] = array();
-                    while($row = $query->fetchRow()){
+                    while ($row = $query->fetchRow()) {
                         $target = $row->$target_relation;
                         //If you have a m2m in the DB without the related row?
-                        if($target !== null)
+                        if ($target !== null)
                             $this->_data[$relation_name][] = $target;
                     }
                     break;
@@ -740,12 +782,13 @@ class Model implements \JsonSerializable {
      * @throws Exception
      * @throws Wave\Exception
      */
-    public function _removeRelationObject($relation_name, Model $object, $remove_relation = true){
+    public function _removeRelationObject($relation_name, Model $object, $remove_relation = true)
+    {
 
 
-        if(isset($this->_data[$relation_name])) {
-            foreach($this->_data[$relation_name] as $key => $relation){
-                if($relation->_getFingerprint() === $object->_getFingerprint()){
+        if (isset($this->_data[$relation_name])) {
+            foreach ($this->_data[$relation_name] as $key => $relation) {
+                if ($relation->_getFingerprint() === $object->_getFingerprint()) {
                     //Unset
                     unset($this->_data[$relation_name][$key]);
                     //Renumber (so it doesn't accidentally map later down the track).
@@ -754,40 +797,40 @@ class Model implements \JsonSerializable {
             }
         }
 
-        if($remove_relation) {
+        if ($remove_relation) {
             $relation_data = $this->_getRelation($relation_name);
 
-            switch($relation_data['relation_type']){
+            switch ($relation_data['relation_type']) {
                 case Relation::MANY_TO_MANY:
                     $related_class = $relation_data['related_class'];
                     $db = Wave\DB::get($related_class::_getDatabaseNamespace());
                     $query = $db->from($related_class, $from_alias);
 
                     //Add in all of the related columns
-                    foreach($relation_data['local_columns'] as $position => $local_column) {
+                    foreach ($relation_data['local_columns'] as $position => $local_column) {
                         //At this point, may as well return as there aren't null-relations
-                        if($this->_data[$local_column] === null)
+                        if ($this->_data[$local_column] === null)
                             return false;
 
                         $query->where(sprintf('%s.%s = ?', $from_alias, $db->escape($relation_data['related_columns'][$position])), $this->_data[$local_column]);
                     }
 
                     //Add in all of the related columns
-                    foreach($relation_data['target_relation']['related_columns'] as $position => $related_column) {
+                    foreach ($relation_data['target_relation']['related_columns'] as $position => $related_column) {
                         //At this point, may as well return as there aren't null-relations
-                        if($object->{$related_column} === null)
+                        if ($object->{$related_column} === null)
                             return false;
 
                         $query->where(sprintf('%s.%s = ?', $from_alias, $db->escape($relation_data['target_relation']['local_columns'][$position])), $object->{$related_column});
                     }
 
-                    if($rc = $query->fetchRow())
+                    if ($rc = $query->fetchRow())
                         return $rc->delete();
 
                     break;
 
                 case Relation::ONE_TO_MANY:
-                    foreach($relation_data['related_columns'] as $position => $related_column)
+                    foreach ($relation_data['related_columns'] as $position => $related_column)
                         $object->{$related_column} = null;
 
                     return $object->save();

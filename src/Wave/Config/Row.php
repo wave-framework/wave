@@ -4,12 +4,14 @@ namespace Wave\Config;
 
 use ArrayObject;
 
-class Row extends ArrayObject {
+class Row extends ArrayObject
+{
 
-    public function __construct(array $config) {
+    public function __construct(array $config)
+    {
 
-        foreach($config as $key => $value) {
-            if(is_array($value)) {
+        foreach ($config as $key => $value) {
+            if (is_array($value)) {
                 $value = new static($value);
             }
             $this->offsetSet($key, $value);
@@ -17,22 +19,25 @@ class Row extends ArrayObject {
 
     }
 
-    public function __get($property) {
-        if(isset($this[$property])) {
+    public function __get($property)
+    {
+        if (isset($this[$property])) {
             return $this[$property];
         }
         throw new UnknownConfigOptionException("Unknown config option [$property]");
     }
 
-    public function __isset($property) {
+    public function __isset($property)
+    {
         return isset($this[$property]);
     }
 
-    public function getArrayCopy(): array {
+    public function getArrayCopy(): array
+    {
         $self = parent::getArrayCopy();
 
-        foreach($self as $key => $value){
-            if($value instanceof Row){
+        foreach ($self as $key => $value) {
+            if ($value instanceof Row) {
                 $self[$key] = $value->getArrayCopy();
             }
         }

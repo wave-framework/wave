@@ -15,7 +15,8 @@ use Wave\Config;
 use Wave\Http\Exception\BadRequestException;
 use Wave\Router\Action;
 
-class Request {
+class Request
+{
 
     const METHOD_HEAD = 'HEAD';
     const METHOD_GET = 'GET';
@@ -87,7 +88,8 @@ class Request {
                                 array $parameters = array(),
                                 array $attributes = array(),
                                 array $server = array(),
-                                array $cookies = array()) {
+                                array $cookies = array())
+    {
 
         $this->setUrl($url);
         $this->setMethod($method);
@@ -106,38 +108,39 @@ class Request {
      *
      * @return Request
      */
-    public static function createFromGlobals() {
+    public static function createFromGlobals()
+    {
 
         $url = 'http://localhost';
-        if(isset($_SERVER['HTTP_HOST'])) {
+        if (isset($_SERVER['HTTP_HOST'])) {
             $protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
             $url = sprintf('%s://%s', $protocol, $_SERVER['HTTP_HOST']);
         }
-        if(isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'], array(80, 443))) {
+        if (isset($_SERVER['SERVER_PORT']) && !in_array($_SERVER['SERVER_PORT'], array(80, 443))) {
             $url .= ':' . $_SERVER['SERVER_PORT'];
         }
 
-        if(isset($_SERVER['PATH_INFO'])) {
+        if (isset($_SERVER['PATH_INFO'])) {
             $url .= substr($_SERVER['PATH_INFO'], strpos($_SERVER['PATH_INFO'], '.php/'));
-            if(isset($_SERVER['QUERY_STRING']))
+            if (isset($_SERVER['QUERY_STRING']))
                 $url .= '?' . $_SERVER['QUERY_STRING'];
-        } else if(isset($_SERVER['REQUEST_URI'])) {
+        } else if (isset($_SERVER['REQUEST_URI'])) {
             $url .= $_SERVER['REQUEST_URI'];
         }
 
         $parameters = array();
         $method = static::METHOD_CLI;
-        if(isset($_SERVER['REQUEST_METHOD'])) {
+        if (isset($_SERVER['REQUEST_METHOD'])) {
             $method = strtoupper($_SERVER['REQUEST_METHOD']);
-            if('POST' === $method && isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
+            if ('POST' === $method && isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
                 $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
             }
-            switch($method) {
+            switch ($method) {
                 case static::METHOD_POST:
                 case static::METHOD_PATCH:
                 case static::METHOD_PUT:
                 case static::METHOD_DELETE:
-                    if(isset($_SERVER['CONTENT_TYPE']))
+                    if (isset($_SERVER['CONTENT_TYPE']))
                         $parameters = static::parseRequestBody($_SERVER['CONTENT_TYPE']);
                     else
                         $parameters = $_POST;
@@ -160,24 +163,25 @@ class Request {
      *
      * @param string $content_type
      *
-     * @throws Exception\BadRequestException
      * @return array
+     * @throws Exception\BadRequestException
      */
-    protected static function parseRequestBody($content_type = self::TYPE_FORM_ENCODED) {
+    protected static function parseRequestBody($content_type = self::TYPE_FORM_ENCODED)
+    {
         list($content_type) = explode(';', $content_type);
-        switch($content_type) {
+        switch ($content_type) {
             case static::TYPE_JSON:
                 $data = json_decode(file_get_contents('php://input'), true);
 
-                if(json_last_error() !== JSON_ERROR_NONE)
+                if (json_last_error() !== JSON_ERROR_NONE)
                     throw new BadRequestException("Error encountered while decoding JSON payload");
 
-                if(!is_array($data)) return array();
+                if (!is_array($data)) return array();
                 else return $data;
 
             case static::TYPE_FORM_ENCODED:
                 parse_str(file_get_contents('php://input'), $data);
-                if(!is_array($data)) return array();
+                if (!is_array($data)) return array();
                 else return $data;
             case static::TYPE_MULTIPART:
             default:
@@ -195,8 +199,9 @@ class Request {
      *
      * @return string
      */
-    protected static function parseFormat($url, $default = null) {
-        if(null === $default) {
+    protected static function parseFormat($url, $default = null)
+    {
+        if (null === $default) {
             $default = PHP_SAPI === 'cli' ? 'cli' : Config::get('wave')->response->default_format;
         }
 
@@ -214,8 +219,9 @@ class Request {
      *
      * @return array
      */
-    public function getData() {
-        switch($this->getMethod()) {
+    public function getData()
+    {
+        switch ($this->getMethod()) {
             case self::METHOD_POST:
             case self::METHOD_PUT:
             case self::METHOD_PATCH:
@@ -228,11 +234,13 @@ class Request {
         }
     }
 
-    public function getAuthorization() {
+    public function getAuthorization()
+    {
         return $this->attributes->get('_authorization');
     }
 
-    public function setAuthorization($authorization) {
+    public function setAuthorization($authorization)
+    {
         $this->attributes->set('_authorization', $authorization);
     }
 
@@ -243,10 +251,11 @@ class Request {
      *
      * @return bool
      */
-    public function has($parameter) {
+    public function has($parameter)
+    {
 
-        foreach(array('attributes', 'query', 'parameters') as $property) {
-            if($this->$property->has($parameter)) {
+        foreach (array('attributes', 'query', 'parameters') as $property) {
+            if ($this->$property->has($parameter)) {
                 return true;
             }
         }
@@ -262,10 +271,11 @@ class Request {
      *
      * @return mixed
      */
-    public function get($parameter, $default = null) {
+    public function get($parameter, $default = null)
+    {
 
-        foreach(array('attributes', 'query', 'parameters') as $property) {
-            if($this->$property->has($parameter)) {
+        foreach (array('attributes', 'query', 'parameters') as $property) {
+            if ($this->$property->has($parameter)) {
                 return $this->$property->get($parameter);
             }
         }
@@ -278,7 +288,8 @@ class Request {
      *
      * @param $url
      */
-    public function setUrl($url) {
+    public function setUrl($url)
+    {
         $this->components = parse_url($url);
         $this->url = $url;
 
@@ -290,7 +301,8 @@ class Request {
      *
      * @return string
      */
-    public function getUrl() {
+    public function getUrl()
+    {
         return $this->url;
     }
 
@@ -299,7 +311,8 @@ class Request {
      *
      * @return string
      */
-    public function getMethod() {
+    public function getMethod()
+    {
         return $this->method;
     }
 
@@ -310,9 +323,10 @@ class Request {
      *
      * @throws \InvalidArgumentException
      */
-    public function setMethod($method) {
+    public function setMethod($method)
+    {
         $method = strtoupper($method);
-        if(!in_array(
+        if (!in_array(
             $method, array(
                 static::METHOD_HEAD,
                 static::METHOD_GET,
@@ -338,8 +352,9 @@ class Request {
      *
      * @return string|null
      */
-    public function getComponent($component) {
-        if(isset($this->components[$component]))
+    public function getComponent($component)
+    {
+        if (isset($this->components[$component]))
             return $this->components[$component];
         else
             return null;
@@ -350,7 +365,8 @@ class Request {
      *
      * @return null|string
      */
-    public function getScheme() {
+    public function getScheme()
+    {
         return $this->getComponent('scheme');
     }
 
@@ -359,7 +375,8 @@ class Request {
      *
      * @return null|string
      */
-    public function getHost() {
+    public function getHost()
+    {
         return $this->getComponent('host');
     }
 
@@ -368,7 +385,8 @@ class Request {
      *
      * @return null|string
      */
-    public function getPort() {
+    public function getPort()
+    {
         return $this->getComponent('port');
     }
 
@@ -377,11 +395,12 @@ class Request {
      *
      * @return null|string
      */
-    public function getPath($exclude_base_path = true) {
+    public function getPath($exclude_base_path = true)
+    {
         $path = $this->getComponent('path');
-        if($exclude_base_path) {
+        if ($exclude_base_path) {
             $base = $this->getBasePath();
-            if(!empty($base) && strpos($path, $base) === 0)
+            if (!empty($base) && strpos($path, $base) === 0)
                 $path = substr($path, strlen($base));
         }
 
@@ -394,7 +413,8 @@ class Request {
      *
      * @return null|string
      */
-    public function getQueryString() {
+    public function getQueryString()
+    {
         return $this->getComponent('query');
     }
 
@@ -403,7 +423,8 @@ class Request {
      *
      * @return string
      */
-    public function getPathAndQueryString() {
+    public function getPathAndQueryString()
+    {
         return $this->getPath() . '?' . $this->getQueryString();
     }
 
@@ -412,20 +433,21 @@ class Request {
      *
      * @return string base path
      */
-    protected function prepareBasePath() {
+    protected function prepareBasePath()
+    {
         $filename = basename($this->server->get('SCRIPT_FILENAME', ''));
         $baseUrl = $this->getBaseUrl();
-        if(empty($baseUrl)) {
+        if (empty($baseUrl)) {
             return '';
         }
 
-        if(basename($baseUrl) === $filename) {
+        if (basename($baseUrl) === $filename) {
             $basePath = dirname($baseUrl);
         } else {
             $basePath = $baseUrl;
         }
 
-        if('\\' === DIRECTORY_SEPARATOR) {
+        if ('\\' === DIRECTORY_SEPARATOR) {
             $basePath = str_replace('\\', '/', $basePath);
         }
 
@@ -446,8 +468,9 @@ class Request {
      *
      * @api
      */
-    public function getBasePath() {
-        if(null === $this->basePath) {
+    public function getBasePath()
+    {
+        if (null === $this->basePath) {
             $this->basePath = $this->prepareBasePath();
         }
 
@@ -466,8 +489,9 @@ class Request {
      *
      * @api
      */
-    public function getBaseUrl() {
-        if(null === $this->baseUrl) {
+    public function getBaseUrl()
+    {
+        if (null === $this->baseUrl) {
             $this->baseUrl = $this->prepareBaseUrl();
         }
 
@@ -479,12 +503,13 @@ class Request {
      *
      * @return string
      */
-    protected function prepareBaseUrl() {
+    protected function prepareBaseUrl()
+    {
         $filename = basename($this->server->get('SCRIPT_FILENAME', ''));
 
-        if(basename($this->server->get('SCRIPT_NAME', '')) === $filename) {
+        if (basename($this->server->get('SCRIPT_NAME', '')) === $filename) {
             $baseUrl = $this->server->get('SCRIPT_NAME', '');
-        } elseif(basename($this->server->get('PHP_SELF', '')) === $filename) {
+        } elseif (basename($this->server->get('PHP_SELF', '')) === $filename) {
             $baseUrl = $this->server->get('PHP_SELF', '');
         } else {
             // Backtrack up the script_filename to find the portion matching
@@ -500,29 +525,29 @@ class Request {
                 $seg = $segs[$index];
                 $baseUrl = '/' . $seg . $baseUrl;
                 ++$index;
-            } while($last > $index && (false !== $pos = strpos($path, $baseUrl)) && 0 != $pos);
+            } while ($last > $index && (false !== $pos = strpos($path, $baseUrl)) && 0 != $pos);
         }
 
         // Does the baseUrl have anything in common with the request_uri?
         $requestUri = $this->server->get('REQUEST_URI', '');
 
-        if($baseUrl && false !== $prefix = $this->getUrlencodedPrefix($requestUri, $baseUrl)) {
+        if ($baseUrl && false !== $prefix = $this->getUrlencodedPrefix($requestUri, $baseUrl)) {
             // full $baseUrl matches
             return $prefix;
         }
 
-        if($baseUrl && false !== $prefix = $this->getUrlencodedPrefix($requestUri, dirname($baseUrl))) {
+        if ($baseUrl && false !== $prefix = $this->getUrlencodedPrefix($requestUri, dirname($baseUrl))) {
             // directory portion of $baseUrl matches
             return rtrim($prefix, '/');
         }
 
         $truncatedRequestUri = $requestUri;
-        if(false !== $pos = strpos($requestUri, '?')) {
+        if (false !== $pos = strpos($requestUri, '?')) {
             $truncatedRequestUri = substr($requestUri, 0, $pos);
         }
 
         $basename = basename($baseUrl);
-        if(empty($basename) || !strpos(rawurldecode($truncatedRequestUri), $basename)) {
+        if (empty($basename) || !strpos(rawurldecode($truncatedRequestUri), $basename)) {
             // no match whatsoever; set it blank
             return '';
         }
@@ -530,7 +555,7 @@ class Request {
         // If using mod_rewrite or ISAPI_Rewrite strip the script filename
         // out of baseUrl. $pos !== 0 makes sure it is not matching a value
         // from PATH_INFO or QUERY_STRING
-        if(strlen($requestUri) >= strlen($baseUrl) && (false !== $pos = strpos($requestUri, $baseUrl)) && $pos !== 0) {
+        if (strlen($requestUri) >= strlen($baseUrl) && (false !== $pos = strpos($requestUri, $baseUrl)) && $pos !== 0) {
             $baseUrl = substr($requestUri, 0, $pos + strlen($baseUrl));
         }
 
@@ -540,14 +565,16 @@ class Request {
     /**
      * @return \Wave\Http\HeaderBag
      */
-    public function getHeaders() {
+    public function getHeaders()
+    {
         return $this->headers;
     }
 
     /**
      * @param \Wave\Http\HeaderBag $headers
      */
-    public function setHeaders(HeaderBag $headers) {
+    public function setHeaders(HeaderBag $headers)
+    {
         $this->headers = $headers;
     }
 
@@ -557,7 +584,8 @@ class Request {
      *
      * @return string
      */
-    public function getFormat() {
+    public function getFormat()
+    {
         return $this->format;
     }
 
@@ -566,21 +594,24 @@ class Request {
      *
      * @param $format
      */
-    public function setFormat($format) {
+    public function setFormat($format)
+    {
         $this->format = $format;
     }
 
     /**
      * @return Action
      */
-    public function getAction() {
+    public function getAction()
+    {
         return $this->action;
     }
 
     /**
      * @param Action $action
      */
-    public function setAction(Action $action) {
+    public function setAction(Action $action)
+    {
         $this->action = $action;
     }
 
@@ -589,7 +620,8 @@ class Request {
      *
      * @return string The request
      */
-    public function __toString() {
+    public function __toString()
+    {
         return
             sprintf('%s %s %s', $this->getMethod(), $this->getPathAndQueryString(), $this->server->get('SERVER_PROTOCOL')) . "\r\n" .
             $this->headers . "\r\n" .
@@ -601,8 +633,9 @@ class Request {
      *
      * @return string The request body content.
      */
-    public function getContent() {
-        if(null === $this->content) {
+    public function getContent()
+    {
+        if (null === $this->content) {
             $this->content = file_get_contents('php://input');
         }
 
@@ -618,14 +651,15 @@ class Request {
      *
      * @return string|false The prefix as it is encoded in $string, or false
      */
-    private function getUrlencodedPrefix($string, $prefix) {
-        if(0 !== strpos(rawurldecode($string), $prefix)) {
+    private function getUrlencodedPrefix($string, $prefix)
+    {
+        if (0 !== strpos(rawurldecode($string), $prefix)) {
             return false;
         }
 
         $len = strlen($prefix);
 
-        if(preg_match("#^(%[[:xdigit:]]{2}|.){{$len}}#", $string, $match)) {
+        if (preg_match("#^(%[[:xdigit:]]{2}|.){{$len}}#", $string, $match)) {
             return $match[0];
         }
 

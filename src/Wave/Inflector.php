@@ -2,7 +2,8 @@
 
 namespace Wave;
 
-class Inflector {
+class Inflector
+{
 
     private static $plural = array(
         '/(quiz)$/i' => "$1zes",
@@ -82,57 +83,60 @@ class Inflector {
         'media'
     );
 
-    public static function pluralize($string) {
+    public static function pluralize($string)
+    {
         // save some time in the case that singular and plural are the same
-        if(in_array(strtolower($string), self::$uncountable))
+        if (in_array(strtolower($string), self::$uncountable))
             return $string;
 
         // check for irregular singular forms
-        foreach(self::$irregular as $pattern => $result) {
+        foreach (self::$irregular as $pattern => $result) {
             $pattern = '/' . $pattern . '$/i';
 
-            if(preg_match($pattern, $string))
+            if (preg_match($pattern, $string))
                 return preg_replace($pattern, $result, $string);
         }
 
         // check for matches using regular expressions
-        foreach(self::$plural as $pattern => $result) {
-            if(preg_match($pattern, $string))
+        foreach (self::$plural as $pattern => $result) {
+            if (preg_match($pattern, $string))
                 return preg_replace($pattern, $result, $string);
         }
 
         return $string;
     }
 
-    public static function singularize($string) {
+    public static function singularize($string)
+    {
         // save some time in the case that singular and plural are the same
-        if(in_array(strtolower($string), self::$uncountable))
+        if (in_array(strtolower($string), self::$uncountable))
             return $string;
 
         // check for irregular plural forms
-        foreach(self::$irregular as $result => $pattern) {
+        foreach (self::$irregular as $result => $pattern) {
             $pattern = '/' . $pattern . '$/i';
 
-            if(preg_match($pattern, $string))
+            if (preg_match($pattern, $string))
                 return preg_replace($pattern, $result, $string);
         }
 
         // check for matches using regular expressions
-        foreach(self::$singular as $pattern => $result) {
-            if(preg_match($pattern, $string))
+        foreach (self::$singular as $pattern => $result) {
+            if (preg_match($pattern, $string))
                 return preg_replace($pattern, $result, $string);
         }
 
         return $string;
     }
 
-    public static function camelize($string, $suffix_to_remove = '') {
+    public static function camelize($string, $suffix_to_remove = '')
+    {
 
         $camelized = '';
         $words = preg_split('/([^a-zA-Z])/', rtrim($string, $suffix_to_remove), -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
 
-        foreach($words as $word)
-            if(!in_array($word, array('_', ' ')))
+        foreach ($words as $word)
+            if (!in_array($word, array('_', ' ')))
                 $camelized .= ucfirst($word);
 
         return $camelized;

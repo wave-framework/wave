@@ -13,7 +13,8 @@ namespace Wave\Http;
 use Wave\Config;
 use Wave\Hook;
 
-class Response {
+class Response
+{
 
     const STATUS_OK = 200;
     const STATUS_CREATED = 201;
@@ -142,7 +143,8 @@ class Response {
     protected $version;
 
 
-    public function __construct($content = '', $status = self::STATUS_OK, array $headers = array(), array $cookies = array()) {
+    public function __construct($content = '', $status = self::STATUS_OK, array $headers = array(), array $cookies = array())
+    {
 
         $this->setHeaders(new HeaderBag($headers));
         $this->setCookies($cookies);
@@ -153,36 +155,38 @@ class Response {
     }
 
 
-    public function prepare(Request $request) {
+    public function prepare(Request $request)
+    {
 
-        if('HTTP/1.0' != $request->server->get('SERVER_PROTOCOL')) {
+        if ('HTTP/1.0' != $request->server->get('SERVER_PROTOCOL')) {
             $this->setProtocolVersion('1.1');
         }
 
         return $this;
     }
 
-    public function send() {
+    public function send()
+    {
         Hook::triggerAction('response.before_send', array(&$this));
         $this->sendHeaders();
         $this->sendContent();
 
-        if(function_exists('fastcgi_finish_request')) {
+        if (function_exists('fastcgi_finish_request')) {
             fastcgi_finish_request();
-        } elseif('cli' !== PHP_SAPI) {
+        } elseif ('cli' !== PHP_SAPI) {
             // ob_get_level() never returns 0 on some Windows configurations, so if
             // the level is the same two times in a row, the loop should be stopped.
             $previous = null;
             $obStatus = ob_get_status(1);
-            while(($level = ob_get_level()) > 0 && $level !== $previous) {
+            while (($level = ob_get_level()) > 0 && $level !== $previous) {
                 $previous = $level;
-                if($obStatus[$level - 1]) {
-                    if(version_compare(PHP_VERSION, '5.4', '>=')) {
-                        if(isset($obStatus[$level - 1]['flags']) && ($obStatus[$level - 1]['flags'] & PHP_OUTPUT_HANDLER_REMOVABLE)) {
+                if ($obStatus[$level - 1]) {
+                    if (version_compare(PHP_VERSION, '5.4', '>=')) {
+                        if (isset($obStatus[$level - 1]['flags']) && ($obStatus[$level - 1]['flags'] & PHP_OUTPUT_HANDLER_REMOVABLE)) {
                             ob_end_flush();
                         }
                     } else {
-                        if(isset($obStatus[$level - 1]['del']) && $obStatus[$level - 1]['del']) {
+                        if (isset($obStatus[$level - 1]['del']) && $obStatus[$level - 1]['del']) {
                             ob_end_flush();
                         }
                     }
@@ -195,8 +199,9 @@ class Response {
         return $this;
     }
 
-    public function sendHeaders() {
-        if(headers_sent()) {
+    public function sendHeaders()
+    {
+        if (headers_sent()) {
             return $this;
         }
 
@@ -204,13 +209,13 @@ class Response {
         header(sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText));
 
         // headers
-        foreach($this->headers->all() as $name => $values) {
-            foreach($values as $value) {
+        foreach ($this->headers->all() as $name => $values) {
+            foreach ($values as $value) {
                 header($name . ': ' . $value, false);
             }
         }
 
-        foreach($this->cookies as $cookie) {
+        foreach ($this->cookies as $cookie) {
             setcookie(
                 $cookie->getName(),
                 $cookie->getValue(),
@@ -225,67 +230,79 @@ class Response {
         return $this;
     }
 
-    public function sendContent() {
+    public function sendContent()
+    {
 
         echo $this->content;
 
         return $this;
     }
 
-    public static function getMessageForCode($_status) {
-        if(array_key_exists($_status, static::$statusTexts)) {
+    public static function getMessageForCode($_status)
+    {
+        if (array_key_exists($_status, static::$statusTexts)) {
             return static::$statusTexts[$_status];
         }
         return '';
     }
 
-    public function setContent($content) {
+    public function setContent($content)
+    {
         $this->content = $content;
     }
 
-    public function getContent() {
+    public function getContent()
+    {
         return $this->content;
     }
 
-    public function setStatusCode($code, $text = null) {
-        $this->statusCode = (int) $code;
+    public function setStatusCode($code, $text = null)
+    {
+        $this->statusCode = (int)$code;
 
-        if(null === $this->statusText = $text)
+        if (null === $this->statusText = $text)
             $this->statusText = isset(self::$statusTexts[$code]) ? self::$statusTexts[$code] : '';
 
     }
 
-    public function getStatusCode() {
+    public function getStatusCode()
+    {
         return $this->statusCode;
     }
 
     /**
      * @return \Wave\Http\HeaderBag
      */
-    public function getHeaders() {
+    public function getHeaders()
+    {
         return $this->headers;
     }
 
     /**
      * @param \Wave\Http\HeaderBag $headers
      */
-    public function setHeaders(HeaderBag $headers) {
+    public function setHeaders(HeaderBag $headers)
+    {
         $this->headers = $headers;
     }
 
-    public function setCookies(array $cookies) {
+    public function setCookies(array $cookies)
+    {
         $this->cookies = $cookies;
     }
 
-    public function addCookie(Cookie $cookie) {
+    public function addCookie(Cookie $cookie)
+    {
         $this->cookies[$cookie->getName()] = $cookie;
     }
 
-    public function setProtocolVersion($version) {
+    public function setProtocolVersion($version)
+    {
         $this->version = $version;
     }
 
-    public function getProtocolVersion() {
+    public function getProtocolVersion()
+    {
         return $this->version;
     }
 
@@ -300,7 +317,8 @@ class Response {
      *
      * @see prepare()
      */
-    public function __toString() {
+    public function __toString()
+    {
         return
             sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText) . "\r\n" .
             $this->headers . "\r\n" .

@@ -2,19 +2,22 @@
 
 namespace Wave\DB;
 
-class Statement extends \PDOStatement {
+class Statement extends \PDOStatement
+{
 
 
     private $connection;
 
-    protected function __construct(Connection $connection) {
+    protected function __construct(Connection $connection)
+    {
 
         $this->setFetchMode(\PDO::FETCH_ASSOC);
         $this->connection = $connection;
 
     }
 
-    public function execute($input_parameters = null): bool {
+    public function execute($input_parameters = null): bool
+    {
 
         $start = microtime(true);
         $result = parent::execute($input_parameters);

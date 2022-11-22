@@ -15,7 +15,8 @@ use Wave\DB\Exception as DBException;
 use Wave\DB\Model;
 use Wave\DB\Query;
 
-class DB {
+class DB
+{
 
     /** @var DB[] $instances */
     private static $instances = array();
@@ -56,7 +57,8 @@ class DB {
      * @param $config
      * @throws DBException
      */
-    private function __construct($namespace, $config) {
+    private function __construct($namespace, $config)
+    {
 
         $installed_drivers = DB\Connection::getAvailableDrivers();
         $this->namespace = $namespace;
@@ -77,13 +79,12 @@ class DB {
             throw new DBException("Invalid database configuration - at minimum, a 'primary' configuration must be specified");
         }
 
-        foreach ($connections as $alias => $conf)
-        {
+        foreach ($connections as $alias => $conf) {
             /** @var DB\Driver\DriverInterface $driver_class */
             $driver_class = self::getDriverClass($conf->driver);
 
             // Check PDO driver is installed on system
-            if(!in_array($driver_class::getDriverName(), $installed_drivers))
+            if (!in_array($driver_class::getDriverName(), $installed_drivers))
                 throw new DBException(sprintf('PDO::%s driver not installed for %s.', $driver_class::getDriverName(), $driver_class));
 
             // Use the primary connection for default configuration
@@ -104,7 +105,8 @@ class DB {
      * @return DB
      * @throws DB\Exception
      */
-    private static function init($namespace, $database) {
+    private static function init($namespace, $database)
+    {
 
         $instance = new self($namespace, $database);
         Hook::triggerAction('db.after_init', array(&$instance));
@@ -112,20 +114,21 @@ class DB {
 
     }
 
-    public static function getConfigForNamespace($namespace) {
+    public static function getConfigForNamespace($namespace)
+    {
 
         $databases = Config::get('db')->databases;
 
-        if(!isset($databases[$namespace])) {
+        if (!isset($databases[$namespace])) {
             throw new DBException("There is no database configuration for {$namespace}");
         }
 
-        if(isset($databases[$namespace][Core::$_MODE]))
+        if (isset($databases[$namespace][Core::$_MODE]))
             $mode = Core::$_MODE;
         else
             $mode = Core::MODE_PRODUCTION;
 
-        if(!isset($databases[$namespace][$mode])) {
+        if (!isset($databases[$namespace][$mode])) {
             throw new DBException('There must be at least a PRODUCTION database defined');
         }
 
@@ -141,17 +144,18 @@ class DB {
      * @return DB
      * @throws Exception
      */
-    public static function get($namespace = null) {
+    public static function get($namespace = null)
+    {
 
-        if($namespace === null) {
+        if ($namespace === null) {
 
-            if(!isset(self::$default_namespace))
+            if (!isset(self::$default_namespace))
                 self::$default_namespace = self::getDefaultNamespace();
 
             $namespace = self::$default_namespace;
         }
 
-        if(!isset(self::$instances[$namespace])) {
+        if (!isset(self::$instances[$namespace])) {
             $config = self::getConfigForNamespace($namespace);
             self::$instances[$namespace] = self::init($namespace, $config);
         }
@@ -163,10 +167,11 @@ class DB {
     /**
      * @return DB[]
      */
-    public static function getAll() {
+    public static function getAll()
+    {
 
         $databases = Config::get('db')->databases;
-        foreach($databases as $namespace => $modes)
+        foreach ($databases as $namespace => $modes)
             self::get($namespace);
 
         return self::$instances;
@@ -178,7 +183,8 @@ class DB {
      * @return DB
      * @throws Exception
      */
-    public static function reset() {
+    public static function reset()
+    {
         self::$instances = array();
 
         return self::get();
@@ -193,25 +199,27 @@ class DB {
      *
      * @return null|DB
      */
-    public static function getByDatabaseName($name) {
+    public static function getByDatabaseName($name)
+    {
 
         $databases = Config::get('db')->databases;
-        foreach($databases as $namespace => $modes)
-            foreach($modes as $mode)
-                if((isset($mode['database']) && $mode['database'] === $name) ||
+        foreach ($databases as $namespace => $modes)
+            foreach ($modes as $mode)
+                if ((isset($mode['database']) && $mode['database'] === $name) ||
                     (isset($mode[self::PRIMARY_CONNECTION]) && $mode[self::PRIMARY_CONNECTION]['database'] === $name))
                     return self::get($namespace);
 
         return null;
     }
 
-    public static function getByConfig($config_options) {
+    public static function getByConfig($config_options)
+    {
 
         $databases = Config::get('db')->databases;
-        foreach($databases as $namespace => $modes) {
-            foreach($modes as $mode) {
-                foreach($config_options as $option => $value) {
-                    if((!isset($mode[$option]) || $mode[$option] !== $value) &&
+        foreach ($databases as $namespace => $modes) {
+            foreach ($modes as $mode) {
+                foreach ($config_options as $option => $value) {
+                    if ((!isset($mode[$option]) || $mode[$option] !== $value) &&
                         (!isset($mode[self::PRIMARY_CONNECTION]) || $mode[self::PRIMARY_CONNECTION][$option] !== $value))
                         continue 2;
                 }
@@ -230,9 +238,10 @@ class DB {
      *
      * @return DB\Table[]
      */
-    public function getTables($cache = true) {
+    public function getTables($cache = true)
+    {
 
-        if(!isset($this->tables) || !$cache) {
+        if (!isset($this->tables) || !$cache) {
             $driver_class = $this->getConnection()->getDriverClass();
             $this->tables = $driver_class::getTables($this);
         }
@@ -246,11 +255,12 @@ class DB {
      *
      * @return DB\Column
      */
-    public function getColumn($table, $column) {
+    public function getColumn($table, $column)
+    {
 
         $tables = $this->getTables();
 
-        if(!isset($tables[$table]))
+        if (!isset($tables[$table]))
             return null;
 
         $table = $tables[$table];
@@ -262,9 +272,10 @@ class DB {
     /**
      * @return string
      */
-    public static function getDefaultNamespace() {
+    public static function getDefaultNamespace()
+    {
 
-        foreach(Config::get('db')->databases as $ns => $database)
+        foreach (Config::get('db')->databases as $ns => $database)
             return $ns;
 
     }
@@ -274,7 +285,8 @@ class DB {
      *
      * @return string
      */
-    public static function getDriverClass($driver) {
+    public static function getDriverClass($driver)
+    {
         return '\\Wave\\DB\\Driver\\' . $driver;
     }
 
@@ -290,7 +302,8 @@ class DB {
      * @return string
      * @throws DBException
      */
-    public function escape($string) {
+    public function escape($string)
+    {
         $driver = $this->getConnection()->getDriverClass();
 
         return $driver::getEscapeCharacter() . $string . $driver::getEscapeCharacter();
@@ -303,7 +316,8 @@ class DB {
      *
      * @return mixed
      */
-    public function valueToSQL($value) {
+    public function valueToSQL($value)
+    {
         $driver_class = $this->getConnection()->getDriverClass();
         return $driver_class::valueToSQL($value);
 
@@ -317,8 +331,9 @@ class DB {
      *
      * @return mixed
      */
-    public function valueFromSQL($value, array $field_data) {
-        $driver_class =$this->getConnection()->getDriverClass();
+    public function valueFromSQL($value, array $field_data)
+    {
+        $driver_class = $this->getConnection()->getDriverClass();
         return $driver_class::valueFromSQL($value, $field_data);
 
     }
@@ -333,7 +348,8 @@ class DB {
      *
      * @return DB\Connection
      */
-    public function getConnection($alias = self::PRIMARY_CONNECTION) {
+    public function getConnection($alias = self::PRIMARY_CONNECTION)
+    {
         if (!isset($this->connections[$alias])) {
             throw new DBException(sprintf('A connection with the alias [%s] has not been defined', $alias));
         }
@@ -346,7 +362,8 @@ class DB {
      *
      * @return string
      */
-    public function getNamespace($full_namespace = true) {
+    public function getNamespace($full_namespace = true)
+    {
 
         $ns_prefix = $full_namespace ? Config::get('wave')->model->base_namespace . '\\' : '';
         return $ns_prefix . $this->namespace;
@@ -355,15 +372,17 @@ class DB {
     /**
      * @return mixed
      */
-    public function getName() {
+    public function getName()
+    {
         return $this->config->database;
     }
 
     /**
      * @return mixed
      */
-    public function getSchema() {
-        if($this->config->offsetExists('schema'))
+    public function getSchema()
+    {
+        if ($this->config->offsetExists('schema'))
             return $this->config->schema;
 
         return $this->config->database;
@@ -378,7 +397,8 @@ class DB {
      *
      * @return DB\Query
      */
-    public function from($from, &$alias = null, $fields = null) {
+    public function from($from, &$alias = null, $fields = null)
+    {
         $query = new Query($this->getConnection());
         return $query->from($from, $alias, $fields);
     }
@@ -390,10 +410,11 @@ class DB {
      *
      * @return bool
      */
-    public static function save(Model &$object) {
+    public static function save(Model &$object)
+    {
 
-        if($object->_isLoaded()) {
-            if($object->_isDirty()) {
+        if ($object->_isLoaded()) {
+            if ($object->_isDirty()) {
                 return self::update($object);
             }
         } else {
@@ -410,7 +431,8 @@ class DB {
      *
      * @return \PDOStatement
      */
-    public function statement($sql, array $params = array()) {
+    public function statement($sql, array $params = array())
+    {
         $statement = $this->getConnection()->prepare($sql);
         $statement->execute($params);
 
@@ -424,7 +446,8 @@ class DB {
      * @param array $params
      * @return \PDOStatement
      */
-    public function basicStatement($sql, array $params = array()) {
+    public function basicStatement($sql, array $params = array())
+    {
         return $this->statement($sql, $params);
     }
 
@@ -435,23 +458,24 @@ class DB {
      *
      * @return bool
      */
-    public static function insert(Model &$object) {
+    public static function insert(Model &$object)
+    {
 
         $database = self::get($object::_getDatabaseNamespace());
         $connection = $database->getConnection();
 
         $fields = $params = $placeholders = array();
         $object_data = $object->_getData();
-        foreach($object->_getFields(true) as $object_field => $field_properties) {
+        foreach ($object->_getFields(true) as $object_field => $field_properties) {
             //Don't take any action for generated columns.
-            if($field_properties['generated']){
+            if ($field_properties['generated']) {
                 continue;
             }
 
             $object_value = $object_data[$object_field];
 
             $fields[] = $database->escape($object_field);
-            if($object_value === $field_properties['default'] && $field_properties['serial'] === true) {
+            if ($object_value === $field_properties['default'] && $field_properties['serial'] === true) {
                 $placeholders[] = 'DEFAULT';
             } else {
                 $params[] = $database->valueToSQL($object_value);
@@ -469,10 +493,10 @@ class DB {
         $connection->prepare($sql)->execute($params);
 
         $primary_key = $object::_getPrimaryKey();
-        if($primary_key !== null && count($primary_key) === 1) {
+        if ($primary_key !== null && count($primary_key) === 1) {
             $column = current($primary_key);
             $field = $object::_getField($column);
-            if($field['serial'] === true){
+            if ($field['serial'] === true) {
                 $liid = intval($connection->lastInsertId($field['sequence']));
                 $object->$column = $liid;
             }
@@ -489,20 +513,21 @@ class DB {
      *
      * @return bool
      */
-    public static function update(Model &$object) {
+    public static function update(Model &$object)
+    {
 
         $database = self::get($object::_getDatabaseNamespace());
         $connection = $database->getConnection();
 
         $updates = $criteria = $params = array();
         //dirty data
-        foreach($object->_getDirty() as $object_field => $object_value) {
+        foreach ($object->_getDirty() as $object_field => $object_value) {
             $updates[] = sprintf('%s = ?', $database->escape($object_field));
             $params[] = $database->valueToSQL($object_value);
         }
 
         //row identifier
-        foreach($object->_getIdentifyingData() as $identifying_field => $identifying_value) {
+        foreach ($object->_getIdentifyingData() as $identifying_field => $identifying_value) {
             $value = $database->valueToSQL($identifying_value);
             $criteria[] = DB\Query::parseWhereCondition(sprintf('%s = ?', $database->escape($identifying_field)), $value);
             $params = array_merge($params, $value);
@@ -526,7 +551,8 @@ class DB {
      *
      * @return bool
      */
-    public static function delete(Model &$object) {
+    public static function delete(Model &$object)
+    {
 
         $database = self::get($object::_getDatabaseNamespace());
         $connection = $database->getConnection();
@@ -534,7 +560,7 @@ class DB {
 
         //row identifier
         $criteria = $params = array();
-        foreach($object->_getIdentifyingData() as $identifying_field => $identifying_value) {
+        foreach ($object->_getIdentifyingData() as $identifying_field => $identifying_value) {
             $value = $database->valueToSQL($identifying_value);
             $criteria[] = DB\Query::parseWhereCondition(sprintf('%s = ?', $database->escape($identifying_field)), $value);
             $params = array_merge($params, $value);

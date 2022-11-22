@@ -2,23 +2,27 @@
 
 namespace Wave\Validator\Datatypes;
 
-class UrlDatatype extends AbstractDatatype {
+class UrlDatatype extends AbstractDatatype
+{
 
     private $cleaned;
 
-    public function __invoke() {
+    public function __invoke()
+    {
         $this->cleaned = trim($this->input);
         return filter_var($this->cleaned, FILTER_VALIDATE_URL);
     }
 
-    public function getCleanedData() {
+    public function getCleanedData()
+    {
         return $this->cleaned;
     }
 
     /**
      * @return string a type to use in the violation message
      */
-    public function getType() {
+    public function getType()
+    {
         return 'url';
     }
 }

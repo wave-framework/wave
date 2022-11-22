@@ -2,7 +2,8 @@
 
 namespace Wave;
 
-abstract class Method {
+abstract class Method
+{
 
     const ANY = '*';
     const POST = 'POST';

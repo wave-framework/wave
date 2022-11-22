@@ -5,7 +5,8 @@ namespace Wave\DB\Driver;
 use Wave\Config\Row;
 use Wave\DB;
 
-interface DriverInterface {
+interface DriverInterface
+{
 
     public static function constructDSN(Row $config);
 

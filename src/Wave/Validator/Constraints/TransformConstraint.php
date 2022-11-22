@@ -8,14 +8,16 @@ use Wave\Validator;
 use Wave\Validator\CleanerInterface;
 use Wave\Validator\Exception;
 
-class TransformConstraint extends AbstractConstraint implements CleanerInterface {
+class TransformConstraint extends AbstractConstraint implements CleanerInterface
+{
 
     protected $key;
     protected $value;
 
 
-    public function __construct($property, $arguments, Validator &$validator) {
-        if(!is_callable($arguments))
+    public function __construct($property, $arguments, Validator &$validator)
+    {
+        if (!is_callable($arguments))
             throw new \InvalidArgumentException('The argument passed to [transform] must be callable');
 
         parent::__construct($property, $arguments, $validator);
@@ -24,7 +26,8 @@ class TransformConstraint extends AbstractConstraint implements CleanerInterface
     /**
      * @return bool
      */
-    public function evaluate() {
+    public function evaluate()
+    {
         $this->data = call_user_func_array(
             $this->arguments, array(
                 &$this->data,
@@ -38,7 +41,8 @@ class TransformConstraint extends AbstractConstraint implements CleanerInterface
     }
 
 
-    public function getCleanedData() {
+    public function getCleanedData()
+    {
         return $this->data;
     }
 }

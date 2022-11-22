@@ -5,7 +5,8 @@ namespace Wave;
 use Wave\Config;
 use Wave\Storage\Cookie;
 
-class Auth {
+class Auth
+{
 
     const SUCCESS = 'success';
     const FAILURE_NO_IDENTITY = 'no-identity';
@@ -21,11 +22,12 @@ class Auth {
 
     public static $_is_loaded = false;
 
-    public static function registerHandler($class, $autoload = true) {
-        if(!class_implements($class))
+    public static function registerHandler($class, $autoload = true)
+    {
+        if (!class_implements($class))
             throw new \Wave\Exception('Auth Handler class (' . $class . ') must implement \Wave\IAuthable');
 
-        if($autoload) $class::loadPersistentAuth();
+        if ($autoload) $class::loadPersistentAuth();
 
         self::$_handler = $class;
 
@@ -34,16 +36,17 @@ class Auth {
 
     }
 
-    public static function checkIdentity($primary, $secondary) {
+    public static function checkIdentity($primary, $secondary)
+    {
         $class = self::$_handler;
         $auth_object = $class::loadByIdentifier($primary);
 
-        if($auth_object instanceof IAuthable) {
+        if ($auth_object instanceof IAuthable) {
 
             $_is_valid = true;
             // check the secondary credentials
-            foreach($secondary as $key => $value) {
-                if((is_callable($value) && $value($auth_object->$key))
+            foreach ($secondary as $key => $value) {
+                if ((is_callable($value) && $value($auth_object->$key))
                     || (isset($auth_object->$key) && $auth_object->$key == $value)
                 )
                     continue;
@@ -56,7 +59,7 @@ class Auth {
                 $_is_valid = false;
             }
 
-            if($_is_valid) {
+            if ($_is_valid) {
                 self::$_valid_auth = $auth_object;
                 self::registerIdentity($auth_object);
                 return self::SUCCESS;
@@ -69,22 +72,25 @@ class Auth {
         }
     }
 
-    public static function registerIdentity($identity) {
+    public static function registerIdentity($identity)
+    {
         return Registry::store('__wave_identity', $identity);
     }
 
-    public static function deregisterIdentity() {
+    public static function deregisterIdentity()
+    {
         return Registry::destroy('__wave_identity');
     }
 
-    public static function persistIdentity($identity, $type = null, $expires = null) {
+    public static function persistIdentity($identity, $type = null, $expires = null)
+    {
         $config = Config::get('deploy')->auth;
-        if($type === null)
+        if ($type === null)
             $type = $config->persist_type;
-        if($expires === null)
+        if ($expires === null)
             $expires = $config->$type->expires;
 
-        if($type == 'cookie') {
+        if ($type == 'cookie') {
 
             Cookie::store(
                 $config->cookie->name,
@@ -100,12 +106,13 @@ class Auth {
 
     }
 
-    public static function ceaseIdentity($type = null) {
+    public static function ceaseIdentity($type = null)
+    {
         $config = Config::get('deploy')->auth;
-        if($type === null)
+        if ($type === null)
             $type = $config->persist_type;
 
-        if($type == 'cookie') {
+        if ($type == 'cookie') {
 
             Cookie::store(
                 $config->cookie->name,
@@ -119,15 +126,18 @@ class Auth {
 
     }
 
-    public static function getAuthProblems() {
+    public static function getAuthProblems()
+    {
         return self::$_auth_problems;
     }
 
-    public static function getIdentity() {
+    public static function getIdentity()
+    {
         return Registry::fetch('__wave_identity');
     }
 
-    public static function getHandlerClass() {
+    public static function getHandlerClass()
+    {
         return self::$_handler;
     }
 

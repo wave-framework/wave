@@ -6,17 +6,19 @@ use ReflectionType;
 use Wave;
 use Wave\Router;
 
-class Generator {
+class Generator
+{
 
-    public static function generate() {
+    public static function generate()
+    {
         $reflector = new Wave\Reflector(Wave\Config::get('wave')->path->controllers);
         $reflected_options = $reflector->execute();
 
         $all_actions = self::buildRoutes($reflected_options);
-        foreach($all_actions as $profile => $actions) {
+        foreach ($all_actions as $profile => $actions) {
             $route_node = new Node();
-            foreach($actions as $action) {
-                foreach($action->getRoutes() as $route) {
+            foreach ($actions as $action) {
+                foreach ($action->getRoutes() as $route) {
                     $route_node->addChild($route, $action);
                 }
             }
@@ -25,26 +27,27 @@ class Generator {
         }
     }
 
-    public static function buildRoutes($controllers) {
+    public static function buildRoutes($controllers)
+    {
 
         $compiled_routes = array();
         // iterate all the controllers and make a tree of all the possible path
-        foreach($controllers as $controller) {
+        foreach ($controllers as $controller) {
             $base_route = new Action();
             // set the route defaults from the Controller annotations (if any)
-            foreach($controller['class']['annotations'] as $annotation) {
+            foreach ($controller['class']['annotations'] as $annotation) {
                 $base_route->addAnnotation($annotation);
             }
 
-            foreach($controller['methods'] as $method) {
+            foreach ($controller['methods'] as $method) {
                 $route = clone $base_route; // copy from the controller route
 
-                if($method['visibility'] == Wave\Reflector::VISIBILITY_PUBLIC) {
-                    foreach($method['annotations'] as $annotation){
+                if ($method['visibility'] == Wave\Reflector::VISIBILITY_PUBLIC) {
+                    foreach ($method['annotations'] as $annotation) {
                         $route->addAnnotation($annotation);
                     }
 
-                    foreach($method['parameters'] as $parameter) {
+                    foreach ($method['parameters'] as $parameter) {
                         /** @var \ReflectionParameter $parameter */
                         $type = null;
                         $reflected_type = $parameter->getType();
@@ -59,8 +62,8 @@ class Generator {
 
                 $route->setAction($controller['class']['name'] . '.' . $method['name']);
 
-                if($route->hasRoutes() || $route->hasSchedule()) {
-                    if(isset($compiled_routes[$base_route->getProfile()][$route->getAction()])) {
+                if ($route->hasRoutes() || $route->hasSchedule()) {
+                    if (isset($compiled_routes[$base_route->getProfile()][$route->getAction()])) {
                         throw new \LogicException(sprintf("Action %s is declared twice", $route->getAction()));
                     }
                     $compiled_routes[$base_route->getProfile()][$route->getAction()] = $route;

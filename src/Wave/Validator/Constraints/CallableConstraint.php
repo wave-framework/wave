@@ -8,15 +8,17 @@ use Wave\Validator;
 use Wave\Validator\CleanerInterface;
 use Wave\Validator\Exception;
 
-class CallableConstraint extends AbstractConstraint implements CleanerInterface {
+class CallableConstraint extends AbstractConstraint implements CleanerInterface
+{
 
     const ERROR_CALLABLE = 'callable';
 
     private $key = self::ERROR_CALLABLE;
     private $message = '%s is not valid';
 
-    public function __construct($property, $arguments, Validator &$validator) {
-        if(!is_callable($arguments))
+    public function __construct($property, $arguments, Validator &$validator)
+    {
+        if (!is_callable($arguments))
             throw new \InvalidArgumentException('The argument passed to [callable] must be callable');
 
         parent::__construct($property, $arguments, $validator);
@@ -26,7 +28,8 @@ class CallableConstraint extends AbstractConstraint implements CleanerInterface 
     /**
      * @return bool
      */
-    public function evaluate() {
+    public function evaluate()
+    {
         return call_user_func_array(
             $this->arguments, array(
                 &$this->data,
@@ -40,15 +43,18 @@ class CallableConstraint extends AbstractConstraint implements CleanerInterface 
     /**
      * @return string
      */
-    protected function getViolationKey() {
+    protected function getViolationKey()
+    {
         return $this->key;
     }
 
-    protected function getViolationMessage($context = 'This value') {
+    protected function getViolationMessage($context = 'This value')
+    {
         return sprintf($this->message, $context);
     }
 
-    public function getCleanedData() {
+    public function getCleanedData()
+    {
         return $this->data;
     }
 }

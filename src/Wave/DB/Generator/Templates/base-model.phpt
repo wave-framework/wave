@@ -36,8 +36,8 @@ use Wave\DB;
 {% endif %}
  {% endfor %}
 */
-abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
-
+abstract class {{ table.ClassName }} extends {{ baseModelClass }}
+{
     //Table name
     protected static $_database = '{{ table.Database.getNamespace(false) }}';
     protected static $_table_name = '{{ table.Name }}';
@@ -96,11 +96,13 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
     {% for column in table.Columns %}
 
     //{{ column.TypeDescription|raw }} {{ column.Extra }} {{ column.Comment }}
-    public function get{{ column.Name }}(){
+    public function get{{ column.Name }}()
+    {
         return $this->_data['{{ column.Name }}'];
     }
 
-    public function set{{ column.Name }}($value){
+    public function set{{ column.Name }}($value)
+    {
         $this->_data['{{ column.Name }}'] = $value;
         $this->_dirty['{{ column.Name }}'] = true;
         return $this;
