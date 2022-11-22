@@ -5,7 +5,8 @@ namespace Wave\Http\Request;
 
 use Wave\Http\Request;
 
-interface AuthorizationAware {
+interface AuthorizationAware
+{
 
     /**
      * Evaluate this object for the required authorization level needed by a controller function.

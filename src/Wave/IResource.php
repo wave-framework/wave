@@ -1,7 +1,8 @@
 <?php
 
 
-interface Wave_IResource {
+interface Wave_IResource
+{
 
     const RESOURCE_SHOW = 'show';
     const RESOURCE_CREATE = 'create';

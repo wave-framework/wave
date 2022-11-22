@@ -12,7 +12,8 @@ use Wave\Annotation\Schedule;
 use Wave\Annotation\Validate;
 use Wave\DB\Model;
 
-class Annotation {
+class Annotation
+{
 
     const FOR_CLASS = 'class';
 
@@ -33,19 +34,21 @@ class Annotation {
         'schedule' => Schedule::class,
     );
 
-    public static function factory($key, $value, $from_class = null){
+    public static function factory($key, $value, $from_class = null)
+    {
 
         $class = __CLASS__;
-        if(isset(self::$handlers[$key])){
+        if (isset(self::$handlers[$key])) {
             $class = self::$handlers[$key];
         }
 
         return new $class($key, $value, $from_class);
     }
 
-    public static function parse($block, $originating_class){
+    public static function parse($block, $originating_class)
+    {
 
-        if(empty($block)) return array();
+        if (empty($block)) return array();
 
         $block = self::sanitizeDocBlock($block);
 
@@ -68,34 +71,41 @@ class Annotation {
      * @param $docblock
      * @return mixed
      */
-    protected static function sanitizeDocBlock($docblock){
+    protected static function sanitizeDocBlock($docblock)
+    {
         return preg_replace('/^([\t\f ]*\*[\t\f ]+)/m', '', $docblock);
     }
 
-    public function __construct($key, $value, $from_class = null) {
+    public function __construct($key, $value, $from_class = null)
+    {
         $this->key = $key;
         $this->value = $value;
         $this->from_class = $from_class;
     }
 
-    public function apply(Router\Action &$action){}
+    public function apply(Router\Action &$action)
+    {
+    }
 
     /**
      * @return mixed
      */
-    public function getKey() {
+    public function getKey()
+    {
         return $this->key;
     }
 
     /**
      * @return mixed
      */
-    public function getValue() {
+    public function getValue()
+    {
         return $this->value;
     }
 
-    protected function validOnSubclassesOf($annotatedClass, $baseClass) {
-        if( $annotatedClass != $baseClass && !is_subclass_of($annotatedClass, $baseClass) )
+    protected function validOnSubclassesOf($annotatedClass, $baseClass)
+    {
+        if ($annotatedClass != $baseClass && !is_subclass_of($annotatedClass, $baseClass))
             throw new InvalidAnnotationException(get_class($this) . " is only valid on objects of type {$baseClass}.");
 
     }

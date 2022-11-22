@@ -13,7 +13,8 @@ use Wave\Config\Row as ConfigRow;
 use Wave\DB;
 use Wave\DB\Driver\DriverInterface;
 
-class Connection extends PDO {
+class Connection extends PDO
+{
 
     /** @var DriverInterface $driver_class */
     private $driver_class;
@@ -25,7 +26,8 @@ class Connection extends PDO {
     /**
      * @param \Wave\Config\Row $config
      */
-    public function __construct(ConfigRow $config, $namespace) {
+    public function __construct(ConfigRow $config, $namespace)
+    {
 
         /** @var DriverInterface $driver_class */
         $driver_class = DB::getDriverClass($config->driver);
@@ -33,11 +35,11 @@ class Connection extends PDO {
         $this->namespace = $namespace;
 
         $options = array();
-        if(isset($config->driver_options)) {
+        if (isset($config->driver_options)) {
             // driver_options can be in two formats, either a key => value array (native)
             // or an array of [ key, value ], used to preserve types (i.e. integers as keys)
-            if(isset($config->driver_options[0])) {
-                foreach($config->driver_options as $option) {
+            if (isset($config->driver_options[0])) {
+                foreach ($config->driver_options as $option) {
                     list($key, $value) = $option;
                     $options[$key] = $value;
                 }
@@ -57,13 +59,13 @@ class Connection extends PDO {
     public function prepare($sql, $options = array()): \PDOStatement|false
     {
 
-        if(!$this->cache_enabled)
+        if (!$this->cache_enabled)
             return parent::prepare($sql, $options);
 
         $hash = md5($sql);
 
         //double-check that sql is same if it is cached
-        if(!isset($this->statement_cache[$hash]) || $this->statement_cache[$hash]->queryString !== $sql) {
+        if (!isset($this->statement_cache[$hash]) || $this->statement_cache[$hash]->queryString !== $sql) {
             $this->statement_cache[$hash] = parent::prepare($sql, $options);
         }
 
@@ -74,7 +76,8 @@ class Connection extends PDO {
     /**
      * @return DriverInterface
      */
-    public function getDriverClass() {
+    public function getDriverClass()
+    {
         return $this->driver_class;
     }
 
@@ -84,7 +87,8 @@ class Connection extends PDO {
      *
      * @return mixed
      */
-    public function getNamespace() {
+    public function getNamespace()
+    {
         return $this->namespace;
     }
 

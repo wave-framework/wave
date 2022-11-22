@@ -12,7 +12,8 @@ use Wave\Http\Response\XmlResponse;
 use Wave\Router\Action;
 use Wave\Validator\Exception\InvalidInputException;
 
-class Controller {
+class Controller
+{
 
     const RETURN_FORMAT_REQUEST = 'request';
     const RETURN_FORMAT_RESPOND = 'respond';
@@ -53,20 +54,21 @@ class Controller {
      * @param array $data
      * @param int $invoke_type
      *
+     * @return Http\Response
      * @throws Http\Exception\UnauthorizedException
      * @throws Http\Exception\NotFoundException
      * @throws Exception
      * @throws Http\Exception\ForbiddenException
-     * @return Http\Response
      * @throws Http\Exception\ForbiddenException
      */
-    public static final function invoke(Action $action, Request $request, $data = array(), $invoke_type = self::INVOKE_NORMAL) {
+    public static final function invoke(Action $action, Request $request, $data = array(), $invoke_type = self::INVOKE_NORMAL)
+    {
 
         list($controller_class, $action_method) = explode('.', $action->getAction(), 2) + array(null, null);
-        if(!isset($action_method))
+        if (!isset($action_method))
             $action_method = Config::get('wave')->controller->default_method;
 
-        if(class_exists($controller_class, true) && method_exists($controller_class, $action_method)) {
+        if (class_exists($controller_class, true) && method_exists($controller_class, $action_method)) {
 
             /** @var \Wave\Controller $controller */
             $controller = new $controller_class();
@@ -76,7 +78,7 @@ class Controller {
             $controller->_response_method = $request->getFormat();
             $controller->_invoke_method = $invoke_type;
 
-            switch($controller->_request->getMethod()) {
+            switch ($controller->_request->getMethod()) {
                 case Request::METHOD_GET:
                     $controller->_is_get = true;
                     break;
@@ -90,33 +92,33 @@ class Controller {
             Hook::triggerAction('controller.before_init', array(&$controller));
             $controller->init();
 
-            if($invoke_type !== self::INVOKE_SUB_REQUEST && !$action->canRespondWith($request->getFormat())) {
+            if ($invoke_type !== self::INVOKE_SUB_REQUEST && !$action->canRespondWith($request->getFormat())) {
                 throw new NotFoundException(
                     'The requested action ' . $action->getAction() .
                     ' can not respond with ' . $request->getFormat() .
                     '. (Accepts: ' . implode(', ', $action->getRespondsWith()) . ')', $request
                 );
-            } else if(!$action->checkRequiredLevel($request)) {
+            } else if (!$action->checkRequiredLevel($request)) {
                 throw new UnauthorizedException('You are not authorized to view this resource');
-            } else if($action->needsValidation() && !$controller->inputValid($action->getValidationSchema($data))) {
+            } else if ($action->needsValidation() && !$controller->inputValid($action->getValidationSchema($data))) {
                 return $controller->request();
             }
 
             Hook::triggerAction('controller.before_dispatch', array(&$controller));
 
             $parameters = array();
-            foreach($action->getMethodParameters() as $parameter){
+            foreach ($action->getMethodParameters() as $parameter) {
                 list($parameter_name, $parameter_type) = $parameter;
-                if(isset($controller->_cleaned[$parameter_name])){
+                if (isset($controller->_cleaned[$parameter_name])) {
                     //Try first in validator output
                     $parameters[] = $controller->_cleaned[$parameter_name];
-                } elseif(isset($controller->_data[$parameter_name])){
+                } elseif (isset($controller->_data[$parameter_name])) {
                     //Then if just using the passed data - there may be a legitimate use for this?
                     $parameters[] = $controller->_data[$parameter_name];
-                } elseif($parameter_type === 'Wave\\Validator\\Result'){
+                } elseif ($parameter_type === 'Wave\\Validator\\Result') {
                     //If the validator is requested, give it
                     $parameters[] = $controller->_cleaned;
-                }elseif($parameter_type === get_class($request)){
+                } elseif ($parameter_type === get_class($request)) {
                     //If the request is requested, give it
                     $parameters[] = $request;
                 } else {
@@ -127,7 +129,7 @@ class Controller {
 
             try {
                 $response = call_user_func_array(array($controller, $action_method), $parameters);
-            } catch(InvalidInputException $e) {
+            } catch (InvalidInputException $e) {
                 $controller->_input_errors = $e->getViolations();
                 $response = $controller->request();
             }
@@ -140,22 +142,27 @@ class Controller {
 
     }
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->_post =& $_POST;
         $this->_get =& $_GET;
 
         $this->_identity = \Wave\Auth::getIdentity();
     }
 
-    public function _setResponseMethod($method) {
+    public function _setResponseMethod($method)
+    {
         $this->_response_method = $method;
     }
 
-    public function _getResponseMethod() {
+    public function _getResponseMethod()
+    {
         return $this->_response_method;
     }
 
-    public function init() {}
+    public function init()
+    {
+    }
 
     /**
      * Use the Wave Validator to check form input. If errors exist, the offending
@@ -165,24 +172,25 @@ class Controller {
      * @param        $data -        [optional] Supply a data array to use for validation
      * @return        Boolean true for no errors, or false.
      */
-    protected function inputValid($schema, $data = null) {
-        if($data === null)
+    protected function inputValid($schema, $data = null)
+    {
+        if ($data === null)
             $data = $this->_data;
 
         try {
             $output = Validator::validate($schema, $data);
             $this->_cleaned = $output;
             return true;
-        }
-        catch(InvalidInputException $e) {
+        } catch (InvalidInputException $e) {
             $this->_input_errors = $e->getViolations();
         }
 
         return false;
     }
 
-    protected function _buildPayload($status, $message = '', $payload = null) {
-        if($payload === null)
+    protected function _buildPayload($status, $message = '', $payload = null)
+    {
+        if ($payload === null)
             $payload = $this->_getResponseProperties();
 
         return array(
@@ -192,16 +200,18 @@ class Controller {
         );
     }
 
-    protected function _buildDataSet() {
+    protected function _buildDataSet()
+    {
         $this->_setTemplatingGlobals();
         $properties = $this->_getResponseProperties();
         return array_merge($properties);
     }
 
-    protected function _getResponseProperties() {
+    protected function _getResponseProperties()
+    {
         $payload = array();
-        foreach($this as $key => $val) {
-            if($key[0] === '_') {
+        foreach ($this as $key => $val) {
+            if ($key[0] === '_') {
                 continue;
             }
             $payload[$key] = $val;
@@ -209,49 +219,51 @@ class Controller {
         return $payload;
     }
 
-    protected function _setTemplatingGlobals() {
+    protected function _setTemplatingGlobals()
+    {
         View::registerGlobal('input', isset($this->_sanitized) ? $this->_sanitized : $this->_data);
         View::registerGlobal('errors', isset($this->_input_errors) ? $this->_input_errors : array());
         View::registerGlobal('_identity', $this->_identity);
     }
 
-    protected function respond($payload = null) {
-        if($this->_invoke_method === self::INVOKE_SUB_REQUEST) {
-            if($payload !== null) {
+    protected function respond($payload = null)
+    {
+        if ($this->_invoke_method === self::INVOKE_SUB_REQUEST) {
+            if ($payload !== null) {
                 return $payload;
-            }
-            else {
+            } else {
                 return $this->_getResponseProperties();
             }
-        }
-        else {
+        } else {
             $callable = $this->getResponseMethodHandler(self::RETURN_FORMAT_RESPOND);
             return call_user_func($callable, $payload);
         }
     }
 
-    protected function request($payload = null) {
-        if($this->_invoke_method === self::INVOKE_SUB_REQUEST) {
-            if($payload === null) {
+    protected function request($payload = null)
+    {
+        if ($this->_invoke_method === self::INVOKE_SUB_REQUEST) {
+            if ($payload === null) {
                 $payload = isset($this->_input_errors) ? $this->_input_errors : array();
             }
             return array('errors' => $payload);
-        }
-        else {
+        } else {
             $callable = $this->getResponseMethodHandler(self::RETURN_FORMAT_REQUEST);
             return call_user_func($callable, $payload);
         }
     }
 
-    protected function requestHTML() {
-        if(isset($this->_request_template)) {
+    protected function requestHTML()
+    {
+        if (isset($this->_request_template)) {
             $this->_template = $this->_request_template;
         }
         return $this->respondHTML();
     }
 
-    protected function respondHTML() {
-        if(!isset($this->_template)) {
+    protected function respondHTML()
+    {
+        if (!isset($this->_template)) {
             throw new Exception(
                 "Template not set for {$this->_response_method} in action {$this->_action->getAction()}");
         }
@@ -263,15 +275,17 @@ class Controller {
         return new HtmlResponse($content);
     }
 
-    protected function requestDialog() {
-        if(isset($this->_request_template))
+    protected function requestDialog()
+    {
+        if (isset($this->_request_template))
             $this->_template = $this->_request_template;
 
         return $this->respondDialog();
     }
 
-    protected function respondDialog() {
-        if(!isset($this->_template)) {
+    protected function respondDialog()
+    {
+        if (!isset($this->_template)) {
             throw new Exception(
                 "Template not set for {$this->_response_method} in action {$this->_action->getAction()}");
         }
@@ -285,25 +299,27 @@ class Controller {
         return $this->respondJSON(array('html' => $html));
     }
 
-    protected function requestJSON($payload = null) {
-        if(!isset($this->_status)) {
+    protected function requestJSON($payload = null)
+    {
+        if (!isset($this->_status)) {
             $this->_status = Response::STATUS_BAD_REQUEST;
         }
-        if(!isset($this->_message)) {
+        if (!isset($this->_message)) {
             $this->_message = 'Invalid request or parameters';
         }
 
-        if($payload === null) {
+        if ($payload === null) {
             $payload = array('errors' => isset($this->_input_errors) ? $this->_input_errors : array());
         }
         return $this->respondJSON($payload);
     }
 
-    protected function respondJSON($payload = null) {
-        if(!isset($this->_status)) {
+    protected function respondJSON($payload = null)
+    {
+        if (!isset($this->_status)) {
             $this->_status = Response::STATUS_OK;
         }
-        if(!isset($this->_message)) {
+        if (!isset($this->_message)) {
             $this->_message = Response::getMessageForCode($this->_status);
         }
 
@@ -314,31 +330,34 @@ class Controller {
         return new JsonResponse($payload, $this->_status);
     }
 
-    protected function respondXML($payload = null) {
-        if(!isset($this->_status)) {
+    protected function respondXML($payload = null)
+    {
+        if (!isset($this->_status)) {
             $this->_status = Response::STATUS_OK;
         }
-        if(!isset($this->_message)) {
+        if (!isset($this->_message)) {
             $this->_message = Response::getMessageForCode($this->_status);
         }
 
         return new XmlResponse($this->_buildPayload($this->_status, $this->_message, $payload));
     }
 
-    protected function requestXML($payload = null) {
-        if(!isset($this->_status)) {
+    protected function requestXML($payload = null)
+    {
+        if (!isset($this->_status)) {
             $this->_status = Response::STATUS_BAD_REQUEST;
         }
-        if(!isset($this->_message)) {
+        if (!isset($this->_message)) {
             $this->_message = Response::getMessageForCode($this->_status);
         }
 
         return $this->respondXML($payload);
     }
 
-    private function getResponseMethodHandler($type) {
+    private function getResponseMethodHandler($type)
+    {
         $response_method = $type . strtoupper($this->_response_method);
-        if(method_exists($this, $response_method) && $response_method !== $type)
+        if (method_exists($this, $response_method) && $response_method !== $type)
             return [$this, $response_method];
         else
             throw new Exception(

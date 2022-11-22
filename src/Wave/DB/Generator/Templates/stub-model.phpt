@@ -16,6 +16,7 @@
 
 namespace {{ table.Database.Namespace }};
 
-class {{ table.ClassName }} extends Base\{{ table.ClassName }} {
+class {{ table.ClassName }} extends Base\{{ table.ClassName }}
+{
 
 }

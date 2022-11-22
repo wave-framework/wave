@@ -9,7 +9,8 @@ use Wave\Router\Action;
 use Wave\Router\Node;
 use Wave\Router\RoutingException;
 
-class Router {
+class Router
+{
 
     private static $profiles;
 
@@ -28,10 +29,11 @@ class Router {
     /** @var \Wave\Http\Response $response */
     protected $response;
 
-    public static function init($host = null) {
+    public static function init($host = null)
+    {
         Hook::triggerAction('router.before_init', array(&$host));
-        if($host === null) {
-            if(isset($_SERVER['HTTP_HOST']))
+        if ($host === null) {
+            if (isset($_SERVER['HTTP_HOST']))
                 $host = $_SERVER['HTTP_HOST'];
             else
                 $host = Config::get('deploy')->profiles->default->baseurl;
@@ -41,21 +43,24 @@ class Router {
         return $instance;
     }
 
-    public static function getActionByName($profile, $action_name) {
+    public static function getActionByName($profile, $action_name)
+    {
         $table = static::getRoutesTableCache($profile);
         $action_name = ltrim($action_name, '\\');
 
         return isset($table[$action_name]) ? $table[$action_name] : null;
     }
 
-    public static function getProfiles() {
-        if(!isset(self::$profiles))
+    public static function getProfiles()
+    {
+        if (!isset(self::$profiles))
             self::$profiles = Config::get('deploy')->profiles;
 
         return self::$profiles;
     }
 
-    public static function getCacheName($host, $type) {
+    public static function getCacheName($host, $type)
+    {
         return "routes/$host.$type";
     }
 
@@ -69,49 +74,52 @@ class Router {
     {
         $table = static::getRoutesTableCache($this->profile);
 
-        return array_filter($table, function (Action $action){
+        return array_filter($table, function (Action $action) {
             return $action->hasSchedule();
         });
     }
 
-    public static function getRoutesTreeCache($profile) {
+    public static function getRoutesTreeCache($profile)
+    {
         $root = Cache::load(self::getCacheName($profile, 'tree'));
-        if($root == null) {
+        if ($root == null) {
             $root = Cache::load(self::getCacheName('default', 'tree'));
         }
 
-        if(!($root instanceof Node))
+        if (!($root instanceof Node))
             throw new RoutingException("Could not load route tree for profile: {$profile} nor default profile");
 
         return $root;
     }
 
-    public static function getRoutesTableCache($profile) {
+    public static function getRoutesTableCache($profile)
+    {
         $table = Cache::load(self::getCacheName($profile, 'table'));
-        if($table == null) {
+        if ($table == null) {
             $table = Cache::load(self::getCacheName('default', 'table'));
         }
 
-        if(!is_array($table))
+        if (!is_array($table))
             throw new RoutingException("Could not load routes table for profile: {$profile} nor default profile");
 
         return $table;
     }
 
-    public function __construct($profile) {
-        if(isset(static::getProfiles()->$profile)) {
+    public function __construct($profile)
+    {
+        if (isset(static::getProfiles()->$profile)) {
             $this->profile = $profile;
         } else {
             // try looking for the profile using the baseurl instead
-            foreach(static::getProfiles() as $name => $config) {
-                if($config->baseurl == $profile) {
+            foreach (static::getProfiles() as $name => $config) {
+                if ($config->baseurl == $profile) {
                     $this->profile = $name;
                     break;
                 }
             }
         }
 
-        if(!isset($this->profile)) {
+        if (!isset($this->profile)) {
             throw new RoutingException("Unknown routing profile {$profile}");
         }
     }
@@ -119,19 +127,20 @@ class Router {
     /**
      * @param Request $request
      *
-     * @throws \LogicException
-     * @throws Http\Exception\NotFoundException
      * @return Response
+     * @throws Http\Exception\NotFoundException
+     * @throws \LogicException
      */
-    public function route(Request $request = null) {
+    public function route(Request $request = null)
+    {
 
-        if(null === $request)
+        if (null === $request)
             $request = Request::createFromGlobals();
 
         $this->request = $request;
 
         $this->request_uri = $request->getPath();
-        if(strrpos($this->request_uri, $request->getFormat()) !== false) {
+        if (strrpos($this->request_uri, $request->getFormat()) !== false) {
             $this->request_uri = substr($this->request_uri, 0, -(strlen($request->getFormat()) + 1));
         }
         $this->request_method = $request->getMethod();
@@ -142,12 +151,12 @@ class Router {
         $node = $this->getRootNode()->findChild($url, $this->request);
 
         /** @var \Wave\Router\Action $action */
-        if($node instanceof Router\Node && $action = $node->getAction()) {
+        if ($node instanceof Router\Node && $action = $node->getAction()) {
             Hook::triggerAction('router.before_invoke', array(&$action, &$this));
             $this->request->setAction($action);
             $this->response = Controller::invoke($action, $this->request);
             Hook::triggerAction('router.before_response', array(&$action, &$this));
-            if(!($this->response instanceof Response)) {
+            if (!($this->response instanceof Response)) {
                 throw new \LogicException("Action {$action->getAction()} should return a \\Wave\\Http\\Response object", 500);
             } else {
                 return $this->response->prepare($this->request);
@@ -156,8 +165,9 @@ class Router {
             throw new NotFoundException('The requested URL ' . $url . ' does not exist', $this->request);
     }
 
-    public function getRootNode() {
-        if(!($this->root instanceof Node)) {
+    public function getRootNode()
+    {
+        if (!($this->root instanceof Node)) {
             $this->root = static::getRoutesTreeCache($this->profile);
         }
         return $this->root;
@@ -166,14 +176,16 @@ class Router {
     /**
      * @return \Wave\Http\Request
      */
-    public function getRequest() {
+    public function getRequest()
+    {
         return $this->request;
     }
 
     /**
      * @param \Wave\Http\Request $request
      */
-    public function setRequest($request) {
+    public function setRequest($request)
+    {
         $this->request = $request;
     }
 }

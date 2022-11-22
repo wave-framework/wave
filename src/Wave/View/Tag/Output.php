@@ -7,9 +7,11 @@ use Twig\Node\Node;
 use Twig\Token;
 use Twig\TokenParser\AbstractTokenParser;
 
-class Output extends AbstractTokenParser {
+class Output extends AbstractTokenParser
+{
 
-    public function parse(Token $token) {
+    public function parse(Token $token)
+    {
         $lineno = $token->getLine();
 
 
@@ -21,24 +23,28 @@ class Output extends AbstractTokenParser {
         return new OutputNode($type, $lineno, $this->getTag());
     }
 
-    public function getTag() {
+    public function getTag()
+    {
         return 'output';
     }
 
 
 }
 
-class OutputNode extends Node {
+class OutputNode extends Node
+{
 
 
     const FORMAT_JS = '<script type=\"text/javascript\" src=\"%s\"></script>';
     const FORMAT_CSS = '<link href=\"%s\" rel=\"stylesheet\" media=\"%s\" />';
 
-    public function __construct($type, $line, $tag = null) {
+    public function __construct($type, $line, $tag = null)
+    {
         parent::__construct(array(), array('type' => $type), $line, $tag);
     }
 
-    public function compile(Compiler $compiler) {
+    public function compile(Compiler $compiler)
+    {
 
         $compiler
             ->addDebugInfo($this);

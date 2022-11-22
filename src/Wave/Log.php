@@ -20,7 +20,8 @@ use Wave\Log\CliHandler;
 use Wave\Log\ExceptionIntrospectionProcessor;
 
 
-class Log extends Logger {
+class Log extends Logger
+{
 
     protected static $default_handlers = null;
     private static $default_level = null;
@@ -41,7 +42,8 @@ class Log extends Logger {
     /**
      *    Initialise the Log with a default channel for framework logs
      **/
-    public static function init() {
+    public static function init()
+    {
 
     }
 
@@ -49,11 +51,12 @@ class Log extends Logger {
      * Set the default level for logging messages to the
      *
      * @param int $level The new default level
-     * @throws Exception
      * @return void
+     * @throws Exception
      */
-    public static function setDefaultLevel($level) {
-        if(!in_array($level, self::$all_levels))
+    public static function setDefaultLevel($level)
+    {
+        if (!in_array($level, self::$all_levels))
             throw new \Wave\Exception("Invalid default log level of $level set");
         static::$default_level = $level;
     }
@@ -61,15 +64,17 @@ class Log extends Logger {
     /**
      * @return int The default log level
      **/
-    public static function getDefaultLevel() {
-        if(static::$default_level === null)
+    public static function getDefaultLevel()
+    {
+        if (static::$default_level === null)
             static::$default_level = Config::get('wave')->logger->file->level;
 
         return static::$default_level;
     }
 
-    public static function getDefaultHandlers() {
-        if(static::$default_handlers === null) {
+    public static function getDefaultHandlers()
+    {
+        if (static::$default_handlers === null) {
 
             static::$default_handlers = array();
 
@@ -78,7 +83,7 @@ class Log extends Logger {
             $log_dir = dirname($log_path);
 
 
-            if(!is_writable($log_dir)) {
+            if (!is_writable($log_dir)) {
                 @mkdir($log_dir, 0770, true);
             }
 
@@ -87,7 +92,7 @@ class Log extends Logger {
 
             static::pushDefaultHandler($stream_handler);
 
-            if(PHP_SAPI === 'cli') {
+            if (PHP_SAPI === 'cli') {
                 $cli_handler = new CliHandler(Config::get('wave')->logger->cli->level);
                 $cli_handler->setFormatter(new LineFormatter(CliHandler::LINE_FORMAT));
                 static::pushDefaultHandler($cli_handler);
@@ -98,8 +103,9 @@ class Log extends Logger {
         return static::$default_handlers;
     }
 
-    public static function pushDefaultHandler(AbstractHandler $handler) {
-        if(static::$default_handlers === null) {
+    public static function pushDefaultHandler(AbstractHandler $handler)
+    {
+        if (static::$default_handlers === null) {
             static::$default_handlers = self::getDefaultHandlers();
         }
 
@@ -118,8 +124,9 @@ class Log extends Logger {
      *
      * @return \Monolog\Logger A new Logger instance
      */
-    public static function createChannel($channel, array $handlers = array(), $use_default_handlers = true) {
-        if($use_default_handlers)
+    public static function createChannel($channel, array $handlers = array(), $use_default_handlers = true)
+    {
+        if ($use_default_handlers)
             $handlers += static::getDefaultHandlers();
 
         static::$channels[$channel] = new Logger($channel, $handlers);
@@ -132,9 +139,10 @@ class Log extends Logger {
      *
      * @return  \Monolog\Logger A Logger instance for the given channel or `null` if not found
      */
-    public static function getChannel($name, $create = true) {
-        if(!isset(static::$channels[$name])) {
-            if($create === true) return static::createChannel($name);
+    public static function getChannel($name, $create = true)
+    {
+        if (!isset(static::$channels[$name])) {
+            if ($create === true) return static::createChannel($name);
             else return null;
         }
         return static::$channels[$name];
@@ -148,7 +156,8 @@ class Log extends Logger {
      *
      * @return \Monolog\Logger
      */
-    public static function setChannel($name, Logger $instance) {
+    public static function setChannel($name, Logger $instance)
+    {
         return static::$channels[$name] = $instance;
     }
 
@@ -161,7 +170,8 @@ class Log extends Logger {
      *
      * @return Bool Whether the message has been written
      **/
-    public static function write($channel, $message, $level = Logger::INFO, $context = array()) {
+    public static function write($channel, $message, $level = Logger::INFO, $context = array())
+    {
         $channel = static::getChannel($channel);
 
         return $channel->addRecord($level, $message, $context);

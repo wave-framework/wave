@@ -2,7 +2,8 @@
 
 namespace Wave;
 
-class Reflector {
+class Reflector
+{
 
     const SCAN_DIRECTORY = 1;
     const SCAN_FILE = 2;
@@ -15,40 +16,42 @@ class Reflector {
 
     private $_classes = null;
 
-    public function __construct($handle, $type = self::SCAN_DIRECTORY, $filter = self::DEFAULT_FILE_FILTER, $recursive = true) {
-        if(!file_exists($handle))
+    public function __construct($handle, $type = self::SCAN_DIRECTORY, $filter = self::DEFAULT_FILE_FILTER, $recursive = true)
+    {
+        if (!file_exists($handle))
             throw new \Wave\Exception('Directory ' . $handle . ' cannot be resolved in \Wave\Refector', 0);
 
         $this->_classes = array();
-        if($type == self::SCAN_FILE && is_file($handle)) {
+        if ($type == self::SCAN_FILE && is_file($handle)) {
             $class = self::findClass($handle);
-            if($class !== false)
+            if ($class !== false)
                 $this->_classes[] = $class;
-        } else if($type == self::SCAN_DIRECTORY && is_dir($handle)) {
+        } else if ($type == self::SCAN_DIRECTORY && is_dir($handle)) {
 
-            if($recursive === true) {
+            if ($recursive === true) {
                 $dir_iterator = new \RecursiveDirectoryIterator($handle);
                 $iterator = new \RecursiveIteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST);
             } else {
                 $dir_iterator = new \FilesystemIterator($handle);
                 $iterator = new \IteratorIterator($dir_iterator, \RecursiveIteratorIterator::SELF_FIRST);
             }
-            foreach($iterator as $file) {
+            foreach ($iterator as $file) {
                 $class = self::findClass($file);
-                if($class !== false)
+                if ($class !== false)
                     $this->_classes[] = $class;
             }
         }
 
     }
 
-    public function execute($include_inherited_members = false) {
-        if(!isset($this->_classes[0]))
+    public function execute($include_inherited_members = false)
+    {
+        if (!isset($this->_classes[0]))
             throw new \Wave\Exception('No files to reflect on');
 
         $classes = array();
 
-        foreach($this->_classes as $class) {
+        foreach ($this->_classes as $class) {
             $reflector = new \ReflectionClass($class);
 
             $class_annotations = Annotation::parse($reflector->getDocComment(), $class);
@@ -62,15 +65,15 @@ class Reflector {
             );
 
             $methods = array();
-            foreach($reflector->getMethods() as $method) {
+            foreach ($reflector->getMethods() as $method) {
                 $declaring_class = $method->getDeclaringClass()->getName();
                 // don't put inherited methods on here plz
-                if($declaring_class != $class && !$include_inherited_members)
+                if ($declaring_class != $class && !$include_inherited_members)
                     continue;
 
                 $annotations = Annotation::parse($method->getDocComment(), $class);
                 $method_annotations = array();
-                foreach($annotations as $annotation) {
+                foreach ($annotations as $annotation) {
                     $method_annotations[] = $annotation;
                 }
 
@@ -87,15 +90,15 @@ class Reflector {
             }
 
             $properties = array();
-            foreach($reflector->getProperties() as $property) {
+            foreach ($reflector->getProperties() as $property) {
                 $declaring_class = $property->getDeclaringClass()->getName();
                 // don't put inherited methods on here plz
-                if($declaring_class != $class && !$include_inherited_members)
+                if ($declaring_class != $class && !$include_inherited_members)
                     continue;
 
                 $annotations = Annotation::parse($property->getDocComment(), $class);
                 $property_annotations = array();
-                foreach($annotations as $annotation) {
+                foreach ($annotations as $annotation) {
                     $property_annotations[] = $annotation;
                 }
 
@@ -124,7 +127,8 @@ class Reflector {
      *
      * @return string|false Full class name if found, false otherwise
      */
-    protected function findClass($file) {
+    protected function findClass($file)
+    {
 
         // skip anything that's not a regular file
         if (!is_file($file))
@@ -133,26 +137,26 @@ class Reflector {
         $class = false;
         $namespace = false;
         $tokens = token_get_all(file_get_contents($file));
-        for($i = 0, $count = count($tokens); $i < $count; $i++) {
+        for ($i = 0, $count = count($tokens); $i < $count; $i++) {
             $token = $tokens[$i];
 
-            if(!is_array($token)) {
+            if (!is_array($token)) {
                 continue;
             }
 
-            if(true === $class && T_STRING === $token[0]) {
+            if (true === $class && T_STRING === $token[0]) {
                 return $namespace . '\\' . $token[1];
             }
 
-            if(true === $namespace && (T_NAME_QUALIFIED === $token[0] || T_STRING === $token[0])) {
+            if (true === $namespace && (T_NAME_QUALIFIED === $token[0] || T_STRING === $token[0])) {
                 $namespace = $token[1];
             }
 
-            if(T_CLASS === $token[0]) {
+            if (T_CLASS === $token[0]) {
                 $class = true;
             }
 
-            if(T_NAMESPACE === $token[0]) {
+            if (T_NAMESPACE === $token[0]) {
                 $namespace = true;
             }
         }

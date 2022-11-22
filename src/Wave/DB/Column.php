@@ -11,7 +11,8 @@ namespace Wave\DB;
 use Wave;
 
 
-class Column {
+class Column
+{
 
     const TYPE_UNKNOWN = 0;
     const TYPE_INT = 1;
@@ -45,7 +46,8 @@ class Column {
     /** @var  array $metadata */
     private $metadata = array();
 
-    public function __construct(Table $table, $name, $nullable, $data_type, $default_value, $is_serial = false, $type_desc = '', $extra = '', $comment = '') {
+    public function __construct(Table $table, $name, $nullable, $data_type, $default_value, $is_serial = false, $type_desc = '', $extra = '', $comment = '')
+    {
 
         $this->table = $table;
         $this->name = $name;
@@ -63,7 +65,8 @@ class Column {
     /**
      * @return Table
      */
-    public function getTable() {
+    public function getTable()
+    {
         return $this->table;
     }
 
@@ -72,28 +75,32 @@ class Column {
      *
      * @return string
      */
-    public function getName($escape = false) {
+    public function getName($escape = false)
+    {
         return $escape ? $this->table->getDatabase()->escape($this->name) : $this->name;
     }
 
     /**
      * @return bool
      */
-    public function isNullable() {
+    public function isNullable()
+    {
         return $this->nullable;
     }
 
     /**
      * @return boolean
      */
-    public function isSerial() {
+    public function isSerial()
+    {
         return $this->is_serial;
     }
 
     /**
      * @return int
      */
-    public function getDataType() {
+    public function getDataType()
+    {
         return $this->data_type;
     }
 
@@ -101,8 +108,9 @@ class Column {
      * Return the datatype for this column as a PHP compatible type
      * @return string
      */
-    public function getDataTypeAsPHPType() {
-        switch($this->data_type) {
+    public function getDataTypeAsPHPType()
+    {
+        switch ($this->data_type) {
             case self::TYPE_INT:
                 return 'int';
             case self::TYPE_STRING:
@@ -122,28 +130,32 @@ class Column {
     /**
      * @return mixed
      */
-    public function getDefault() {
+    public function getDefault()
+    {
         return $this->default;
     }
 
     /**
      * @return string
      */
-    public function getTypeDescription() {
+    public function getTypeDescription()
+    {
         return $this->type_desc;
     }
 
     /**
      * @return string
      */
-    public function getExtra() {
+    public function getExtra()
+    {
         return $this->extra;
     }
 
     /**
      * @return string
      */
-    public function getComment() {
+    public function getComment()
+    {
         return $this->comment;
     }
 
@@ -151,9 +163,10 @@ class Column {
      * @param $key
      * @return null
      */
-    public function getMetadata($key = null) {
-        if($key !== null) {
-            if(array_key_exists($key, $this->metadata))
+    public function getMetadata($key = null)
+    {
+        if ($key !== null) {
+            if (array_key_exists($key, $this->metadata))
                 return $this->metadata[$key];
             else
                 return null;
@@ -164,7 +177,8 @@ class Column {
     /**
      * @return bool
      */
-    public function isPrimaryKey() {
+    public function isPrimaryKey()
+    {
         $pk = $this->table->getPrimaryKey();
 
         return $pk === null ? false : in_array($this, $pk->getColumns());
@@ -178,10 +192,11 @@ class Column {
         return strpos($this->getExtra(), 'GENERATED') !== false;
     }
 
-    private function parseMetadata($raw) {
+    private function parseMetadata($raw)
+    {
 
         $parsed = json_decode($raw, true);
-        if(json_last_error() === JSON_ERROR_NONE && is_array($parsed)) {
+        if (json_last_error() === JSON_ERROR_NONE && is_array($parsed)) {
             $this->metadata = $parsed;
         }
 
@@ -190,22 +205,25 @@ class Column {
     /**
      * @return string
      */
-    public function getSequenceName() {
+    public function getSequenceName()
+    {
         return $this->sequence_name;
     }
 
     /**
      * @param string $sequence_name
      */
-    public function setSequenceName($sequence_name) {
+    public function setSequenceName($sequence_name)
+    {
         $this->sequence_name = $sequence_name;
     }
 
     /**
-     * Provide a representation of this column that can be used to calculate a 
+     * Provide a representation of this column that can be used to calculate a
      * fingerprint for whether it has changed or not.
      */
-    public function __serialize() {
+    public function __serialize()
+    {
         return [
             'table' => $this->table->getName(),
             'name' => $this->getName(),

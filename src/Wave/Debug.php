@@ -2,7 +2,8 @@
 
 namespace Wave;
 
-class Debug {
+class Debug
+{
 
     private $config;
 
@@ -17,19 +18,22 @@ class Debug {
     /**
      * @return \Wave\Debug
      */
-    public static function getInstance() {
-        if(self::$instance === null)
+    public static function getInstance()
+    {
+        if (self::$instance === null)
             self::init();
 
         return self::$instance;
     }
 
-    public function __construct(array $config) {
+    public function __construct(array $config)
+    {
         $this->config = $config;
         $this->resetExecutionTime($config['start_time']);
     }
 
-    public static function init(array $config = array()) {
+    public static function init(array $config = array())
+    {
         $defaults = array(
             'start_time' => microtime(true),
             'log_queries' => Core::$_MODE !== Core::MODE_PRODUCTION,
@@ -39,11 +43,13 @@ class Debug {
         self::$instance = new self(array_merge($defaults, $config));
     }
 
-    public function getMemoryUsage() {
+    public function getMemoryUsage()
+    {
         return round(memory_get_peak_usage() / pow(1024, 2), 2);
     }
 
-    public function getCurrentMemoryUsage() {
+    public function getCurrentMemoryUsage()
+    {
         return round(memory_get_usage() / pow(1024, 2), 2);
     }
 
@@ -51,23 +57,27 @@ class Debug {
      * Returns the time in miliseconds since the initation of the object. Used to track program execution time.
      * @return int
      */
-    public function getExecutionTime() {
+    public function getExecutionTime()
+    {
         return round((microtime(true) - $this->execution_start) * 1000, 0);
     }
 
-    public function resetExecutionTime($reset_time = null) {
-        if($reset_time === null)
+    public function resetExecutionTime($reset_time = null)
+    {
+        if ($reset_time === null)
             $reset_time = microtime(true);
 
         $this->execution_start = $reset_time;
     }
 
-    public function getCheckpoints() {
+    public function getCheckpoints()
+    {
         return $this->checkpoints;
     }
 
-    public function addCheckpoint($name) {
-        if($this->config['log_checkpoints']){
+    public function addCheckpoint($name)
+    {
+        if ($this->config['log_checkpoints']) {
             $this->checkpoints[] = array(
                 'name' => $name,
                 'time' => $this->getExecutionTime(),
@@ -79,11 +89,12 @@ class Debug {
 
     /**
      * Adds the details of a used file in to an array
-     * @return
      * @param object $filename
      * @param object $caller [optional]
+     * @return
      */
-    public function addUsedFile($filename, $caller = null) {
+    public function addUsedFile($filename, $caller = null)
+    {
         $this->used_files[] = array('filename' => $filename, 'caller' => $caller);
     }
 
@@ -91,19 +102,21 @@ class Debug {
      * Returns all files used in the process
      * @return
      */
-    public function getUsedFiles() {
+    public function getUsedFiles()
+    {
         $out = array();
-        foreach(get_included_files() as $i => $file) {
+        foreach (get_included_files() as $i => $file) {
             $out[] = array('number' => $i + 1, 'filename' => str_replace(SYS_ROOT, '', $file));
         }
         return $out;
     }
 
-    public function addQuery($time, $statement) {
+    public function addQuery($time, $statement)
+    {
 
         $this->query_count++;
 
-        if($this->config['log_queries']) {
+        if ($this->config['log_queries']) {
             $sql = $statement->queryString;
             $rows = $statement->rowCount();
             $success = $statement->errorCode() == \PDO::ERR_NONE ? true : false;
@@ -126,22 +139,25 @@ class Debug {
     }
 
 
-    public function getNumberOfFiles() {
+    public function getNumberOfFiles()
+    {
         return count(get_included_files());
     }
 
 
-    public function getNumberOfQueries() {
+    public function getNumberOfQueries()
+    {
         return $this->query_count;
     }
 
     /**
      * Returns the queris involved in the render, sets a colour for bad ones
      */
-    public function getQueries() {
+    public function getQueries()
+    {
 
         $out = array();
-        for($i = 0; $i < count($this->queries); $i++) {
+        for ($i = 0; $i < count($this->queries); $i++) {
 
             $colour = $this->queries[$i]['success'] ? "green" : "red";
             $sql = $this->queries[$i]['sql'];
@@ -161,7 +177,8 @@ class Debug {
 
     }
 
-    public function render() {
+    public function render()
+    {
         Hook::triggerAction('debugger.render', array(&$this));
         ?>
         <!--DEBUG PANEL-->
@@ -258,10 +275,11 @@ class Debug {
             //      ]]>
         </script>
         <!--END DEBUG PANEL-->
-    <?php
+        <?php
     }
 
-    public static function getCSS() {
+    public static function getCSS()
+    {
 
         return <<<CSS
 #_wave_debugmemory{background-position: 0px -48px;}

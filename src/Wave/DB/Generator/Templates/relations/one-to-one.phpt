@@ -8,7 +8,8 @@
      *
      * @return $this
     **/
-    public function set{{ relation.Name }}(&$obj = null, $create_relation = true){
+    public function set{{ relation.Name }}(&$obj = null, $create_relation = true)
+    {
         $this->_setRelationObject('{{ relation.Name }}', $obj, $create_relation);
         return $this;
     }
@@ -19,7 +20,8 @@
      * @param callable $transform_callback
      * @return {{ relation.ReferencedTable.getClassName(true) }}
     **/
-    public function get{{ relation.Name }}(){
+    public function get{{ relation.Name }}()
+    {
         $transform_callback = func_num_args() >= 1 ? func_get_arg(0) : null;
         return $this->_getRelationObjects('{{ relation.Name }}', $transform_callback);
     }

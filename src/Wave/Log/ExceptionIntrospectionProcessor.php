@@ -2,19 +2,21 @@
 
 namespace Wave\Log;
 
-class ExceptionIntrospectionProcessor {
+class ExceptionIntrospectionProcessor
+{
 
     /**
-     * @param  array $record
+     * @param array $record
      * @return array
      */
-    public function __invoke(array $record) {
+    public function __invoke(array $record)
+    {
 
         $trace = debug_backtrace();
 
         $first = end($trace);
 
-        if(isset($first['args'][0]) && $first['args'][0] instanceof \Exception) {
+        if (isset($first['args'][0]) && $first['args'][0] instanceof \Exception) {
             // the start of this trace is an exception, so get the throwing file from
             // the exception trace.
             $exception = $first['args'][0];
@@ -40,7 +42,7 @@ class ExceptionIntrospectionProcessor {
             array_shift($trace);
 
             $i = 0;
-            while(isset($trace[$i]['class'])
+            while (isset($trace[$i]['class'])
                 && (false !== strpos($trace[$i]['class'], 'Monolog\\')
                     || (false !== strpos($trace[$i]['class'], 'Wave\\Log') && 'write' === $trace[$i]['function']))) {
                 $i++;

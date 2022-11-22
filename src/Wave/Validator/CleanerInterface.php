@@ -2,7 +2,8 @@
 
 namespace Wave\Validator;
 
-interface CleanerInterface {
+interface CleanerInterface
+{
 
 
     public function getCleanedData();

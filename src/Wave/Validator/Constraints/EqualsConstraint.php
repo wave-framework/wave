@@ -2,7 +2,8 @@
 
 namespace Wave\Validator\Constraints;
 
-class EqualsConstraint extends AbstractConstraint {
+class EqualsConstraint extends AbstractConstraint
+{
 
     const ERROR_NOT_EQUAL = 'not_equal';
 
@@ -11,11 +12,13 @@ class EqualsConstraint extends AbstractConstraint {
      *
      * @return mixed
      */
-    public function evaluate() {
+    public function evaluate()
+    {
         return $this->data === $this->arguments;
     }
 
-    protected function getViolationMessage($context = 'This value') {
+    protected function getViolationMessage($context = 'This value')
+    {
         return sprintf("%s does not equal %s", $context, $this->arguments);
     }
 

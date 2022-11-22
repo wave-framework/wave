@@ -11,7 +11,8 @@ namespace Wave\DB;
 use Wave;
 
 
-class Table {
+class Table
+{
 
     /** @var \Wave\DB $database */
     private $database;
@@ -31,7 +32,8 @@ class Table {
     /** @var Constraint[] $constraints */
     private $constraints;
 
-    public function __construct(Wave\DB $database, $table, $engine = '', $collation = '', $comment = '') {
+    public function __construct(Wave\DB $database, $table, $engine = '', $collation = '', $comment = '')
+    {
 
         $this->database = $database;
         $this->table = $table;
@@ -43,9 +45,10 @@ class Table {
     /**
      * @return Column[]
      */
-    public function getColumns() {
+    public function getColumns()
+    {
 
-        if(!isset($this->columns)) {
+        if (!isset($this->columns)) {
             $driver_class = $this->database->getConnection()->getDriverClass();
             $this->columns = $driver_class::getColumns($this);
         }
@@ -56,9 +59,10 @@ class Table {
     /**
      * @return Relation[]
      */
-    public function getRelations() {
+    public function getRelations()
+    {
 
-        if(!isset($this->relations)) {
+        if (!isset($this->relations)) {
             $driver_class = $this->database->getConnection()->getDriverClass();
             $this->relations = $driver_class::getRelations($this);
         }
@@ -69,9 +73,10 @@ class Table {
     /**
      * @return Constraint[]
      */
-    public function getConstraints() {
+    public function getConstraints()
+    {
 
-        if(!isset($this->constraints)) {
+        if (!isset($this->constraints)) {
             $driver_class = $this->database->getConnection()->getDriverClass();
             $this->constraints = $driver_class::getConstraints($this);
         }
@@ -83,10 +88,11 @@ class Table {
     /**
      * @return null|Constraint
      */
-    public function getPrimaryKey() {
+    public function getPrimaryKey()
+    {
 
-        foreach($this->getConstraints() as $constraint)
-            if($constraint->getType() === Constraint::TYPE_PRIMARY)
+        foreach ($this->getConstraints() as $constraint)
+            if ($constraint->getType() === Constraint::TYPE_PRIMARY)
                 return $constraint;
 
         return null;
@@ -95,35 +101,40 @@ class Table {
     /**
      * @return \Wave\DB
      */
-    public function getDatabase() {
+    public function getDatabase()
+    {
         return $this->database;
     }
 
     /**
      * @return string
      */
-    public function getName() {
+    public function getName()
+    {
         return $this->table;
     }
 
     /**
      * @return string
      */
-    public function getEngine() {
+    public function getEngine()
+    {
         return $this->engine;
     }
 
     /**
      * @return string
      */
-    public function getCollation() {
+    public function getCollation()
+    {
         return $this->collation;
     }
 
     /**
      * @return string
      */
-    public function getComment() {
+    public function getComment()
+    {
         return $this->comment;
     }
 
@@ -132,21 +143,23 @@ class Table {
      *
      * @return string
      */
-    public function getClassName($with_namespace = false) {
+    public function getClassName($with_namespace = false)
+    {
 
         $prefix = $with_namespace ? '\\' . $this->database->getNamespace() . '\\' : '';
         return $prefix . Wave\Inflector::camelize($this->table);
     }
 
     /**
-     * Returns a fingerprint of this table schema that can be used to calculate if 
+     * Returns a fingerprint of this table schema that can be used to calculate if
      * the table defintion has changed. This is primarily used when generating models
      * to avoid recreating models that haven't changed.
-     * 
+     *
      * Makes use of overloaded __serialize() methods on the Column, Relation, and
      * Constraint components to calculate a MD5 hash.
      */
-    public function getSchemaFingerprint() {
+    public function getSchemaFingerprint()
+    {
         $fingerprint = [
             'database' => $this->database->getName(),
             'table' => $this->table,

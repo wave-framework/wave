@@ -4,7 +4,8 @@ namespace Wave\Validator\Constraints;
 
 use Wave\Validator;
 
-abstract class AbstractConstraint {
+abstract class AbstractConstraint
+{
 
     const ERROR_INVALID = 'invalid';
 
@@ -18,7 +19,8 @@ abstract class AbstractConstraint {
      * @param mixed $arguments the arguments for the current constraint (from the schema)
      * @param \Wave\Validator $validator the current instance of the validator
      */
-    public function __construct($property, $arguments, Validator &$validator) {
+    public function __construct($property, $arguments, Validator &$validator)
+    {
 
         $this->property = $property;
         $this->data = isset($validator[$property]) ? $validator[$property] : null;
@@ -35,7 +37,8 @@ abstract class AbstractConstraint {
     abstract public function evaluate();
 
 
-    protected function getViolationKey() {
+    protected function getViolationKey()
+    {
         return static::ERROR_INVALID;
     }
 
@@ -46,11 +49,13 @@ abstract class AbstractConstraint {
      *                        (for example: 'Your email address' is not valid).
      * @return string
      */
-    protected function getViolationMessage($context = 'This value') {
+    protected function getViolationMessage($context = 'This value')
+    {
         return sprintf('%s is not valid', $context);
     }
 
-    public function getViolationPayload() {
+    public function getViolationPayload()
+    {
         return array(
             'reason' => $this->getViolationKey(),
             'message' => $this->getViolationMessage()

@@ -14,7 +14,8 @@ namespace Wave\Http;
  * HeaderBag is a container for HTTP headers. Inspired by the HeaderBag from Symfony
  *
  */
-class HeaderBag implements \IteratorAggregate, \Countable {
+class HeaderBag implements \IteratorAggregate, \Countable
+{
     protected $headers = array();
 
     /**
@@ -24,7 +25,8 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @api
      */
-    public function __construct(array $headers = array()) {
+    public function __construct(array $headers = array())
+    {
 
         $this->add($headers);
     }
@@ -33,7 +35,8 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      * Returns the headers.
      * @return array An array of headers
      */
-    public function all() {
+    public function all()
+    {
         return $this->headers;
     }
 
@@ -41,7 +44,8 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      * Returns the parameter keys.
      * @return array An array of parameter keys
      */
-    public function keys() {
+    public function keys()
+    {
         return array_keys($this->headers);
     }
 
@@ -49,7 +53,8 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      * Replaces the current HTTP headers by a new set.
      * @param array $headers An array of HTTP headers
      */
-    public function replace(array $headers = array()) {
+    public function replace(array $headers = array())
+    {
         $this->headers = array();
         $this->add($headers);
     }
@@ -61,8 +66,9 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @api
      */
-    public function add(array $headers) {
-        foreach($headers as $key => $values) {
+    public function add(array $headers)
+    {
+        foreach ($headers as $key => $values) {
             $this->set($key, $values);
         }
     }
@@ -76,19 +82,20 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @return string|array The first header value if $first is true, an array of values otherwise
      */
-    public function get($key, $default = null, $first = true) {
+    public function get($key, $default = null, $first = true)
+    {
 
         $key = strtr(strtolower($key), '_', '-');
 
-        if(!array_key_exists($key, $this->headers)) {
-            if(null === $default) {
+        if (!array_key_exists($key, $this->headers)) {
+            if (null === $default) {
                 return $first ? null : array();
             }
 
             return $first ? $default : array($default);
         }
 
-        if($first) {
+        if ($first) {
             return count($this->headers[$key]) ? $this->headers[$key][0] : $default;
         }
 
@@ -104,13 +111,14 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @api
      */
-    public function set($key, $values, $replace = true) {
+    public function set($key, $values, $replace = true)
+    {
 
         $key = strtr(strtolower($key), '_', '-');
 
-        $values = array_values((array) $values);
+        $values = array_values((array)$values);
 
-        if(true === $replace || !isset($this->headers[$key])) {
+        if (true === $replace || !isset($this->headers[$key])) {
             $this->headers[$key] = $values;
         } else {
             $this->headers[$key] = array_merge($this->headers[$key], $values);
@@ -126,7 +134,8 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @api
      */
-    public function has($key) {
+    public function has($key)
+    {
         return array_key_exists(strtr(strtolower($key), '_', '-'), $this->headers);
     }
 
@@ -140,7 +149,8 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @api
      */
-    public function contains($key, $value) {
+    public function contains($key, $value)
+    {
         return in_array($value, $this->get($key, null, false));
     }
 
@@ -151,7 +161,8 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @api
      */
-    public function remove($key) {
+    public function remove($key)
+    {
         $key = strtr(strtolower($key), '_', '-');
 
         unset($this->headers[$key]);
@@ -162,7 +173,8 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @return \ArrayIterator An \ArrayIterator instance
      */
-    public function getIterator(): \ArrayIterator {
+    public function getIterator(): \ArrayIterator
+    {
         return new \ArrayIterator($this->headers);
     }
 
@@ -171,7 +183,8 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @return int The number of headers
      */
-    public function count(): int {
+    public function count(): int
+    {
         return count($this->headers);
     }
 
@@ -180,17 +193,18 @@ class HeaderBag implements \IteratorAggregate, \Countable {
      *
      * @return string The headers
      */
-    public function __toString() {
-        if(!$this->headers) {
+    public function __toString()
+    {
+        if (!$this->headers) {
             return '';
         }
 
         $max = max(array_map('strlen', array_keys($this->headers))) + 1;
         $content = '';
         ksort($this->headers);
-        foreach($this->headers as $name => $values) {
+        foreach ($this->headers as $name => $values) {
             $name = implode('-', array_map('ucfirst', explode('-', $name)));
-            foreach($values as $value) {
+            foreach ($values as $value) {
                 $content .= sprintf("%-{$max}s %s\r\n", $name . ':', $value);
             }
         }

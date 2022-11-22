@@ -4,7 +4,8 @@ namespace Wave;
 
 use Wave\Http\Request;
 
-interface IAuthable {
+interface IAuthable
+{
 
     public static function loadByIdentifier(array $params);
 

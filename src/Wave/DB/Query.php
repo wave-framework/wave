@@ -15,7 +15,8 @@ use Wave\Config;
  * @method \Wave\DB\Query and () and ($condition, mixed $params = array())
  * @method \Wave\DB\Query or () or ($condition, mixed $params = array())
  */
-class Query {
+class Query
+{
 
     const CLAUSE_JOIN = 1;
     const CLAUSE_WHERE = 2;
@@ -49,7 +50,8 @@ class Query {
 
     private $relation_tables = array();
 
-    public function __construct(Connection $connection) {
+    public function __construct(Connection $connection)
+    {
         $this->connection = $connection;
         $this->alias_counter = 'a';
     }
@@ -66,13 +68,14 @@ class Query {
      *
      * @return Query
      */
-    public function from($from, &$alias = null, array $fields = null) {
+    public function from($from, &$alias = null, array $fields = null)
+    {
 
         //if a relative reference, add the ns prefix - will be most of the time
         $this->resolveNamespace($from);
 
         //populate table fields if not specified.
-        if($fields === null) {
+        if ($fields === null) {
             $this->manual_select = false;
             $this->addFieldsToSelect($from, $alias);
         } else {
@@ -101,19 +104,20 @@ class Query {
      *
      * @return Query
      */
-    public function with($relation, &$alias = null) {
+    public function with($relation, &$alias = null)
+    {
 
         $from_class = $this->unaliasClass($this->from_alias);
         $relation_data = $from_class::_getRelation($relation);
 
 
         //if it's many to many, load the related class and flag the first join to be attached as relation data
-        if($relation_data['relation_type'] === Wave\DB\Relation::MANY_TO_MANY) {
+        if ($relation_data['relation_type'] === Wave\DB\Relation::MANY_TO_MANY) {
 
             $this->leftJoin($relation_data['related_class'], $related_alias, $target_alias);
 
             //more iteration for multi-column relations
-            foreach($relation_data['related_columns'] as $index => $related_column) {
+            foreach ($relation_data['related_columns'] as $index => $related_column) {
                 $func = $index === 0 ? 'on' : 'and';
                 $this->$func(
                     sprintf(
@@ -125,7 +129,7 @@ class Query {
 
             $this->leftJoin($relation_data['target_relation']['related_class'], $alias);
 
-            foreach($relation_data['target_relation']['related_columns'] as $index => $related_column) {
+            foreach ($relation_data['target_relation']['related_columns'] as $index => $related_column) {
                 $func = $index === 0 ? 'on' : 'and';
                 $this->$func(
                     sprintf(
@@ -143,7 +147,7 @@ class Query {
             $this->leftJoin($relation_data['related_class'], $alias);
 
             //more iteration for multi-column relations
-            foreach($relation_data['related_columns'] as $index => $related_column) {
+            foreach ($relation_data['related_columns'] as $index => $related_column) {
                 $func = $index === 0 ? 'on' : 'and';
                 $this->$func(
                     sprintf(
@@ -169,7 +173,8 @@ class Query {
      * Perform a left join
      * @see join
      */
-    public function leftJoin($class, &$alias = null, &$target_alias = null) {
+    public function leftJoin($class, &$alias = null, &$target_alias = null)
+    {
         return $this->join('LEFT JOIN', $class, $alias, $target_alias);
     }
 
@@ -177,7 +182,8 @@ class Query {
      * Perform an inner join
      * @see join
      */
-    public function innerJoin($class, &$alias = null, &$target_alias = null) {
+    public function innerJoin($class, &$alias = null, &$target_alias = null)
+    {
         return $this->join('INNER JOIN', $class, $alias, $target_alias);
     }
 
@@ -185,7 +191,8 @@ class Query {
      * Perform a right join
      * @see join
      */
-    public function rightJoin($class, &$alias = null, &$target_alias = null) {
+    public function rightJoin($class, &$alias = null, &$target_alias = null)
+    {
         return $this->join('RIGHT JOIN', $class, $alias, $target_alias);
     }
 
@@ -204,12 +211,13 @@ class Query {
      *
      * @return Query
      */
-    public function join($type, $class, &$alias = null, &$target_alias = null) {
+    public function join($type, $class, &$alias = null, &$target_alias = null)
+    {
 
         $this->_last_clause = self::CLAUSE_JOIN;
 
         //this is where to stick the joined object
-        if($target_alias === null)
+        if ($target_alias === null)
             $target_alias = $this->from_alias;
 
         $this->resolveNamespace($class);
@@ -217,7 +225,7 @@ class Query {
         //@patrick, should this not actually select these rows? Should it be an extra parameter in the function constructor?
         //$join_table_alias = $this->addFieldsToSelect($class) could be replaced with:
         //$join_table_alias = $this->aliasClass($class); // so it didn't add the fields but still aliased the table
-        if(!$this->manual_select)
+        if (!$this->manual_select)
             $this->addFieldsToSelect($class, $alias);
         else
             $this->aliasClass($class, $alias);
@@ -241,7 +249,8 @@ class Query {
      *
      * @return Query
      */
-    public function on($condition) {
+    public function on($condition)
+    {
 
         $this->addJoinCondition("ON $condition");
         return $this;
@@ -255,9 +264,10 @@ class Query {
      *
      * @return Query
      */
-    public function using($fields) {
+    public function using($fields)
+    {
 
-        if(!is_array($fields))
+        if (!is_array($fields))
             $fields = array($fields);
 
         $this->addJoinCondition(sprintf('USING(%s)', implode(',', $fields)));
@@ -271,10 +281,11 @@ class Query {
      *
      * @throws \Wave\Exception
      */
-    private function addJoinCondition($condition) {
+    private function addJoinCondition($condition)
+    {
 
         $last_index = count($this->joins) - 1;
-        if($last_index === -1)
+        if ($last_index === -1)
             throw new Wave\Exception('Wave\DB\Query::on and ::using may only be used following a join.');
 
         $this->joins[$last_index]['condition'] .= " $condition";
@@ -299,8 +310,9 @@ class Query {
      * @return Query
      * @throws \Wave\Exception when called using the legacy version of the function
      */
-    public function where($condition, $params = array()) {
-        if(func_num_args() > 2) throw new \Wave\Exception("Invalid use of Query::where() function");
+    public function where($condition, $params = array())
+    {
+        if (func_num_args() > 2) throw new \Wave\Exception("Invalid use of Query::where() function");
         return $this->andWhere($condition, $params);
     }
 
@@ -309,7 +321,8 @@ class Query {
      *
      * @see where
      */
-    public function orWhere($condition, $params = array()) {
+    public function orWhere($condition, $params = array())
+    {
         $this->_last_clause = self::CLAUSE_WHERE;
 
         $this->addWhereCondition($condition, $params, 'OR', true);
@@ -321,7 +334,8 @@ class Query {
      *
      * @see where
      */
-    public function andWhere($condition, $params = array()) {
+    public function andWhere($condition, $params = array())
+    {
         $this->_last_clause = self::CLAUSE_WHERE;
 
         $this->addWhereCondition($condition, $params, 'AND', true);
@@ -339,28 +353,29 @@ class Query {
      *
      * @throws \Wave\Exception
      */
-    private function addWhereCondition($condition, $params, $type, $create = false) {
+    private function addWhereCondition($condition, $params, $type, $create = false)
+    {
 
         $current_index = count($this->where);
 
         $condition = self::parseWhereCondition($condition, $params);
-        if($condition === false)
+        if ($condition === false)
             return;
 
-        if($create) {
+        if ($create) {
             $this->where[] = array(
                 'type' => $type,
                 'condition' => $condition,
                 'params' => array()
             );
         } else {
-            if($current_index-- === 0)
+            if ($current_index-- === 0)
                 throw new Wave\Exception('Wave\DB\Query::and and ::or may only be used following a where.');
 
             $this->where[$current_index]['condition'] .= sprintf(' %s %s', $type, $condition);
         }
 
-        if($params !== null)
+        if ($params !== null)
             $this->where[$current_index]['params'] = array_merge($this->where[$current_index]['params'], $params);
 
     }
@@ -376,41 +391,42 @@ class Query {
      *
      * @return string the transformed condition
      */
-    public static function parseWhereCondition($condition, &$params) {
+    public static function parseWhereCondition($condition, &$params)
+    {
 
-        if((stripos($condition, ' AND ') !== false && stripos($condition, 'BETWEEN') === false) || stripos($condition, ' OR ') !== false)
+        if ((stripos($condition, ' AND ') !== false && stripos($condition, 'BETWEEN') === false) || stripos($condition, ' OR ') !== false)
             trigger_error('You should be using ->or() or ->and() to add multiple criteria to a where clause.');
 
         $num_placeholders = substr_count($condition, '?');
 
         //if there are no placeholders, no transformation can be done on the params.
-        if($num_placeholders === 0)
+        if ($num_placeholders === 0)
             return $condition;
 
-        if(is_array($params)) {
+        if (is_array($params)) {
             $num_params = count($params);
-            if($num_params <= 0) {
+            if ($num_params <= 0) {
                 $condition = 'FALSE';
             }
 
-            if($num_placeholders < $num_params) {
+            if ($num_placeholders < $num_params) {
                 //otherwise change the parameters to matcht he num in the array and make it an 'IN' clause.
                 $condition = str_replace('?', '(' . implode(',', array_fill(0, $num_params, '?')) . ')', $condition);
                 return str_replace(array('<>', '!=', '='), array('NOT IN', 'NOT IN', 'IN'), $condition);
             }
         }
 
-        if($num_placeholders === 1) {
-            if($params === null)
+        if ($num_placeholders === 1) {
+            if ($params === null)
                 $condition = str_replace(
                     array('<>', '!=', '=', '?'), array(
-                        'IS NOT',
-                        'IS NOT',
-                        'IS',
-                        'NULL'
-                    ), $condition
+                    'IS NOT',
+                    'IS NOT',
+                    'IS',
+                    'NULL'
+                ), $condition
                 );
-            else if(!is_array($params))
+            else if (!is_array($params))
                 $params = array($params);
         }
 
@@ -431,8 +447,9 @@ class Query {
      * because or is a reserved word and cannot be used to declare a method (but can be used at runtime).
      * The equivalent function (without the prefixing underscore) is defined via magic methods).
      */
-    public function _or($condition, $params = array()) {
-        switch($this->_last_clause) {
+    public function _or($condition, $params = array())
+    {
+        switch ($this->_last_clause) {
             case self::CLAUSE_WHERE:
                 $this->addWhereCondition($condition, $params, 'OR');
                 break;
@@ -450,8 +467,9 @@ class Query {
      * because or is a reserved word and cannot be used to declare a method (but can be used at runtime).
      * The equivilent function (without the prefixing underscore) is defined via magic methods).
      */
-    public function _and($condition, $params = array()) {
-        switch($this->_last_clause) {
+    public function _and($condition, $params = array())
+    {
+        switch ($this->_last_clause) {
             case self::CLAUSE_WHERE:
                 $this->addWhereCondition($condition, $params, 'AND');
                 break;
@@ -475,9 +493,10 @@ class Query {
      *
      * @return Query
      */
-    public function groupBy($column) {
+    public function groupBy($column)
+    {
 
-        if(!is_array($column))
+        if (!is_array($column))
             $column = array($column);
 
         $this->group = array_merge($this->group, $column);
@@ -490,7 +509,8 @@ class Query {
      *
      * @return Query
      */
-    public function orderBy($column) {
+    public function orderBy($column)
+    {
 
         $this->order = $column;
         return $this;
@@ -503,9 +523,10 @@ class Query {
      *
      * @return Query
      */
-    public function having($having, $params = array()) {
+    public function having($having, $params = array())
+    {
 
-        if(!is_array($params)){
+        if (!is_array($params)) {
             $params = array($params);
         }
 
@@ -519,7 +540,8 @@ class Query {
      *
      * @return Query
      */
-    public function offset($offset) {
+    public function offset($offset)
+    {
 
         $this->offset = $offset;
         return $this;
@@ -531,7 +553,8 @@ class Query {
      *
      * @return Query
      */
-    public function limit($limit) {
+    public function limit($limit)
+    {
 
         $this->limit = $limit;
         return $this;
@@ -544,7 +567,8 @@ class Query {
      *
      * @return Query
      */
-    public function paginate($offset, $limit) {
+    public function paginate($offset, $limit)
+    {
 
         $this->paginate = true;
 
@@ -560,7 +584,8 @@ class Query {
      *
      * @return Query
      */
-    public function addParameter($param){
+    public function addParameter($param)
+    {
         $this->_params[] = $param;
 
         return $this;
@@ -571,14 +596,15 @@ class Query {
      *
      * @return string
      */
-    public function buildSQL() {
+    public function buildSQL()
+    {
 
         $query = 'SELECT ' . ($this->paginate ? 'SQL_CALC_FOUND_ROWS ' : '');
 
         $fields = array();
-        foreach($this->fields as $alias => $field) {
+        foreach ($this->fields as $alias => $field) {
             //if the alias isn't a number, add it to the field
-            if(!is_int($alias))
+            if (!is_int($alias))
                 $field .= ' AS ' . $alias;
             $fields[] = $field;
         }
@@ -590,25 +616,25 @@ class Query {
         $query .= sprintf("FROM %s.%s AS %s\n", $this->escape($from_class::_getSchemaName()), $this->escape($from_class::_getTableName()), $this->from_alias);
 
         //joins (includes withs)
-        foreach($this->joins as $join) {
+        foreach ($this->joins as $join) {
             /** @var Model $join_class */
             $join_class = $join['class'];
             $query .= sprintf("%s %s.%s AS %s %s\n", $join['type'], $this->escape($join_class::_getSchemaName()), $this->escape($join_class::_getTableName()), $join['table_alias'], $join['condition']);
         }
 
-        foreach($this->where as $index => $where) {
+        foreach ($this->where as $index => $where) {
             $query .= ($index === 0 ? 'WHERE' : $where['type']);
             $query .= sprintf(" (%s)\n", $where['condition']);
 
-            if($where['params'] !== null)
+            if ($where['params'] !== null)
                 $this->_params = array_merge($this->_params, $where['params']);
         }
 
 
-        if(isset($this->group[0])) $query .= 'GROUP BY ' . implode(',', $this->group) . "\n";
+        if (isset($this->group[0])) $query .= 'GROUP BY ' . implode(',', $this->group) . "\n";
 
-        if(isset($this->having)){
-            foreach($this->having as $index => $having){
+        if (isset($this->having)) {
+            foreach ($this->having as $index => $having) {
                 $query .= ($index === 0 ? 'HAVING' : 'AND');
                 $query .= sprintf(' %s ', $having['condition']);
                 $this->_params = array_merge($this->_params, $having['params']);
@@ -616,11 +642,11 @@ class Query {
 
         }
 
-        if(isset($this->order[0])) $query .= 'ORDER BY ' . $this->order . "\n";
+        if (isset($this->order[0])) $query .= 'ORDER BY ' . $this->order . "\n";
 
-        if(isset($this->limit)) {
+        if (isset($this->limit)) {
             $query .= 'LIMIT ' . $this->limit;
-            if(isset($this->offset))
+            if (isset($this->offset))
                 $query .= ' OFFSET ' . $this->offset;
         }
 
@@ -642,11 +668,12 @@ class Query {
      *
      * @param bool $debug
      */
-    public function execute($debug = false) {
+    public function execute($debug = false)
+    {
 
         $sql = $this->buildSQL();
 
-        if($debug) {
+        if ($debug) {
             echo "QUERY: $sql\n";
             echo "PARAMS: \n";
             print_r($this->_params);
@@ -669,10 +696,11 @@ class Query {
      *
      * @return Model[]|array
      */
-    public function fetchAll($parse_objects = true, $debug = false) {
+    public function fetchAll($parse_objects = true, $debug = false)
+    {
 
         $rows = array();
-        while($row = $this->fetchRow($parse_objects, $debug)) {
+        while ($row = $this->fetchRow($parse_objects, $debug)) {
             $rows[] = $row;
         }
 
@@ -690,34 +718,35 @@ class Query {
      *
      * @return Model|array|null
      */
-    public function fetchRow($parse_objects = true, $debug = false) {
+    public function fetchRow($parse_objects = true, $debug = false)
+    {
 
         $object_instances = array();
 
-        if(!$this->_executed)
+        if (!$this->_executed)
             $this->execute($debug);
 
-        for(; ;) {
+        for (; ;) {
 
-            if($this->_last_row === false)
+            if ($this->_last_row === false)
                 $this->_last_row = $this->_statement->fetch();
 
             //if still false, return null (no rows left in set)
-            if($this->_last_row === false)
+            if ($this->_last_row === false)
                 break;
 
             //if not bothering to parse object
-            if(!$parse_objects) {
+            if (!$parse_objects) {
                 $output = array();
 
                 // if it's a manual select (fields were manually specified) then just put the
                 // requested fields into the output directly, keyed by their aliases.
-                if($this->manual_select) {
-                    if(isset($this->fields[0])) {
+                if ($this->manual_select) {
+                    if (isset($this->fields[0])) {
                         throw new Exception('An associative array must be passed in to \Wave\DB\Query::from() when not parsing objects');
                     }
-                    foreach($this->fields as $alias => $field) {
-                        if(isset($this->_last_row[$alias])) {
+                    foreach ($this->fields as $alias => $field) {
+                        if (isset($this->_last_row[$alias])) {
                             $key = $this->manual_select ? $alias : $field;
                             $output[$key] = $this->_last_row[$alias];
                         }
@@ -726,14 +755,14 @@ class Query {
                 // otherwise, get the original column names and unalias the resultset, including the
                 // joined rows, keyed by the aliases they were joined with
                 else {
-                    foreach($this->class_aliases[$this->from_alias]['columns'] as $column => $column_alias) {
+                    foreach ($this->class_aliases[$this->from_alias]['columns'] as $column => $column_alias) {
                         $output[$column] = $this->_last_row[$column_alias];
                     }
 
-                    foreach($this->class_aliases as $alias => $class_details) {
-                        if($alias === $this->from_alias) continue;
+                    foreach ($this->class_aliases as $alias => $class_details) {
+                        if ($alias === $this->from_alias) continue;
 
-                        foreach($class_details['columns'] as $column => $column_alias)
+                        foreach ($class_details['columns'] as $column => $column_alias)
                             $output[$alias][$column] = $this->_last_row[$column_alias];
                     }
                 }
@@ -744,42 +773,42 @@ class Query {
 
 
             //if there's no instance of the main class, create a new one.
-            if(!isset($object_instances[$this->from_alias]))
+            if (!isset($object_instances[$this->from_alias]))
                 $object_instances[$this->from_alias] = $this->buildClassInstance($this->from_alias);
 
-            if($object_instances[$this->from_alias] === null) {
+            if ($object_instances[$this->from_alias] === null) {
                 trigger_error('Insufficient data in SELECT to build object instance.');
                 return null;
             }
 
             //if there are joins, check that the current row still has the same $from_instance, if it doesn't, break.
             //otherwise build the related objects and put them on it.
-            if(isset($this->joins[0])) {
+            if (isset($this->joins[0])) {
 
                 //if the from instance is different, break and leave it for the next call to fetchRow().
-                foreach($object_instances[$this->from_alias]->_getIdentifyingData() as $property => $value) {
+                foreach ($object_instances[$this->from_alias]->_getIdentifyingData() as $property => $value) {
                     $class = $this->class_aliases[$this->from_alias]['class'];
                     $alias = $this->class_aliases[$this->from_alias]['columns'][$property];
                     $driver_class = $this->connection->getDriverClass();
                     $cast_value = $driver_class::valueFromSQL($this->_last_row[$alias], $class::_getField($property));
 
-                    if($cast_value !== $value)
+                    if ($cast_value !== $value)
                         return isset($object_instances[$this->from_alias]) ? $object_instances[$this->from_alias] : null; // break 2;
                 }
 
                 //otherwise build the child rows
-                foreach($this->joins as $join) {
+                foreach ($this->joins as $join) {
                     $object_instances[$join['table_alias']] = $this->buildClassInstance($join['table_alias']);
                 }
 
                 //then check non-null child rows and add them to their parent rows
-                foreach($this->joins as $join) {
-                    if($object_instances[$join['table_alias']] === null)
+                foreach ($this->joins as $join) {
+                    if ($object_instances[$join['table_alias']] === null)
                         continue;
 
                     //find if is a join or a with
-                    if(isset($this->with[$join['table_alias']])) {
-                        switch($this->with[$join['table_alias']]['relation_type']) {
+                    if (isset($this->with[$join['table_alias']])) {
+                        switch ($this->with[$join['table_alias']]['relation_type']) {
                             case Wave\DB\Relation::ONE_TO_ONE:
                             case Wave\DB\Relation::MANY_TO_ONE:
                                 $object_instances[$join['target_alias']]->{'set' . $this->with[$join['table_alias']]['relation_name']}($object_instances[$join['table_alias']], false);
@@ -817,21 +846,22 @@ class Query {
      *
      * @return null|Model
      */
-    private function buildClassInstance($class_alias) {
+    private function buildClassInstance($class_alias)
+    {
 
         /** @var Model $class */
         $class = $this->unaliasClass($class_alias);
         $columns = $this->class_aliases[$class_alias]['columns'];
 
         $build_array = array();
-        foreach($columns as $column_name => $column_alias) {
+        foreach ($columns as $column_name => $column_alias) {
             //$field = $class::_getField($column_name);
             //$cast_value = $this->database->valueFromSQL($this->_last_row[$column_alias], $field);
             $build_array[$column_name] = $this->_last_row[$column_alias];
         }
         $instance = $class::createFromArray($build_array);
 
-        if($instance !== null)
+        if ($instance !== null)
             $instance->_setLoaded();
 
         return $instance;
@@ -840,9 +870,10 @@ class Query {
 
     //This method will not work if the last query contained a join
     //@todo do a seperate count on the last query.
-    public function fetchRowCount() {
+    public function fetchRowCount()
+    {
 
-        if($this->paginate === false)
+        if ($this->paginate === false)
             throw new \Wave\Exception('Wave\DB::fetchRowCount can only be used when paginating');
 
         $sql = 'SELECT FOUND_ROWS() AS row_count;';
@@ -862,15 +893,16 @@ class Query {
      *
      * @return string
      */
-    private function resolveNamespace(&$class) {
+    private function resolveNamespace(&$class)
+    {
 
-        if(strpos($class, '\\') === 0 && class_exists($class))
+        if (strpos($class, '\\') === 0 && class_exists($class))
             return $class;
 
         $class = trim($class, '\\');
         $namespace = $this->connection->getNamespace();
         $namespace = Config::get('wave')->model->base_namespace . '\\' . $namespace;
-        if(strpos($class, $namespace) !== 0)
+        if (strpos($class, $namespace) !== 0)
             $class = $namespace . '\\' . $class;
 
         return "\\$class";
@@ -884,10 +916,11 @@ class Query {
      *
      * @return null
      */
-    private function addFieldsToSelect($class, &$class_alias = null) {
+    private function addFieldsToSelect($class, &$class_alias = null)
+    {
         /** @var Model $class */
         $this->aliasClass($class, $class_alias);
-        foreach($class::_getFields() as $field)
+        foreach ($class::_getFields() as $field)
             $this->aliasColumn($class_alias, $field);
 
         //this is so the correct alias can be used in joins etc.
@@ -901,9 +934,10 @@ class Query {
      *
      * @return string
      */
-    private function aliasClass($class, &$alias = null) {
+    private function aliasClass($class, &$alias = null)
+    {
 
-        if($alias === null)
+        if ($alias === null)
             $alias = $this->getAlias();
 
         $this->class_aliases[$alias] = array(
@@ -920,7 +954,8 @@ class Query {
      *
      * @return mixed
      */
-    private function unaliasClass($alias) {
+    private function unaliasClass($alias)
+    {
         return $this->class_aliases[$alias]['class'];
     }
 
@@ -931,7 +966,8 @@ class Query {
      *
      * @return string
      */
-    private function aliasColumn($table, $column) {
+    private function aliasColumn($table, $column)
+    {
 
         $alias = $this->getAlias();
         $column_alias = sprintf('%s.%s', $table, $this->escape($column));
@@ -948,7 +984,8 @@ class Query {
      *
      * @return array
      */
-    private function unaliasColumn($alias) {
+    private function unaliasColumn($alias)
+    {
 
         $column_alias = $this->fields[$alias];
         list($class_alias, $column) = explode('.', $column_alias);
@@ -968,7 +1005,8 @@ class Query {
      *
      * @return string
      */
-    private function getAlias() {
+    private function getAlias()
+    {
         return '_' . $this->alias_counter++;
     }
 
@@ -978,7 +1016,8 @@ class Query {
      *
      * @return string
      */
-    private function escape($text) {
+    private function escape($text)
+    {
         $driver = $this->connection->getDriverClass();
         return $driver::getEscapeCharacter() . $text . $driver::getEscapeCharacter();
     }
@@ -989,7 +1028,8 @@ class Query {
      *
      * @return string
      */
-    private function unescape($text) {
+    private function unescape($text)
+    {
         $driver = $this->connection->getDriverClass();
 
         return trim($text, $driver::getEscapeCharacter());
@@ -1007,14 +1047,15 @@ class Query {
      * @return Query
      * @throws \Wave\Exception
      */
-    public function __call($method, $args) {
+    public function __call($method, $args)
+    {
 
-        if($method != 'or' && $method != 'and')
+        if ($method != 'or' && $method != 'and')
             throw new Wave\Exception("[$method] does not exist");
 
         $method = '_' . $method;
 
-        switch(count($args)) {
+        switch (count($args)) {
             case 1:
                 return $this->$method($args[0]);
             case 2:

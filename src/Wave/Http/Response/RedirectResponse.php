@@ -5,21 +5,25 @@ namespace Wave\Http\Response;
 use Wave\Http\Request;
 use Wave\Http\Response;
 
-class RedirectResponse extends Response {
+class RedirectResponse extends Response
+{
 
     private $target;
 
-    public function __construct($url, $status = self::STATUS_FOUND, array $headers = array()) {
+    public function __construct($url, $status = self::STATUS_FOUND, array $headers = array())
+    {
         parent::__construct('', $status, $headers);
 
         $this->setTarget($url);
     }
 
-    public function getTarget() {
+    public function getTarget()
+    {
         return $this->target;
     }
 
-    public function setTarget($target) {
+    public function setTarget($target)
+    {
         $this->target = $target;
 
         $this->setContent(
