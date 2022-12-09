@@ -233,6 +233,7 @@ class MySQL extends AbstractDriver implements DriverInterface {
                 return DB\Column::TYPE_INT;
 
             case 'float':
+            case 'decimal':
                 return DB\Column::TYPE_FLOAT;
 
             case 'tinyint':
