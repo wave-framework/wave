@@ -83,7 +83,7 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }}
             'local_columns' => array({% for column in relation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
             'related_class' => '{{ relation.ReferencedTable.getClassName(true)|addslashes }}',
             'related_columns' => array({% for column in relation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
-            {% if relation.Type ==  constant('\\Wave\\DB\\Relation::MANY_TO_MANY') %}'target_relation'	=> array(
+            {% if relation.Type ==  constant('\\Wave\\DB\\Relation::MANY_TO_MANY') %}'target_relation' => array(
                 'local_columns' => array({% for column in relation.TargetRelation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
                 'related_class' => '{{ relation.TargetRelation.ReferencedTable.getClassName(true)|addslashes }}',
                 'related_columns' => array({% for column in relation.TargetRelation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
