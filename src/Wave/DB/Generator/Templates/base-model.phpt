@@ -36,7 +36,8 @@ use Wave\DB;
 {% endif %}
  {% endfor %}
 */
-abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
+abstract class {{ table.ClassName }} extends {{ baseModelClass }} 
+{
 
     //Table name
     protected static $_database = '{{ table.Database.getNamespace(false) }}';
@@ -48,13 +49,13 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 
         //{{ column.TypeDescription|raw }} {{ column.Extra }} {{ column.Comment }}
         '{{ column.Name }}' => array(
-            'default'	=> {{ column.Default|formatType }},
-            'data_type'	=> {{ column.DataType }},
-            'nullable'	=> {% if column.isNullable %}true{% else %}false{% endif %},
-            'serial'    => {% if column.isSerial %}true{% else %}false{% endif %},
+            'default' => {{ column.Default|formatType }},
+            'data_type' => {{ column.DataType }},
+            'nullable' => {% if column.isNullable %}true{% else %}false{% endif %},
+            'serial' => {% if column.isSerial %}true{% else %}false{% endif %},
             'generated' => {% if column.isGenerated %}true{% else %}false{% endif %},
-            'sequence'  => {% if column.SequenceName %}'{{ column.SequenceName }}'{% else %}null{% endif %},
-            'metadata'  => array({% for key, value in column.Metadata %}{{key|export}} =>{{value|export}}{% if not loop.last %},{% endif %} {% endfor %})
+            'sequence' => {% if column.SequenceName %}'{{ column.SequenceName }}'{% else %}null{% endif %},
+            'metadata' => array({% for key, value in column.Metadata %}{{key|export}} =>{{value|export}}{% if not loop.last %},{% endif %} {% endfor %})
 
         ){% if not loop.last %},{% endif %}
 
@@ -65,8 +66,8 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
     {% for constraint in table.Constraints %}{% if constraint.Type == constant('\\Wave\\DB\\Constraint::TYPE_PRIMARY') or constraint.Type == constant('\\Wave\\DB\\Constraint::TYPE_UNIQUE')  %}
 
         '{{ constraint.Name }}' => array(
-            'type'	=> {{ constraint.Type }},
-            'fields'	=> array({% for column in constraint.Columns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %})
+            'type' => {{ constraint.Type }},
+            'fields' => array({% for column in constraint.Columns %}'{{ column.Name }}'{% if not loop.last %}, {% endif %}{% endfor %})
 
         ){% if not loop.last %},{% endif %}
 
@@ -78,14 +79,14 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
 
         //{{ relation.Description }}
         '{{ relation.Name }}' => array(
-            'relation_type'		=> {{ relation.Type }},
-            'local_columns'		=> array({% for column in relation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
-            'related_class'		=> '{{ relation.ReferencedTable.getClassName(true)|addslashes }}',
-            'related_columns'	=> array({% for column in relation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
+            'relation_type' => {{ relation.Type }},
+            'local_columns' => array({% for column in relation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
+            'related_class' => '{{ relation.ReferencedTable.getClassName(true)|addslashes }}',
+            'related_columns' => array({% for column in relation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
             {% if relation.Type ==  constant('\\Wave\\DB\\Relation::MANY_TO_MANY') %}'target_relation'	=> array(
-                'local_columns'		=> array({% for column in relation.TargetRelation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
-                'related_class'		=> '{{ relation.TargetRelation.ReferencedTable.getClassName(true)|addslashes }}',
-                'related_columns'	=> array({% for column in relation.TargetRelation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
+                'local_columns' => array({% for column in relation.TargetRelation.LocalColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
+                'related_class' => '{{ relation.TargetRelation.ReferencedTable.getClassName(true)|addslashes }}',
+                'related_columns' => array({% for column in relation.TargetRelation.ReferencedColumns %}'{{ column.Name }}'{% if not loop.last %},{% endif %}{% endfor %}),
             )
             {% endif %}
 
@@ -96,11 +97,13 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
     {% for column in table.Columns %}
 
     //{{ column.TypeDescription|raw }} {{ column.Extra }} {{ column.Comment }}
-    public function get{{ column.Name }}(){
+    public function get{{ column.Name }}()
+    {
         return $this->_data['{{ column.Name }}'];
     }
 
-    public function set{{ column.Name }}($value){
+    public function set{{ column.Name }}($value)
+    {
         $this->_data['{{ column.Name }}'] = $value;
         $this->_dirty['{{ column.Name }}'] = true;
         return $this;
@@ -117,7 +120,6 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }} {
     {% endif %}
 
     {% endfor %}
-
 
 
 }
