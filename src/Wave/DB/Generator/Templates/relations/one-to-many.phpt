@@ -8,7 +8,8 @@
      *
      * @return $this
     **/
-    public function add{{ relation.Name|singularize }}({{ relation.ReferencedTable.getClassName(true) }} &$object, $create_relation = true){
+    public function add{{ relation.Name|singularize }}({{ relation.ReferencedTable.getClassName(true) }} &$object, $create_relation = true)
+    {
         $this->_addRelationObject('{{ relation.Name }}', $object, $create_relation);
         return $this;
     }
@@ -20,7 +21,8 @@
      * @param bool $delete_object whether to delete the object in the database
      * @return $this
     **/
-    public function remove{{ relation.Name|singularize }}({{ relation.ReferencedTable.getClassName(true) }} $object, $delete_object = true){
+    public function remove{{ relation.Name|singularize }}({{ relation.ReferencedTable.getClassName(true) }} $object, $delete_object = true)
+    {
         $this->_removeRelationObject('{{ relation.Name }}', $object, $delete_object);
         return $this;
     }
@@ -31,7 +33,8 @@
      * @param callable $transform_callback
      * @return {{ relation.ReferencedTable.getClassName(true) }}[]
     **/
-    public function get{{ relation.Name }}(){
+    public function get{{ relation.Name }}()
+    {
         $transform_callback = func_num_args() >= 1 ? func_get_arg(0) : null;
         return $this->_getRelationObjects('{{ relation.Name }}', $transform_callback);
     }
