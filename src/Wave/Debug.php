@@ -37,6 +37,12 @@ class Debug {
         );
 
         self::$instance = new self(array_merge($defaults, $config));
+
+        // Register a handle to listen for queries
+        Hook::registerHandler('db.after_query', function($data) {
+            $instance = Debug::getInstance();
+            $instance->addQuery($data);
+        });
     }
 
     public function getMemoryUsage() {
@@ -99,25 +105,23 @@ class Debug {
         return $out;
     }
 
-    public function addQuery($time, $statement) {
+    public function addQuery($data) {
 
         $this->query_count++;
 
         if($this->config['log_queries']) {
-            $sql = $statement->queryString;
-            $rows = $statement->rowCount();
-            $success = $statement->errorCode() == \PDO::ERR_NONE ? true : false;
-            $time = round($time * 1000, true);
+            $sql = $data['query'] ?? "";
+            $time = round($data['time'] ?? 0 * 1000, true);
 
             $sql = str_replace(chr(0x0A), ' ', $sql);
             $sql = str_replace('  ', ' ', $sql);
 
             $this->query_count = array_push(
                 $this->queries, array(
-                    'success' => $success,
+                    'success' => $data['success'] ?? false,
                     'time' => $time,
                     'sql' => $sql,
-                    'rows' => $rows
+                    'rows' => $data['row_count'] ?? 0
                 )
             );
         }
