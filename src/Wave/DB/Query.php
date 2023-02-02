@@ -169,24 +169,24 @@ class Query {
      * Perform a left join
      * @see join
      */
-    public function leftJoin($class, &$alias = null, &$target_alias = null) {
-        return $this->join('LEFT JOIN', $class, $alias, $target_alias);
+    public function leftJoin($class, &$alias = null, &$target_alias = null, $hydrate = true) {
+        return $this->join('LEFT JOIN', $class, $alias, $target_alias, $hydrate);
     }
 
     /**
      * Perform an inner join
      * @see join
      */
-    public function innerJoin($class, &$alias = null, &$target_alias = null) {
-        return $this->join('INNER JOIN', $class, $alias, $target_alias);
+    public function innerJoin($class, &$alias = null, &$target_alias = null, $hydrate = true) {
+        return $this->join('INNER JOIN', $class, $alias, $target_alias, $hydrate);
     }
 
     /**
      * Perform a right join
      * @see join
      */
-    public function rightJoin($class, &$alias = null, &$target_alias = null) {
-        return $this->join('RIGHT JOIN', $class, $alias, $target_alias);
+    public function rightJoin($class, &$alias = null, &$target_alias = null, $hydrate = true) {
+        return $this->join('RIGHT JOIN', $class, $alias, $target_alias, $hydrate);
     }
 
     /**
@@ -201,10 +201,11 @@ class Query {
      * @param string|null $target_alias [optional] Set the alias of the object this row is to be joined on to. By
      *                                    default this is the primary object. This property is passed by reference
      *                                    so it can be used to get a handle on the generated alias.
+     * @param bool $hydrate Whether to hydrate the joined objects onto the fetched model.
      *
      * @return Query
      */
-    public function join($type, $class, &$alias = null, &$target_alias = null) {
+    public function join($type, $class, &$alias = null, &$target_alias = null, $hydrate = true) {
 
         $this->_last_clause = self::CLAUSE_JOIN;
 
@@ -214,10 +215,7 @@ class Query {
 
         $this->resolveNamespace($class);
 
-        //@patrick, should this not actually select these rows? Should it be an extra parameter in the function constructor?
-        //$join_table_alias = $this->addFieldsToSelect($class) could be replaced with:
-        //$join_table_alias = $this->aliasClass($class); // so it didn't add the fields but still aliased the table
-        if(!$this->manual_select)
+        if(!$this->manual_select && $hydrate === true)
             $this->addFieldsToSelect($class, $alias);
         else
             $this->aliasClass($class, $alias);
@@ -227,7 +225,8 @@ class Query {
             'class' => $class,
             'table_alias' => $alias,
             'target_alias' => &$target_alias, //for many to many, this won't be known till the target table is joined
-            'condition' => ''
+            'condition' => '',
+            'hydrate' => $hydrate
         );
 
         return $this;
@@ -769,12 +768,16 @@ class Query {
 
                 //otherwise build the child rows
                 foreach($this->joins as $join) {
+                    if ($join['hydrate'] === false) {
+                        continue;
+                    }
+
                     $object_instances[$join['table_alias']] = $this->buildClassInstance($join['table_alias']);
                 }
 
                 //then check non-null child rows and add them to their parent rows
                 foreach($this->joins as $join) {
-                    if($object_instances[$join['table_alias']] === null)
+                    if($join['hydrate'] === false || $object_instances[$join['table_alias']] === null)
                         continue;
 
                     //find if is a join or a with
