@@ -234,7 +234,9 @@ class Model implements \JsonSerializable {
      * @param $resolved_class
      */
     public function addJoinedObject(Model &$object, $alias, $resolved_class) {
-        $this->_joined_aliases[$resolved_class][] = $alias;
+        if (!isset($this->_joined_aliases[$resolved_class]) || !in_array($alias, $this->_joined_aliases[$resolved_class]))
+            $this->_joined_aliases[$resolved_class][] = $alias;
+
         if(!isset($this->_joined_objects[$alias]))
             $this->_joined_objects[$alias] = array();
 
