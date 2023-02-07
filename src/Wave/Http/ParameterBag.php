@@ -246,7 +246,7 @@ class ParameterBag implements \IteratorAggregate, \Countable {
      *
      * @return \ArrayIterator An \ArrayIterator instance
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return new \ArrayIterator($this->parameters);
     }
 
@@ -255,7 +255,7 @@ class ParameterBag implements \IteratorAggregate, \Countable {
      *
      * @return int The number of parameters
      */
-    public function count() {
+    public function count(): int {
         return count($this->parameters);
     }
 }

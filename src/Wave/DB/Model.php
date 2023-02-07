@@ -454,7 +454,8 @@ class Model implements \JsonSerializable {
      *
      * @return array
      */
-    public function jsonSerialize() {
+    public function jsonSerialize(): mixed
+    {
         return $this->_data;
     }
 
@@ -505,7 +506,8 @@ class Model implements \JsonSerializable {
      *
      * @return array
      */
-    public function _toArray() {
+    public function _toArray(): array
+    {
         $data = array();
         foreach(static::_getFields(false) as $field) {
             $getter = self::_getGetter($field);
