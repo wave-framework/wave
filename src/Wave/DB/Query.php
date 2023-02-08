@@ -792,8 +792,17 @@ class Query {
                                 $object_instances[$join['target_alias']]->{'add' . $this->with[$join['table_alias']]['relation_name']}($object_instances[$join['table_alias']], false);
                                 break;
                         }
-                    } else
+                    } else {
+                        // Don't join equivalent objects to the same target multiple times
+                        $already_joined = $object_instances[$join['target_alias']]->hasJoinedObject($object_instances[$join['table_alias']], $join['table_alias']);
+                        if ($already_joined) {
+                            Wave\Log::write('database', 'Duplicate child (join) results detected. Should this query have a group by?', Wave\Log::DEBUG);
+                            continue;
+                        }
+
                         $object_instances[$join['target_alias']]->addJoinedObject($object_instances[$join['table_alias']], $join['table_alias'], $this->unaliasClass($join['table_alias']));
+                    }
+
 
                 }
 
