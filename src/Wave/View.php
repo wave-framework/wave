@@ -31,8 +31,15 @@ class View {
         }
         $this->twig = new View\TwigEnvironment($loader, $conf);
         $this->twig->addExtension(new View\TwigExtension());
-        foreach(self::$_filters as $name => $action)
+        foreach(self::$_filters as $name => $action) {
+            if ($action instanceof TwigFilter) {
+                $this->twig->addFilter($action);
+                continue;
+            }
+
             $this->twig->addFilter(new TwigFilter($name, $action));
+        }
+
         $this->twig->registerUndefinedFilterCallback(
             function ($name) {
                 if(function_exists($name)) {
