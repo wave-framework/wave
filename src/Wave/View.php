@@ -4,6 +4,7 @@ namespace Wave;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Twig\Extension\CoreExtension;
 use Twig\Loader\FilesystemLoader;
 use Twig\TwigFilter;
 use Twig\TwigFunction;
@@ -64,10 +65,10 @@ class View {
         $this->twig->addGlobal('_mode', Core::$_MODE);
 
         if(self::$_timezone !== null)
-            $this->twig->getExtension('core')->setTimezone(self::$_timezone);
+            $this->twig->getExtension(CoreExtension::class)->setTimezone(self::$_timezone);
 
         if(self::$_date_format !== null)
-            $this->twig->getExtension('core')->setDateFormat(self::$_date_format);
+            $this->twig->getExtension(CoreExtension::class)->setDateFormat(self::$_date_format);
 
         if(Config::get('deploy')->mode == Core::MODE_DEVELOPMENT || isset($_REQUEST['_wave_show_debugger']))
             $this->twig->addGlobal('_debugger', Debug::getInstance());
@@ -112,12 +113,12 @@ class View {
 
     public static function setTimezone($timezone) {
         if(self::$instance == null) self::$_timezone = $timezone;
-        else self::$instance->twig->getExtension('core')->setTimezone($timezone);
+        else self::$instance->twig->getExtension(CoreExtension::class)->setTimezone($timezone);
     }
 
     public static function setDefaultDateFormat($format) {
         if(self::$instance == null) self::$_date_format = $format;
-        else self::$instance->twig->getExtension('core')->setDateFormat($format);
+        else self::$instance->twig->getExtension(CoreExtension::class)->setDateFormat($format);
     }
 
     public static function generate() {
