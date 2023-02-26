@@ -223,7 +223,7 @@ class Model implements \JsonSerializable {
 
     public function _equals(Model $object) {
         return (get_class($this) === get_class($object)) &&
-        array_diff_assoc($this->_getIdentifyingData(), $object->_getIdentifyingData());
+        count(array_diff_assoc($this->_getIdentifyingData(), $object->_getIdentifyingData())) === 0;
     }
 
     /**
@@ -234,11 +234,34 @@ class Model implements \JsonSerializable {
      * @param $resolved_class
      */
     public function addJoinedObject(Model &$object, $alias, $resolved_class) {
-        $this->_joined_aliases[$resolved_class][] = $alias;
+        if (!isset($this->_joined_aliases[$resolved_class]) || !in_array($alias, $this->_joined_aliases[$resolved_class]))
+            $this->_joined_aliases[$resolved_class][] = $alias;
+
         if(!isset($this->_joined_objects[$alias]))
             $this->_joined_objects[$alias] = array();
 
         $this->_joined_objects[$alias][] = $object;
+    }
+
+    /**
+     * Determine whether a joined object has already been joined under a specific alias
+     *
+     * @param Model $object
+     * @param $alias
+     * @return bool
+     */
+    public function hasJoinedObject(Model &$object, $alias): bool
+    {
+        if(!isset($this->_joined_objects[$alias]))
+            return false;
+
+        foreach ($this->_joined_objects[$alias] as $joined_object) {
+               if ($object->_equals($joined_object)) {
+                   return true;
+               }
+        }
+
+        return false;
     }
 
     /**
