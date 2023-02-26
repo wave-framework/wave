@@ -2,6 +2,8 @@
 
 namespace Wave\DB;
 
+use Wave\Hook;
+
 class Statement extends \PDOStatement {
 
 
@@ -19,9 +21,15 @@ class Statement extends \PDOStatement {
         $start = microtime(true);
         parent::execute($input_parameters);
 
-        \Wave\Debug::getInstance()->addQuery($time = microtime(true) - $start, $this);
+        $query_data = [
+            'query' => $this->queryString,
+            'row_count' => $this->rowCount(),
+            'success' => $this->errorCode() === \PDO::ERR_NONE,
+            'time' => microtime(true) - $start,
+            'params' => $input_parameters
+        ];
 
-        //printf("%s: %s: %s\n", microtime(true), $time, implode(' ', explode("\n", $this->queryString)));
+        Hook::triggerAction('db.after_query', [$query_data]);
     }
 
 }

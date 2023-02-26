@@ -27,6 +27,6 @@ class Core {
 
         Cache::init();
 
-        Debug::getInstance()->addCheckpoint('bootstrapped');
+        Hook::triggerAction('bootstrapped');
     }
 }
