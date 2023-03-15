@@ -95,7 +95,7 @@ class Generator {
 
         $loader = new FilesystemLoader(__DIR__ . DS . 'Generator' . DS . 'Templates');
         self::$twig = new Environment($loader, array('autoescape' => false));
-        self::$twig->addFilter(new TwigFilter('addslashes'));
+        self::$twig->addFilter(new TwigFilter('addslashes', 'addslashes'));
         self::$twig->addFilter(
             new TwigFilter('export',
                 function ($var) {
@@ -103,7 +103,7 @@ class Generator {
                 }
             )
         );
-        self::$twig->addFilter(new TwigFilter('implode'));
+        self::$twig->addFilter(new TwigFilter('implode', 'implode'));
         self::$twig->addFilter(new TwigFilter('singularize', '\\Wave\\Inflector::singularize'));
         self::$twig->addFilter(new TwigFilter('formatType', '\\Wave\\DB\\Generator::formatTypeForSource'));
         self::$twig->addGlobal('baseModelClass', static::$baseModelClass);
