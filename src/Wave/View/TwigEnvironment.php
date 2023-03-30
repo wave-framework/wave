@@ -2,7 +2,9 @@
 
 namespace Wave\View;
 
-class TwigEnvironment extends \Twig_Environment {
+use Twig\Environment;
+
+class TwigEnvironment extends Environment {
 
     public $_wave_register = array('css' => array(), 'js' => array());
 

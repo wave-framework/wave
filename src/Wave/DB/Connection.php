@@ -54,8 +54,8 @@ class Connection extends PDO {
 
     }
 
-
-    public function prepare($sql, $options = array()) {
+    public function prepare($sql, $options = array()): \PDOStatement|false
+    {
 
         if(!$this->cache_enabled)
             return parent::prepare($sql, $options);

@@ -2,8 +2,9 @@
 
 namespace Wave\View;
 
-class TwigExtension extends \Twig_Extension {
+use Twig\Extension;
 
+class TwigExtension extends Extension\AbstractExtension {
 
     public function getTokenParsers() {
         return array(

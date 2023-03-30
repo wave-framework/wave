@@ -292,11 +292,11 @@ class Validator implements ArrayAccess {
         return $this->parent_instance;
     }
 
-    public function offsetExists($offset) {
+    public function offsetExists($offset): bool {
         return array_key_exists($offset, $this->cleaned);
     }
 
-    public function offsetGet($offset) {
+    public function offsetGet($offset): mixed {
         return $this->cleaned[$offset];
     }
 
@@ -304,11 +304,11 @@ class Validator implements ArrayAccess {
         return isset($this->cleaned[$offset]) ? $this->cleaned[$offset] : null;
     }
 
-    public function offsetSet($offset, $value) {
+    public function offsetSet($offset, $value): void {
         throw new \BadMethodCallException("Setting validator input data is not supported");
     }
 
-    public function offsetUnset($offset) {
+    public function offsetUnset($offset): void {
         throw new \BadMethodCallException("Unsetting validator input data is not supported");
     }
 

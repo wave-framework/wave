@@ -28,13 +28,13 @@ use Wave\DB;
  {% endfor %}
 *
  * Relations defined by magic accessor methods
- {% for relation in table.Relations if relation.Type != constant('\\Wave\\DB\\Relation::RELATION_UNKNOWN') %}
+ {% for relation in table.Relations %}{% if relation.Type != constant('\\Wave\\DB\\Relation::RELATION_UNKNOWN') %}
 {% if relation.Type == constant('\\Wave\\DB\\Relation::ONE_TO_ONE') %}* @property {{ relation.ReferencedTable.getClassName(true) }} ${{ relation.Name }}
 {% elseif relation.Type == constant('\\Wave\\DB\\Relation::ONE_TO_MANY') %}* @property {{ relation.ReferencedTable.getClassName(true) }}[] ${{ relation.Name }}
 {% elseif relation.Type == constant('\\Wave\\DB\\Relation::MANY_TO_ONE') %}* @property {{ relation.ReferencedTable.getClassName(true) }} ${{ relation.Name }}
 {% elseif relation.Type == constant('\\Wave\\DB\\Relation::MANY_TO_MANY') %}* @property {{ relation.TargetRelation.ReferencedTable.getClassName(true) }}[] ${{ relation.Name }}
 {% endif %}
- {% endfor %}
+ {% endif %}{% endfor %}
 */
 abstract class {{ table.ClassName }} extends {{ baseModelClass }} 
 {
@@ -75,7 +75,7 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }}
 
     //Relations
     protected static $_relations = array(
-        {% for relation in table.Relations if relation.Type != constant('\\Wave\\DB\\Relation::RELATION_UNKNOWN') %}
+        {% for relation in table.Relations %}{% if relation.Type != constant('\\Wave\\DB\\Relation::RELATION_UNKNOWN') %}
 
         //{{ relation.Description }}
         '{{ relation.Name }}' => array(
@@ -92,7 +92,7 @@ abstract class {{ table.ClassName }} extends {{ baseModelClass }}
 
         ),
 
-    {% endfor %});
+    {% endif %}{% endfor %});
 
     {% for column in table.Columns %}
 

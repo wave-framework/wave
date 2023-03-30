@@ -4,6 +4,10 @@ namespace Wave;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use Twig\Extension\CoreExtension;
+use Twig\Loader\FilesystemLoader;
+use Twig\TwigFilter;
+use Twig\TwigFunction;
 
 class View {
 
@@ -19,7 +23,7 @@ class View {
 
     private function __construct() {
 
-        $loader = new \Twig_Loader_Filesystem(Config::get('wave')->path->views);
+        $loader = new FilesystemLoader(Config::get('wave')->path->views);
 
         $conf = array('cache' => Config::get('wave')->view->cache);
         if(Core::$_MODE !== Core::MODE_PRODUCTION) {
@@ -28,19 +32,26 @@ class View {
         }
         $this->twig = new View\TwigEnvironment($loader, $conf);
         $this->twig->addExtension(new View\TwigExtension());
-        foreach(self::$_filters as $name => $action)
-            $this->twig->addFilter($name, $action);
+        foreach(self::$_filters as $name => $action) {
+            if ($action instanceof TwigFilter) {
+                $this->twig->addFilter($action);
+                continue;
+            }
+
+            $this->twig->addFilter(new TwigFilter($name, $action));
+        }
+
         $this->twig->registerUndefinedFilterCallback(
             function ($name) {
                 if(function_exists($name)) {
-                    return new \Twig_Filter_Function($name);
+                    return new TwigFunction($name);
                 }
 
                 return false;
             }
         );
-        $this->twig->addFilter(new \Twig_SimpleFilter('last','\\Wave\\Utils::array_peek'));
-        $this->twig->addFilter(new \Twig_SimpleFilter('short',
+        $this->twig->addFilter(new TwigFilter('last','\\Wave\\Utils::array_peek'));
+        $this->twig->addFilter(new TwigFilter('short',
                 '\\Wave\\Utils::shorten', array(
                     'pre_escape' => 'html',
                     'is_safe' => array('html')
@@ -54,10 +65,10 @@ class View {
         $this->twig->addGlobal('_mode', Core::$_MODE);
 
         if(self::$_timezone !== null)
-            $this->twig->getExtension('core')->setTimezone(self::$_timezone);
+            $this->twig->getExtension(CoreExtension::class)->setTimezone(self::$_timezone);
 
         if(self::$_date_format !== null)
-            $this->twig->getExtension('core')->setDateFormat(self::$_date_format);
+            $this->twig->getExtension(CoreExtension::class)->setDateFormat(self::$_date_format);
 
         if(Config::get('deploy')->mode == Core::MODE_DEVELOPMENT || isset($_REQUEST['_wave_show_debugger']))
             $this->twig->addGlobal('_debugger', Debug::getInstance());
@@ -81,7 +92,7 @@ class View {
         // locate the template file
         $template .= Config::get('wave')->view->extension;
         Hook::triggerAction('view.before_load_template', array(&$this, &$template));
-        $loaded_template = $this->twig->loadTemplate($template);
+        $loaded_template = $this->twig->load($template);
         Hook::triggerAction('view.before_render', array(&$this, &$data));
         $html = $loaded_template->render($data);
         Hook::triggerAction('view.after_render', array(&$this, &$html));
@@ -102,12 +113,12 @@ class View {
 
     public static function setTimezone($timezone) {
         if(self::$instance == null) self::$_timezone = $timezone;
-        else self::$instance->twig->getExtension('core')->setTimezone($timezone);
+        else self::$instance->twig->getExtension(CoreExtension::class)->setTimezone($timezone);
     }
 
     public static function setDefaultDateFormat($format) {
         if(self::$instance == null) self::$_date_format = $format;
-        else self::$instance->twig->getExtension('core')->setDateFormat($format);
+        else self::$instance->twig->getExtension(CoreExtension::class)->setDateFormat($format);
     }
 
     public static function generate() {
@@ -138,7 +149,7 @@ class View {
         foreach($iterator as $template) {
             $filename = $template->getFilename();
             if(pathinfo($filename, PATHINFO_EXTENSION) != 'phtml') continue;
-            $self->twig->loadTemplate(substr($template, $l));
+            $self->twig->load(substr($template, $l));
         }
 
     }

@@ -28,7 +28,7 @@ class Row extends ArrayObject {
         return isset($this[$property]);
     }
 
-    public function getArrayCopy() {
+    public function getArrayCopy(): array {
         $self = parent::getArrayCopy();
 
         foreach($self as $key => $value){

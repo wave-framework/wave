@@ -2,6 +2,7 @@
 
 namespace Wave\Router;
 
+use ReflectionType;
 use Wave;
 use Wave\Router;
 
@@ -45,7 +46,12 @@ class Generator {
 
                     foreach($method['parameters'] as $parameter) {
                         /** @var \ReflectionParameter $parameter */
-                        $type = $parameter->getClass() !== null ? $parameter->getClass()->getName() : null;
+                        $type = null;
+                        $reflected_type = $parameter->getType();
+                        if ($reflected_type instanceof ReflectionType) {
+                            $type = $reflected_type->getName();
+                        }
+
                         $route->addMethodParameter($parameter->getName(), $type);
                     }
 

@@ -16,10 +16,10 @@ class Statement extends \PDOStatement {
 
     }
 
-    public function execute($input_parameters = null) {
+    public function execute($input_parameters = null): bool {
 
         $start = microtime(true);
-        parent::execute($input_parameters);
+        $result = parent::execute($input_parameters);
 
         $query_data = [
             'query' => $this->queryString,
@@ -30,6 +30,8 @@ class Statement extends \PDOStatement {
         ];
 
         Hook::triggerAction('db.after_query', [$query_data]);
+
+        return $result;
     }
 
 }

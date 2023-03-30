@@ -285,7 +285,7 @@ class MySQL extends AbstractDriver implements DriverInterface {
         $value = $row['COLUMN_DEFAULT'];
         $type = self::translateSQLDataType($row['DATA_TYPE']);
 
-        if(strtolower($value) === 'null' || self::translateSQLNullable($row['IS_NULLABLE'])) {
+        if (is_null($value) || strtolower($value) === 'null' || self::translateSQLNullable($row['IS_NULLABLE'])) {
             $value = null;
         } else if(DB\Column::TYPE_FLOAT == $type) {
             $value = (float) $value;

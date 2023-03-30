@@ -24,7 +24,8 @@ class CliHandler extends AbstractProcessingHandler {
      *
      * @param    string|array $record the text to output, or array of lines
      */
-    protected function write(array $record) {
+    protected function write(array $record): void
+    {
         $stream = $record['level'] >= Logger::ERROR ? STDERR : STDOUT;
         $text = static::color($record['formatted'], $record['level']);
 
