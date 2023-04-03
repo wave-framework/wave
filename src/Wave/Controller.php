@@ -193,9 +193,15 @@ class Controller {
     }
 
     protected function _buildDataSet() {
-        $this->_setTemplatingGlobals();
+        $request_properties = [
+            'input' => $this->_sanitized ?? $this->_data,
+            'errors' => $this->_input_errors ?? array(),
+            '_identity' => $this->_identity
+        ];
+
         $properties = $this->_getResponseProperties();
-        return array_merge($properties);
+
+        return array_merge($request_properties, $properties);
     }
 
     protected function _getResponseProperties() {
@@ -207,12 +213,6 @@ class Controller {
             $payload[$key] = $val;
         }
         return $payload;
-    }
-
-    protected function _setTemplatingGlobals() {
-        View::registerGlobal('input', isset($this->_sanitized) ? $this->_sanitized : $this->_data);
-        View::registerGlobal('errors', isset($this->_input_errors) ? $this->_input_errors : array());
-        View::registerGlobal('_identity', $this->_identity);
     }
 
     protected function respond($payload = null) {
