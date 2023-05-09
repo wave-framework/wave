@@ -222,7 +222,7 @@ class Model implements \JsonSerializable {
     }
 
     public function _equals(Model $object) {
-        if (!get_class($this) === get_class($object)) {
+        if (get_class($this) !== get_class($object)) {
             return false;
         }
 
