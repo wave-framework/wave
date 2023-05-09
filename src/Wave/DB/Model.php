@@ -222,8 +222,18 @@ class Model implements \JsonSerializable {
     }
 
     public function _equals(Model $object) {
-        return (get_class($this) === get_class($object)) &&
-        count(array_diff_assoc($this->_getIdentifyingData(), $object->_getIdentifyingData())) === 0;
+        if (get_class($this) !== get_class($object)) {
+            return false;
+        }
+
+        $b = $object->_getIdentifyingData();
+        foreach($this->_getIdentifyingData() as $k => $a){
+            if($a != $b[$k]){
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
