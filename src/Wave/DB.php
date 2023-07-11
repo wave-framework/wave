@@ -12,6 +12,7 @@ namespace Wave;
 
 use Wave\Config;
 use Wave\DB\Exception as DBException;
+use Wave\DB\Exception\DuplicateKeyException;
 use Wave\DB\Model;
 use Wave\DB\Query;
 
