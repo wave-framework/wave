@@ -1,6 +1,6 @@
 <?php
 
-namespace Wave;
+namespace Wave\DB\Exception;
 
 class DuplicateKeyException extends \Wave\DB\Exception
 {
