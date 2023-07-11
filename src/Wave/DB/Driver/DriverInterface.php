@@ -15,5 +15,6 @@ interface DriverInterface {
 
     public static function getEscapeCharacter();
 
+    public static function convertException(\PDOException $exception);
 }
 
