@@ -470,7 +470,7 @@ class DB {
         try {
             $connection->prepare($sql)->execute($params);
         } catch (\PDOException $e){
-            $connection->getDriverClass()::convertException($e);
+            throw $connection->getDriverClass()::convertException($e);
         }
         $primary_key = $object::_getPrimaryKey();
         if($primary_key !== null && count($primary_key) === 1) {
