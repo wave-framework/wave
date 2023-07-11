@@ -470,10 +470,7 @@ class DB {
         try {
             $connection->prepare($sql)->execute($params);
         } catch (\PDOException $e){
-            if($e->getCode() === DB\Exception::SQLSTATE_DUPLICATE_KEY){
-                throw new DuplicateKeyException($e->getCode(), $e->getMessage());
-            }
-            throw $e;
+            $connection->getDriverClass()::convertException($e);
         }
         $primary_key = $object::_getPrimaryKey();
         if($primary_key !== null && count($primary_key) === 1) {

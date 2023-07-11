@@ -4,7 +4,7 @@ namespace Wave\DB\Exception;
 
 use Wave\DB\Exception;
 
-class DuplicateKeyException extends Exception
+class InvalidFieldNameException extends Exception
 {
     public function __construct($message, $code = null)
     {
