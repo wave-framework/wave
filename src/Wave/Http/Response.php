@@ -27,6 +27,7 @@ class Response {
     const STATUS_FORBIDDEN = 403;
     const STATUS_NOT_FOUND = 404;
     const STATUS_NOT_ACCEPTABLE = 406;
+    const STATUS_TOO_MANY_REQUESTS = 429;
     const STATUS_SERVER_ERROR = 500;
     const STATUS_NOT_IMPLEMENTED = 501;
 
