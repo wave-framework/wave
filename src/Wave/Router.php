@@ -176,6 +176,13 @@ class Router {
     public function setRequest($request) {
         $this->request = $request;
     }
+
+    /**
+     * @return \Wave\Http\Response
+     */
+    public function getResponse() {
+        return $this->response;
+    }
 }
 
 ?>
