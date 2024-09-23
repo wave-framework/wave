@@ -471,9 +471,9 @@ class DB {
             $statement = $connection->prepare($sql);
             foreach($params as $name => $param){
                 if(is_array($param)){
-                    $statement->bindParam($name+1, ...$param);
+                    $statement->bindValue($name+1, ...$param);
                 } else {
-                    $statement->bindParam($name+1, $param);
+                    $statement->bindValue($name+1, $param);
                 }
             }
 
@@ -533,9 +533,9 @@ class DB {
         $statement = $connection->prepare($sql);
         foreach($params as $name => $param){
             if(is_array($param)){
-                $statement->bindParam($name+1, ...$param);
+                $statement->bindValue($name+1, ...$param);
             } else {
-                $statement->bindParam($name+1, $param);
+                $statement->bindValue($name+1, $param);
             }
         }
 
@@ -572,9 +572,9 @@ class DB {
         $statement = $connection->prepare($sql);
         foreach($params as $name => $param){
             if(is_array($param)){
-                $statement->bindParam($name+1, ...$param);
+                $statement->bindValue($name+1, ...$param);
             } else {
-                $statement->bindParam($name+1, $param);
+                $statement->bindValue($name+1, $param);
             }
         }
         $statement->execute();
