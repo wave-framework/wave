@@ -468,10 +468,21 @@ class DB {
         );
 
         try {
-            $connection->prepare($sql)->execute($params);
+            $statement = $connection->prepare($sql);
+            foreach($params as $name => $param){
+                if(is_array($param)){
+                    $statement->bindValue($name+1, ...$param);
+                } else {
+                    $statement->bindValue($name+1, $param);
+                }
+            }
+
+            $statement->execute();
         } catch (\PDOException $e){
             throw $connection->getDriverClass()::convertException($e);
         }
+
+
         $primary_key = $object::_getPrimaryKey();
         if($primary_key !== null && count($primary_key) === 1) {
             $column = current($primary_key);
@@ -518,9 +529,17 @@ class DB {
             implode(',', $updates),
             implode(' AND ', $criteria)
         );
-        $connection->prepare($sql)->execute($params);
 
-        return true;
+        $statement = $connection->prepare($sql);
+        foreach($params as $name => $param){
+            if(is_array($param)){
+                $statement->bindValue($name+1, ...$param);
+            } else {
+                $statement->bindValue($name+1, $param);
+            }
+        }
+
+        return $statement->execute();
     }
 
     /**
@@ -549,8 +568,16 @@ class DB {
             $database->escape($object::_getTableName()),
             implode(' AND ', $criteria)
         );
-        $connection->prepare($sql)->execute($params);
 
+        $statement = $connection->prepare($sql);
+        foreach($params as $name => $param){
+            if(is_array($param)){
+                $statement->bindValue($name+1, ...$param);
+            } else {
+                $statement->bindValue($name+1, $param);
+            }
+        }
+        $statement->execute();
         $object->_setLoaded(false);
 
         return true;

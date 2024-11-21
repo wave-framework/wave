@@ -259,6 +259,9 @@ class MySQL extends AbstractDriver implements DriverInterface
             case 'json' :
                 return DB\Column::TYPE_JSON;
 
+            case 'geometry' :
+                return DB\Column::TYPE_GEOMETRY;
+
             default:
                 return DB\Column::TYPE_UNKNOWN;
         }
