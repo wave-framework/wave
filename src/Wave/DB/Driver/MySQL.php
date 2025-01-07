@@ -84,7 +84,7 @@ class MySQL extends AbstractDriver implements DriverInterface
             self::$_column_cache[$namespace] = array();
 
             $column_sql = 'SELECT TABLE_NAME, COLUMN_NAME, COLUMN_DEFAULT, IS_NULLABLE, DATA_TYPE, COLUMN_TYPE, EXTRA, COLUMN_COMMENT ' .
-                'FROM `information_schema`.`COLUMNS` WHERE `TABLE_SCHEMA` = ?;';
+                'FROM `information_schema`.`COLUMNS` WHERE `TABLE_SCHEMA` = ? ORDER BY `TABLE_NAME`, ORDINAL_POSITION;';
 
             $column_stmt = $table->getDatabase()->getConnection()->prepare($column_sql);
             $column_stmt->execute(array($table->getDatabase()->getName()));
