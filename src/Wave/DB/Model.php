@@ -393,6 +393,22 @@ class Model implements \JsonSerializable {
         return $this->_joined_objects;
     }
 
+    public function _setRelationDefault($relation_name) 
+    {
+        $relation = static::_getRelation($relation_name);
+
+        switch($relation['relation_type']) {
+            case Relation::ONE_TO_ONE:
+            case Relation::MANY_TO_ONE:
+                $this->_data[$relation_name] = null;
+                break;
+            case Relation::ONE_TO_MANY:
+            case Relation::MANY_TO_MANY:
+                $this->_data[$relation_name] = array();
+                break;
+        }
+    }
+
     /**
      * Returns the joined objects for a given class name. Looks for the class in the list
      * of aliases used when registering joined objects against this model

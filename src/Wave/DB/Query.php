@@ -10,6 +10,7 @@ namespace Wave\DB;
 
 use Wave;
 use Wave\Config;
+use Wave\Inflector;
 
 /**
  * @method \Wave\DB\Query and () and ($condition, mixed $params = array())
@@ -158,7 +159,8 @@ class Query {
         //this needs recording so the object can be added as a relation, not a join
         $this->with[$alias] = array(
             'relation_type' => $relation_data['relation_type'],
-            'relation_name' => Wave\Inflector::singularize($relation)
+            'relation_name' => $relation,
+            'singular_name' => Wave\Inflector::singularize($relation)
         );
 
         return $this;
@@ -743,8 +745,15 @@ class Query {
 
 
             //if there's no instance of the main class, create a new one.
-            if(!isset($object_instances[$this->from_alias]))
+            if(!isset($object_instances[$this->from_alias])) {
                 $object_instances[$this->from_alias] = $this->buildClassInstance($this->from_alias);
+                
+                if($object_instances[$this->from_alias] !== null  && !empty($this->with)) {
+                    foreach($this->with as $with) {
+                        $object_instances[$this->from_alias]->_setRelationDefault($with['relation_name']);
+                    }
+                }
+            }
 
             if($object_instances[$this->from_alias] === null) {
                 trigger_error('Insufficient data in SELECT to build object instance.');
@@ -785,11 +794,11 @@ class Query {
                         switch($this->with[$join['table_alias']]['relation_type']) {
                             case Wave\DB\Relation::ONE_TO_ONE:
                             case Wave\DB\Relation::MANY_TO_ONE:
-                                $object_instances[$join['target_alias']]->{'set' . $this->with[$join['table_alias']]['relation_name']}($object_instances[$join['table_alias']], false);
+                                $object_instances[$join['target_alias']]->{'set' . $this->with[$join['table_alias']]['singular_name']}($object_instances[$join['table_alias']], false);
                                 break;
                             case Wave\DB\Relation::ONE_TO_MANY:
                             case Wave\DB\Relation::MANY_TO_MANY:
-                                $object_instances[$join['target_alias']]->{'add' . $this->with[$join['table_alias']]['relation_name']}($object_instances[$join['table_alias']], false);
+                                $object_instances[$join['target_alias']]->{'add' . $this->with[$join['table_alias']]['singular_name']}($object_instances[$join['table_alias']], false);
                                 break;
                         }
                     } else {
