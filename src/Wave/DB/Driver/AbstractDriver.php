@@ -2,6 +2,7 @@
 
 namespace Wave\DB\Driver;
 
+use Brick\Geo\Geometry;
 use Wave\DB\Column;
 
 abstract class AbstractDriver
@@ -14,6 +15,8 @@ abstract class AbstractDriver
                 return $value ? 1 : 0;
             case $value instanceof \DateTimeInterface:
                 return $value->format('Y-m-d H:i:s');
+            case $value instanceof Geometry:
+                return [$value->asBinary(), \PDO::PARAM_LOB];
             case is_object($value) || is_array($value):
                 return json_encode($value);
 
@@ -48,6 +51,9 @@ abstract class AbstractDriver
 
             case Column::TYPE_JSON:
                 return json_decode($value);
+
+            case Column::TYPE_GEOMETRY:
+                return Geometry::fromBinary($value);
 
             case Column::TYPE_DATE:
             case Column::TYPE_TIMESTAMP:
