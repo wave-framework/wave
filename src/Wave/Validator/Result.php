@@ -12,7 +12,7 @@ class Result extends ArrayObject {
     private $violations;
     private $validator;
 
-    public function __construct(array $cleaned, array $errors = array(), Validator $validator = null) {
+    public function __construct(array $cleaned, array $errors = array(), ?Validator $validator = null) {
         parent::__construct($cleaned);
         $this->violations = $errors;
         $this->validator = $validator;

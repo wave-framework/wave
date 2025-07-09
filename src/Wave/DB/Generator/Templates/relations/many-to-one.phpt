@@ -8,7 +8,7 @@
      *
      * @return $this
     **/
-    public function set{{ relation.Name }}({{ relation.ReferencedTable.getClassName(true) }} &$object = null, $create_relation = true)
+    public function set{{ relation.Name }}(?{{ relation.ReferencedTable.getClassName(true) }} &$object = null, $create_relation = true)
     {
         $this->_setRelationObject('{{ relation.Name }}', $object, $create_relation);
         return $this;

@@ -14,6 +14,7 @@ class CallableConstraint extends AbstractConstraint implements CleanerInterface 
 
     private $key = self::ERROR_CALLABLE;
     private $message = '%s is not valid';
+    private $cleaned;
 
     public function __construct($property, $arguments, Validator &$validator) {
         if(!is_callable($arguments))
