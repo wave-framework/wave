@@ -9,6 +9,16 @@ use Wave\Router\Action;
 class RequiresLevel extends ArrayArguments {
 	
 	const DEFAULT_KEYWORD = 'default';
+
+	/**
+	 * @var bool
+	 */
+	protected $inherit = true;
+
+	/**
+	 * @var array
+	 */
+	protected $methods = array();
 	
 	public function validate($class) {
 		$this->minimumParameterCount(1);

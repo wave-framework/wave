@@ -13,7 +13,7 @@ class HttpException extends Exception {
     protected $response;
 
 
-    public function __construct($message, Request $request = null, Response $response = null) {
+    public function __construct($message, ?Request $request = null, ?Response $response = null) {
 
         $this->request = $request;
         $this->response = $response;

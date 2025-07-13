@@ -10,19 +10,20 @@ use Wave\Router\Action;
 class Exception extends \Exception {
 
     private static $levels = array(
+        E_ERROR => Log::CRITICAL,
         E_WARNING => Log::WARNING,
+        E_PARSE => Log::EMERGENCY,
         E_NOTICE => Log::WARNING,
+        E_CORE_ERROR => Log::CRITICAL,
+        E_CORE_WARNING => Log::WARNING,
+        E_COMPILE_ERROR => Log::CRITICAL,
+        E_COMPILE_WARNING => Log::WARNING,
         E_USER_ERROR => Log::ERROR,
         E_USER_WARNING => Log::WARNING,
         E_USER_NOTICE => Log::WARNING,
-        E_STRICT => Log::WARNING,
         E_RECOVERABLE_ERROR => Log::ERROR,
         E_DEPRECATED => Log::WARNING,
         E_USER_DEPRECATED => Log::WARNING,
-        E_ERROR => Log::ERROR,
-        E_CORE_ERROR => Log::CRITICAL,
-        E_COMPILE_ERROR => Log::CRITICAL,
-        E_PARSE => Log::EMERGENCY,
     );
 
     private static $_reserved_memory = '';
@@ -79,7 +80,7 @@ class Exception extends \Exception {
 
         self::$_reserved_memory = null;
 
-        $errors = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING | E_STRICT;
+        $errors = E_ERROR | E_PARSE | E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_COMPILE_WARNING;
 
         if($lastError['type'] & $errors) {
             self::handleError(@$lastError['type'], @$lastError['message'], @$lastError['file'], @$lastError['line']);

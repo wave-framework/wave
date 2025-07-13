@@ -41,6 +41,13 @@ class Controller {
     protected $_is_post = false;
     protected $_is_get = false;
 
+    protected $_post;
+    protected $_get;
+    protected $_identity;
+    protected $_sanitized;
+    protected $_template;
+    protected $_request_template;
+
     protected $_status;
     protected $_message;
 

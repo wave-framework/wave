@@ -123,7 +123,7 @@ class Router {
      * @throws Http\Exception\NotFoundException
      * @return Response
      */
-    public function route(Request $request = null) {
+    public function route(?Request $request = null) {
 
         if(null === $request)
             $request = Request::createFromGlobals();

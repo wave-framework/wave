@@ -81,6 +81,12 @@ class Request {
      */
     public $server;
 
+    /**
+     * Cookies passed in with the request
+     * @var ParameterBag $cookies
+     */
+    public $cookies = array();
+
 
     public function __construct($url, $method = self::METHOD_GET,
                                 array $query = array(),

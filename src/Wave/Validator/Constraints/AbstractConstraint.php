@@ -10,6 +10,7 @@ abstract class AbstractConstraint {
 
     protected $data;
     protected $arguments;
+    protected $property;
 
     protected $validator;
 

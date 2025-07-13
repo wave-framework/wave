@@ -11,7 +11,7 @@ class Core {
     static $_MODE = self::MODE_PRODUCTION;
 
     public static function setErrorReporting($display = false) {
-        error_reporting($display ? E_ALL | E_STRICT : E_ALL & ~E_DEPRECATED);
+        error_reporting($display ? E_ALL : E_ALL & ~E_DEPRECATED);
         ini_set('display_errors', $display ? '1' : '0');
     }
 

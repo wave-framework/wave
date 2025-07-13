@@ -66,7 +66,7 @@ class Query {
      *
      * @return Query
      */
-    public function from($from, &$alias = null, array $fields = null) {
+    public function from($from, &$alias = null, ?array $fields = null) {
 
         //if a relative reference, add the ns prefix - will be most of the time
         $this->resolveNamespace($from);
