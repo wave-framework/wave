@@ -16,6 +16,7 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
     protected $type = 'exists';
     protected $message = null;
     private $match_fields = array();
+    private $with_relations = array();
     private $instance = null;
 
     public function __construct($property, $arguments, Validator &$validator) {
@@ -29,6 +30,8 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
             $this->match_fields = array($arguments['property'] => $property);
         }
 
+        $this->with_relations = $arguments['with'] ?? [];
+
         if(empty($this->match_fields))
             throw new \InvalidArgumentException("[$this->type] constraint requires at least one property to match");
 
@@ -39,10 +42,14 @@ class ExistsConstraint extends AbstractConstraint implements CleanerInterface {
      * @return bool
      */
     public function evaluate() {
-        $statement = DB::get()->from($this->arguments['model']);
+        $statement = DB::get()->from($this->arguments['model'], $alias);
+
+        foreach($this->with_relations as $relation_name) {
+            $statement->with($relation_name);
+        }
 
         foreach($this->match_fields as $column => $input_key) {
-            $statement->where($column . ' = ?', $this->validator[$input_key]);
+            $statement->where("$alias.$column = ?", $this->validator[$input_key]);
         }
 
         $this->instance = $statement->fetchRow();
